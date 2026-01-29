@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HVAC 장비 관리 시스템</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <i class="fas fa-wind"></i>
+                <h1>HVAC 장비 관리</h1>
+            </div>
+            <p class="subtitle">공조설비 점검 및 관리 시스템</p>
+        </div>
+
+        <div class="main-menu">
+            <div class="menu-card" onclick="checkPassword('inspector')">
+                <div class="card-icon inspector">
+                    <i class="fas fa-clipboard-check"></i>
+                </div>
+                <h2>장비 점검</h2>
+                <p>현장 장비 점검 및 데이터 입력</p>
+                <div class="card-badge">점검자</div>
+            </div>
+
+            <div class="menu-card" onclick="checkPassword('manager')">
+                <div class="card-icon manager">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h2>관리 대시보드</h2>
+                <p>통계, 차트 및 점검 내역 조회</p>
+                <div class="card-badge">관리자</div>
+            </div>
+        </div>
+
+        <div class="quick-access">
+            <h3><i class="fas fa-bolt"></i> 빠른 접근</h3>
+            <div class="quick-buttons">
+                <button onclick="openQRScanner()" class="btn-qr">
+                    <i class="fas fa-qrcode"></i> QR 스캔
+                </button>
+                <button onclick="location.href='equipment-list.html'" class="btn-list">
+                    <i class="fas fa-list"></i> 장비 목록
+                </button>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p> HVAC Equipment Management System </p>
+            <p> © 2025 Dongjin Air Tech. All rights reserved.</p>
+        </div>
+    </div>
+
+    <!-- 비밀번호 입력 팝업 -->
+    <div id="passwordModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <i class="fas fa-lock"></i>
+                <h3 id="modalTitle">비밀번호 입력</h3>
+            </div>
+            <div class="modal-body">
+                <p id="modalDescription">접근하려면 비밀번호를 입력해주세요</p>
+                <input type="password" id="passwordInput" placeholder="비밀번호 입력" maxlength="20">
+                <div class="password-hint" id="passwordHint"></div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closePasswordModal()" class="btn-cancel">
+                    <i class="fas fa-times"></i> 취소
+                </button>
+                <button onclick="submitPassword()" class="btn-submit">
+                    <i class="fas fa-check"></i> 확인
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

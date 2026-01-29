@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>장비 점검 - HVAC 관리</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/inspection.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="btn-back" onclick="location.href='index.html'">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <h1><i class="fas fa-clipboard-check"></i> 장비 점검</h1>
+        </div>
+
+        <!-- 진행 단계 표시 -->
+        <div class="progress-steps">
+            <div class="step active" id="step1">
+                <div class="step-number">1</div>
+                <div class="step-label">현장 선택</div>
+            </div>
+            <div class="step" id="step2">
+                <div class="step-number">2</div>
+                <div class="step-label">건물 선택</div>
+            </div>
+            <div class="step" id="step3">
+                <div class="step-number">3</div>
+                <div class="step-label">장비 선택</div>
+            </div>
+            <div class="step" id="step4">
+                <div class="step-number">4</div>
+                <div class="step-label">점검 입력</div>
+            </div>
+        </div>
+
+        <!-- Step 1: 현장 선택 -->
+        <div id="siteSelection" class="selection-panel active">
+            <h2><i class="fas fa-map-marker-alt"></i> 현장 선택</h2>
+            <div id="siteList" class="selection-grid">
+                <!-- 동적으로 생성 -->
+            </div>
+        </div>
+
+        <!-- Step 2: 건물 선택 -->
+        <div id="buildingSelection" class="selection-panel">
+            <h2><i class="fas fa-building"></i> 건물 선택</h2>
+            <div class="selected-info">
+                <span>선택된 현장: <strong id="selectedSiteName">-</strong></span>
+                <button class="btn-change" onclick="changeStep(1)">변경</button>
+            </div>
+            <div id="buildingList" class="selection-grid">
+                <!-- 동적으로 생성 -->
+            </div>
+        </div>
+
+        <!-- Step 3: 장비 선택 -->
+        <div id="equipmentSelection" class="selection-panel">
+            <h2><i class="fas fa-cogs"></i> 장비 선택</h2>
+            <div class="selected-info">
+                <span>선택된 현장: <strong id="selectedSiteName2">-</strong> / 건물: <strong id="selectedBuildingName">-</strong></span>
+                <button class="btn-change" onclick="changeStep(2)">변경</button>
+            </div>
+            
+            <!-- 필터 -->
+            <div class="filter-panel">
+                <div class="filter-group">
+                    <label><i class="fas fa-layer-group"></i> 층</label>
+                    <select id="floorFilter" onchange="filterEquipment()">
+                        <option value="">전체</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label><i class="fas fa-wrench"></i> 장비 종류</label>
+                    <select id="typeFilter" onchange="filterEquipment()">
+                        <option value="">전체</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="equipmentList" class="equipment-grid">
+                <!-- 동적으로 생성 -->
+            </div>
+        </div>
+
+        <!-- Step 4: 점검 입력 -->
+        <div id="inspectionForm" class="selection-panel">
+            <h2><i class="fas fa-edit"></i> 점검 데이터 입력</h2>
+            <div class="selected-info">
+                <span>선택된 장비: <strong id="selectedEquipmentName">-</strong></span>
+                <button class="btn-change" onclick="changeStep(3)">변경</button>
+            </div>
+
+            <!-- 장비 상세 정보 -->
+            <div id="equipmentDetail" class="equipment-detail">
+                <!-- 동적으로 생성 -->
+            </div>
+
+            <!-- 점검 유형 선택 -->
+            <div class="inspection-type-selector">
+                <label>
+                    <input type="radio" name="inspectionType" value="일반점검" checked onchange="updateFormFields()">
+                    <span>일반점검</span>
+                </label>
+                <label>
+                    <input type="radio" name="inspectionType" value="세부점검" onchange="updateFormFields()">
+                    <span>세부점검</span>
+                </label>
+            </div>
+
+            <!-- 점검 폼 -->
+            <form id="inspectionFormData" class="inspection-form">
+                <div class="form-group">
+                     <label><i class="fas fa-user"></i> 점검자명 *</label>
+                     <select id="inspectorName" required>
+                     <option value="">선택하세요</option>
+            <!-- 동적으로 채워짐 -->
+                     </select>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-info-circle"></i> 장비 상태 *</label>
+                    <select id="status" required>
+                        <option value="">선택하세요</option>
+                        <option value="정상">정상</option>
+                        <option value="주의">주의</option>
+                        <option value="경고">경고</option>
+                        <option value="고장">고장</option>
+                    </select>
+                </div>
+
+                <!-- 일반점검 필드 -->
+                <div id="basicFields" class="form-section">
+                    <h3>기본 점검 항목</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-thermometer-half"></i> 온도(℃)</label>
+                            <input type="number" step="0.1" id="temperature" placeholder="예: 23.5">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-tachometer-alt"></i> 압력(kPa)</label>
+                            <input type="number" step="0.1" id="pressure" placeholder="예: 150">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-power-off"></i> 운전상태</label>
+                        <select id="operationStatus">
+                            <option value="정상">정상</option>
+                            <option value="이상">이상</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-tint"></i> 누수확인</label>
+                        <select id="leakCheck">
+                            <option value="없음">없음</option>
+                            <option value="있음">있음</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- 세부점검 추가 필드 -->
+                <div id="detailedFields" class="form-section" style="display: none;">
+                    <h3>세부 점검 항목</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label><i class="fas fa-wave-square"></i> 진동(mm/s)</label>
+                            <input type="number" step="0.1" id="vibration" placeholder="예: 2.5">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-volume-up"></i> 소음(dB)</label>
+                            <input type="number" step="0.1" id="noise" placeholder="예: 65">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-broom"></i> 청결상태</label>
+                        <select id="cleanStatus">
+                            <option value="양호">양호</option>
+                            <option value="보통">보통</option>
+                            <option value="불량">불량</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fas fa-filter"></i> 필터상태</label>
+                        <select id="filterStatus">
+                            <option value="양호">양호</option>
+                            <option value="교체필요">교체필요</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-comment"></i> 특이사항</label>
+                    <textarea id="notes" rows="4" placeholder="특이사항이 있으면 입력하세요"></textarea>
+                </div>
+
+                <!-- 사진 첨부 섹션 -->
+                <div class="form-group">
+                    <label><i class="fas fa-camera"></i> 사진 첨부 (선택)</label>
+                    <div class="photo-upload-area">
+                        <input type="file" id="photoInput" accept="image/*" capture="environment" multiple style="display: none;">
+                        <button type="button" class="btn-photo" onclick="document.getElementById('photoInput').click()">
+                            <i class="fas fa-camera"></i> 사진 촬영/선택
+                        </button>
+                        <div id="photoPreview" class="photo-preview"></div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="changeStep(3)">
+                        <i class="fas fa-arrow-left"></i> 이전
+                    </button>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-check"></i> 점검 완료
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script src="js/inspection.js"></script>
+</body>
+</html>
