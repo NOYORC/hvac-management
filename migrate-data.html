@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>데이터 마이그레이션 - Google Sheets → Firebase</title>
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #667eea;
+            text-align: center;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin: 10px 0;
+        }
+        .btn:hover {
+            opacity: 0.9;
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .progress {
+            margin: 20px 0;
+            display: none;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e9ecef;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        .data-summary {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .data-summary h3 {
+            margin-top: 0;
+        }
+        .data-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .data-item:last-child {
+            border-bottom: none;
+        }
+        .count {
+            font-weight: bold;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 데이터 마이그레이션</h1>
+        <p style="text-align: center;">Google Apps Script → Firebase Firestore</p>
+
+        <div class="warning">
+            <strong>⚠️ 주의사항:</strong>
+            <ul>
+                <li>이 작업은 <strong>기존 Google Sheets 데이터</strong>를 Firebase로 복사합니다</li>
+                <li>Firebase에 <strong>이미 있는 데이터는 덮어쓰기</strong> 됩니다</li>
+                <li>마이그레이션 중에는 페이지를 <strong>새로고침하지 마세요</strong></li>
+                <li>완료까지 <strong>1-5분</strong> 정도 소요될 수 있습니다</li>
+            </ul>
+        </div>
+
+        <button class="btn" onclick="checkData()">1️⃣ 기존 데이터 확인하기</button>
+        
+        <div id="dataSummary" class="data-summary" style="display: none;">
+            <h3>📊 기존 데이터 현황</h3>
+            <div id="summaryContent"></div>
+        </div>
+
+        <button class="btn" id="migrateBtn" onclick="startMigration()" disabled style="display: none;">
+            2️⃣ 마이그레이션 시작하기
+        </button>
+
+        <div id="progress" class="progress">
+            <div class="progress-bar">
+                <div id="progressFill" class="progress-fill">0%</div>
+            </div>
+            <p id="progressText" style="text-align: center; margin-top: 10px;"></p>
+        </div>
+
+        <div id="status" class="status"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, setDoc, doc, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSvObiEPfQkEfSLRzyg2BdCCJmQENJs8ic",
+            authDomain: "hvac-management-477fb.firebaseapp.com",
+            projectId: "hvac-management-477fb",
+            storageBucket: "hvac-management-477fb.firebasestorage.app",
+            messagingSenderId: "812239966797",
+            appId: "1:812239966797:web:b454d99fde982328f7dea04",
+            measurementId: "G-f14YESP0P1"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        window.db = db;
+        window.firestoreModules = { collection, addDoc, setDoc, doc, getDocs, deleteDoc };
+    </script>
+
+    <script>
+        const API_BASE = 'https://script.google.com/macros/s/AKfycbzKnOxwx-AY4fg_bT88wHfR6w3BIbAytWnl8wrQ_MdSRj39LSYRYueDgx8Hl-RC1Jybuw/exec';
+        let existingData = {};
+
+        async function checkData() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.style.display = 'block';
+            statusDiv.className = 'status info';
+            statusDiv.innerHTML = '⏳ Google Sheets 데이터를 확인하는 중...';
+
+            try {
+                // 각 테이블 데이터 가져오기
+                const tables = ['sites', 'buildings', 'equipment', 'inspectors', 'inspections'];
+                
+                for (const table of tables) {
+                    statusDiv.innerHTML += `<br>📥 ${table} 데이터 로딩 중...`;
+                    const response = await fetch(`${API_BASE}?action=list&table=${table}`);
+                    const data = await response.json();
+                    existingData[table] = data.data || [];
+                }
+
+                // 데이터 요약 표시
+                const summaryDiv = document.getElementById('dataSummary');
+                const summaryContent = document.getElementById('summaryContent');
+                
+                summaryContent.innerHTML = `
+                    <div class="data-item">
+                        <span>📍 현장 (Sites)</span>
+                        <span class="count">${existingData.sites.length}개</span>
+                    </div>
+                    <div class="data-item">
+                        <span>🏢 건물 (Buildings)</span>
+                        <span class="count">${existingData.buildings.length}개</span>
+                    </div>
+                    <div class="data-item">
+                        <span>⚙️ 장비 (Equipment)</span>
+                        <span class="count">${existingData.equipment.length}개</span>
+                    </div>
+                    <div class="data-item">
+                        <span>👷 점검자 (Inspectors)</span>
+                        <span class="count">${existingData.inspectors.length}명</span>
+                    </div>
+                    <div class="data-item">
+                        <span>📋 점검 기록 (Inspections)</span>
+                        <span class="count">${existingData.inspections.length}개</span>
+                    </div>
+                `;
+
+                summaryDiv.style.display = 'block';
+                document.getElementById('migrateBtn').style.display = 'block';
+                document.getElementById('migrateBtn').disabled = false;
+
+                statusDiv.className = 'status success';
+                statusDiv.innerHTML = '✅ 데이터 확인 완료! 아래 버튼을 클릭하여 마이그레이션을 시작하세요.';
+
+            } catch (error) {
+                console.error('Error:', error);
+                statusDiv.className = 'status error';
+                statusDiv.innerHTML = `❌ <strong>오류 발생:</strong><br>${error.message}<br><br>Google Sheets API가 정상적으로 작동하는지 확인해주세요.`;
+            }
+        }
+
+        async function startMigration() {
+            const statusDiv = document.getElementById('status');
+            const progressDiv = document.getElementById('progress');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            const migrateBtn = document.getElementById('migrateBtn');
+
+            // UI 업데이트
+            migrateBtn.disabled = true;
+            statusDiv.style.display = 'block';
+            statusDiv.className = 'status info';
+            statusDiv.innerHTML = '🚀 마이그레이션을 시작합니다...';
+            progressDiv.style.display = 'block';
+
+            try {
+                const { collection, addDoc, setDoc, doc, getDocs, deleteDoc } = window.firestoreModules;
+                
+                const tables = ['sites', 'buildings', 'equipment', 'inspectors', 'inspections'];
+                const totalTables = tables.length;
+                let currentTable = 0;
+
+                for (const tableName of tables) {
+                    currentTable++;
+                    const progress = Math.round((currentTable / totalTables) * 100);
+                    progressFill.style.width = progress + '%';
+                    progressFill.textContent = progress + '%';
+                    
+                    progressText.innerHTML = `📦 ${tableName} 마이그레이션 중... (${currentTable}/${totalTables})`;
+                    statusDiv.innerHTML = `⏳ ${tableName} 테이블 처리 중...`;
+
+                    const data = existingData[tableName];
+
+                    // 1. 기존 Firebase 데이터 삭제 (선택사항)
+                    const existingDocs = await getDocs(collection(window.db, tableName));
+                    statusDiv.innerHTML += `<br>🗑️ 기존 ${tableName} 데이터 삭제 중... (${existingDocs.size}개)`;
+                    
+                    for (const docSnapshot of existingDocs.docs) {
+                        await deleteDoc(doc(window.db, tableName, docSnapshot.id));
+                    }
+
+                    // 2. 새 데이터 추가
+                    statusDiv.innerHTML += `<br>📥 새 ${tableName} 데이터 추가 중... (${data.length}개)`;
+                    
+                    for (const item of data) {
+                        // ID가 있으면 setDoc, 없으면 addDoc
+                        if (item.id && (tableName !== 'inspections')) {
+                            // inspections는 자동 ID 사용
+                            const { id, ...itemData } = item;
+                            await setDoc(doc(window.db, tableName, id), { ...itemData, id });
+                        } else {
+                            // inspections 또는 ID가 없는 경우
+                            const itemData = { ...item };
+                            
+                            // inspection_date를 Date 객체로 변환
+                            if (tableName === 'inspections' && itemData.inspection_date) {
+                                itemData.inspection_date = new Date(itemData.inspection_date);
+                            }
+                            
+                            await addDoc(collection(window.db, tableName), itemData);
+                        }
+                    }
+
+                    statusDiv.innerHTML += `<br>✅ ${tableName} 완료! (${data.length}개 추가됨)`;
+                }
+
+                // 완료
+                progressFill.style.width = '100%';
+                progressFill.textContent = '100%';
+                progressText.innerHTML = '✅ 마이그레이션 완료!';
+                
+                statusDiv.className = 'status success';
+                statusDiv.innerHTML = `
+                    🎉 <strong>마이그레이션 완료!</strong><br><br>
+                    📍 현장: ${existingData.sites.length}개<br>
+                    🏢 건물: ${existingData.buildings.length}개<br>
+                    ⚙️ 장비: ${existingData.equipment.length}개<br>
+                    👷 점검자: ${existingData.inspectors.length}명<br>
+                    📋 점검 기록: ${existingData.inspections.length}개<br><br>
+                    <strong>모든 데이터가 Firebase로 이전되었습니다!</strong><br><br>
+                    <a href="index.html" style="color: #667eea; font-weight: bold;">🏠 메인 페이지로 이동</a> |
+                    <a href="dashboard.html" style="color: #667eea; font-weight: bold;">📊 대시보드 확인</a>
+                `;
+
+            } catch (error) {
+                console.error('Migration Error:', error);
+                statusDiv.className = 'status error';
+                statusDiv.innerHTML = `
+                    ❌ <strong>마이그레이션 중 오류 발생:</strong><br>
+                    ${error.message}<br><br>
+                    일부 데이터만 이전되었을 수 있습니다.<br>
+                    페이지를 새로고침하고 다시 시도해주세요.
+                `;
+                progressDiv.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
