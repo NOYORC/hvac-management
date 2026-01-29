@@ -82,8 +82,7 @@ async function loadStatistics() {
 
 // QR 스캐너 열기
 function openQRScanner() {
-    alert('🔍 QR 코드 스캔 기능은 준비 중입니다!\n장비 목록 페이지로 이동합니다.');
-    location.href = 'equipment-list.html';
+    location.href = 'qr-scanner.html';
 }
 
 // 날짜 포맷 함수

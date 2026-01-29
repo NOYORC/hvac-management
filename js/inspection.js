@@ -8,7 +8,19 @@ let allEquipment = [];
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', async function() {
     await waitForFirebase();
-    await loadSites();
+    
+    // URL 파라미터에서 equipmentId 확인
+    const urlParams = new URLSearchParams(window.location.search);
+    const equipmentId = urlParams.get('equipmentId');
+    
+    if (equipmentId) {
+        // QR 스캔으로 접근한 경우 - 장비 정보 직접 로드
+        await loadEquipmentDirectly(equipmentId);
+    } else {
+        // 일반 접근 - 현장 선택부터 시작
+        await loadSites();
+    }
+    
     await loadInspectors();
     
     // 폼 제출 이벤트
@@ -29,6 +41,88 @@ function waitForFirebase() {
             }, 100);
         }
     });
+}
+
+// QR 스캔으로 장비 직접 로드
+async function loadEquipmentDirectly(equipmentId) {
+    try {
+        const result = await window.FirestoreHelper.getDocument('equipment', equipmentId);
+        
+        if (result.success && result.data) {
+            selectedEquipment = result.data;
+            
+            // 장비가 속한 현장과 건물 정보도 로드
+            const siteResult = await window.FirestoreHelper.getDocument('sites', selectedEquipment.site_id);
+            const buildingResult = await window.FirestoreHelper.getDocument('buildings', selectedEquipment.building_id);
+            
+            if (siteResult.success) selectedSite = siteResult.data;
+            if (buildingResult.success) selectedBuilding = buildingResult.data;
+            
+            // Step 4로 바로 이동 (점검 입력 화면)
+            document.getElementById('selectedSiteName').textContent = selectedSite?.site_name || '알 수 없음';
+            document.getElementById('selectedSiteName2').textContent = selectedSite?.site_name || '알 수 없음';
+            document.getElementById('selectedBuildingName').textContent = selectedBuilding?.building_name || '알 수 없음';
+            document.getElementById('selectedEquipmentName').textContent = `${selectedEquipment.equipment_type} (${selectedEquipment.id})`;
+            
+            // 장비 상세 정보 표시
+            const detailDiv = document.getElementById('equipmentDetail');
+            detailDiv.innerHTML = `
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <i class="fas fa-wrench"></i>
+                        <div>
+                            <div class="detail-label">장비 종류</div>
+                            <div class="detail-value">${selectedEquipment.equipment_type}</div>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-tag"></i>
+                        <div>
+                            <div class="detail-label">장비 ID</div>
+                            <div class="detail-value">${selectedEquipment.id}</div>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-layer-group"></i>
+                        <div>
+                            <div class="detail-label">위치</div>
+                            <div class="detail-value">${selectedEquipment.floor} - ${selectedEquipment.location}</div>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-box"></i>
+                        <div>
+                            <div class="detail-label">모델</div>
+                            <div class="detail-value">${selectedEquipment.model}</div>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-tachometer-alt"></i>
+                        <div>
+                            <div class="detail-label">용량</div>
+                            <div class="detail-value">${selectedEquipment.capacity}</div>
+                        </div>
+                    </div>
+                    <div class="detail-item">
+                        <i class="fas fa-calendar"></i>
+                        <div>
+                            <div class="detail-label">설치일</div>
+                            <div class="detail-value">${selectedEquipment.install_date}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            changeStep(4);
+        } else {
+            alert('장비를 찾을 수 없습니다. 현장 선택부터 시작합니다.');
+            await loadSites();
+        }
+    } catch (error) {
+        console.error('장비 직접 로드 오류:', error);
+        alert('장비 정보를 불러오는데 실패했습니다. 현장 선택부터 시작합니다.');
+        await loadSites();
+    }
 }
 
 // 점검자 목록 로드
