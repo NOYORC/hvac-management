@@ -130,11 +130,12 @@
         window.db = db;
     </script>
 
+    <script src="js/firebase-config.js"></script>
+    <script src="js/main.js"></script>
+    
     <!-- QR Code Generator Library -->
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     
-    <script src="js/firebase-config.js"></script>
-    <script src="js/main.js"></script>
     <script>
         let allEquipment = [];
 
@@ -154,9 +155,26 @@
             });
         }
 
+        // QR 라이브러리 로딩 대기
+        function waitForQRCode() {
+            return new Promise((resolve) => {
+                if (typeof QRCode !== 'undefined') {
+                    resolve();
+                } else {
+                    const checkInterval = setInterval(() => {
+                        if (typeof QRCode !== 'undefined') {
+                            clearInterval(checkInterval);
+                            resolve();
+                        }
+                    }, 100);
+                }
+            });
+        }
+
         // 페이지 로드 시 장비 목록 로드
         document.addEventListener('DOMContentLoaded', async function() {
             await waitForFirebase();
+            await waitForQRCode();
             await loadEquipmentList();
         });
 

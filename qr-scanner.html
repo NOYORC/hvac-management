@@ -101,7 +101,21 @@
             <div class="scanner-info">
                 <i class="fas fa-info-circle"></i>
                 <strong>QR 코드를 카메라에 비춰주세요</strong><br>
-                장비에 부착된 QR 코드를 스캔하면 자동으로 점검 페이지로 이동합니다.
+                장비에 부착된 QR 코드를 스캔하면 자동으로 점검 페이지로 이동합니다.<br>
+                <small style="color: #666; margin-top: 10px; display: block;">
+                    ⚠️ HTTP 환경에서는 카메라를 사용할 수 없습니다. HTTPS(GitHub Pages)에서 사용하거나, 아래 수동 입력을 이용하세요.
+                </small>
+            </div>
+
+            <!-- 수동 입력 옵션 추가 -->
+            <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                <strong>📝 장비 ID 수동 입력</strong><br>
+                <input type="text" id="manualEquipmentId" placeholder="장비 ID 입력 (예: EQ001)" 
+                    style="width: 100%; padding: 10px; margin: 10px 0; border: 2px solid #667eea; border-radius: 5px; font-size: 16px;">
+                <button onclick="loadEquipmentManually()" 
+                    style="background: #667eea; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; width: 100%;">
+                    <i class="fas fa-search"></i> 장비 찾기
+                </button>
             </div>
 
             <div id="reader"></div>
@@ -198,7 +212,24 @@
                 onScanFailure
             ).catch(err => {
                 console.error("스캐너 시작 오류:", err);
-                showError("카메라를 시작할 수 없습니다. 카메라 권한을 확인해주세요.");
+                const readerDiv = document.getElementById('reader');
+                readerDiv.innerHTML = `
+                    <div style="background: #f8d7da; padding: 20px; border-radius: 8px; color: #721c24;">
+                        <strong>⚠️ 카메라를 사용할 수 없습니다</strong><br><br>
+                        <p>다음 이유 중 하나일 수 있습니다:</p>
+                        <ul style="text-align: left;">
+                            <li>HTTP 환경에서는 카메라 접근이 제한됩니다</li>
+                            <li>카메라 권한이 거부되었습니다</li>
+                            <li>다른 앱이 카메라를 사용 중입니다</li>
+                        </ul>
+                        <p><strong>해결 방법:</strong></p>
+                        <ul style="text-align: left;">
+                            <li>✅ GitHub Pages(HTTPS)에서 접속하기</li>
+                            <li>✅ 위의 <strong>수동 입력</strong> 사용하기</li>
+                            <li>✅ 브라우저 카메라 권한 확인하기</li>
+                        </ul>
+                    </div>
+                `;
             });
         }
 
@@ -259,6 +290,7 @@
                     `;
                     
                     document.getElementById('equipmentPreview').style.display = 'block';
+                    document.getElementById('scannerResult').style.display = 'block';
                 } else {
                     showError(`장비를 찾을 수 없습니다. (ID: ${equipmentId})`);
                 }
@@ -266,6 +298,28 @@
                 console.error('장비 정보 조회 오류:', error);
                 showError('장비 정보를 불러오는데 실패했습니다.');
             }
+        }
+
+        // 수동 입력으로 장비 검색
+        async function loadEquipmentManually() {
+            const equipmentId = document.getElementById('manualEquipmentId').value.trim();
+            
+            if (!equipmentId) {
+                alert('장비 ID를 입력해주세요.');
+                return;
+            }
+            
+            // 스캐너 중지 (실행 중이면)
+            if (html5QrCode && html5QrCode.isScanning) {
+                try {
+                    await html5QrCode.stop();
+                } catch (err) {
+                    console.log('스캐너 중지:', err);
+                }
+            }
+            
+            // 장비 정보 로드
+            await loadEquipmentInfo(equipmentId);
         }
 
         function showError(message) {
