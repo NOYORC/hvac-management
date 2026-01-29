@@ -1,8 +1,8 @@
-
 // 페이지 로드 시 실행
-document.addEventListener('DOMContentLoaded', function() {
-    loadSiteFilter();
-    loadDashboardData();
+document.addEventListener('DOMContentLoaded', async function() {
+    await waitForFirebase();
+    await loadSiteFilter();
+    await loadDashboardData();
     
     // 필터 변경 이벤트 리스너 등록
     document.getElementById('periodFilter').addEventListener('change', loadDashboardData);
@@ -10,11 +10,26 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('statusFilter').addEventListener('change', loadDashboardData);
 });
 
+// Firebase 초기화 대기
+function waitForFirebase() {
+    return new Promise((resolve) => {
+        if (window.db && window.FirestoreHelper) {
+            resolve();
+        } else {
+            const checkInterval = setInterval(() => {
+                if (window.db && window.FirestoreHelper) {
+                    clearInterval(checkInterval);
+                    resolve();
+                }
+            }, 100);
+        }
+    });
+}
+
 // 현장 필터 로드
 async function loadSiteFilter() {
     try {
-        const response = await fetch(`${API_BASE}?action=list&table=sites`);
-        const data = await response.json();
+        const data = await window.FirestoreHelper.getAllDocuments('sites');
         
         const siteFilter = document.getElementById('siteFilterDash');
         siteFilter.innerHTML = '<option value="">전체</option>';
@@ -41,12 +56,10 @@ async function loadDashboardData() {
         const status = document.getElementById('statusFilter').value;
 
         // 점검 데이터 가져오기
-        const inspectionsResponse = await fetch(`${API_BASE}?action=list&table=inspections`);
-        const inspectionsData = await inspectionsResponse.json();
+        const inspectionsData = await window.FirestoreHelper.getAllDocuments('inspections');
         
         // 장비 데이터 가져오기
-        const equipmentResponse = await fetch(`${API_BASE}?action=list&table=equipment`);
-        const equipmentData = await equipmentResponse.json();
+        const equipmentData = await window.FirestoreHelper.getAllDocuments('equipment');
 
         let inspections = inspectionsData.data || [];
         const equipment = equipmentData.data || [];
@@ -54,7 +67,13 @@ async function loadDashboardData() {
         // 기간 필터링
         const now = new Date();
         inspections = inspections.filter(inspection => {
-            const inspectionDate = new Date(inspection.inspection_date);
+            let inspectionDate;
+            // Firebase Timestamp 처리
+            if (inspection.inspection_date && inspection.inspection_date.toDate) {
+                inspectionDate = inspection.inspection_date.toDate();
+            } else {
+                inspectionDate = new Date(inspection.inspection_date);
+            }
             
             if (period === 'today') {
                 return inspectionDate.toDateString() === now.toDateString();
@@ -176,7 +195,13 @@ function updateTrendChart(inspections) {
 
     const dailyCounts = last7Days.map(date => {
         return inspections.filter(insp => {
-            const inspDate = new Date(insp.inspection_date).toISOString().split('T')[0];
+            let inspDate;
+            // Firebase Timestamp 처리
+            if (insp.inspection_date && insp.inspection_date.toDate) {
+                inspDate = insp.inspection_date.toDate().toISOString().split('T')[0];
+            } else {
+                inspDate = new Date(insp.inspection_date).toISOString().split('T')[0];
+            }
             return inspDate === date;
         }).length;
     });
@@ -380,7 +405,11 @@ function updateRecentInspections(inspections, equipment) {
 
     // 최근 10개만 표시
     const recentInspections = inspections
-        .sort((a, b) => new Date(b.inspection_date) - new Date(a.inspection_date))
+        .sort((a, b) => {
+            const dateA = a.inspection_date && a.inspection_date.toDate ? a.inspection_date.toDate() : new Date(a.inspection_date);
+            const dateB = b.inspection_date && b.inspection_date.toDate ? b.inspection_date.toDate() : new Date(b.inspection_date);
+            return dateB - dateA;
+        })
         .slice(0, 10);
 
     tbody.innerHTML = recentInspections.map(insp => {
@@ -409,15 +438,4 @@ function getStatusColor(status) {
         '고장': '#9E9E9E'
     };
     return colors[status] || '#2196F3';
-}
-
-function formatDate(dateString) {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ko-KR', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
 }

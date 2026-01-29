@@ -1,6 +1,3 @@
-// API 기본 URL
-const API_BASE = 'https://script.google.com/macros/s/AKfycbzKnOxwx-AY4fg_bT88wHfR6w3BIbAytWnl8wrQ_MdSRj39LSYRYueDgx8Hl-RC1Jybuw/exec';
-
 // 비밀번호 설정
 const PASSWORDS = {
     inspector: '1234',  // 점검자 비밀번호
@@ -12,6 +9,8 @@ let currentRole = null;
 
 // 페이지 로드 시 통계 데이터 가져오기
 document.addEventListener('DOMContentLoaded', async function() {
+    // Firebase config 스크립트 로드 대기
+    await waitForFirebase();
     await loadStatistics();
     
     // 비밀번호 입력 시 엔터키 처리
@@ -25,6 +24,22 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 });
 
+// Firebase 초기화 대기
+function waitForFirebase() {
+    return new Promise((resolve) => {
+        if (window.db && window.FirestoreHelper) {
+            resolve();
+        } else {
+            const checkInterval = setInterval(() => {
+                if (window.db && window.FirestoreHelper) {
+                    clearInterval(checkInterval);
+                    resolve();
+                }
+            }, 100);
+        }
+    });
+}
+
 // 통계 데이터 로드
 async function loadStatistics() {
     // index.html에만 있는 요소들 확인
@@ -33,22 +48,25 @@ async function loadStatistics() {
     
     try {
         // 현장 수
-        const sitesResponse = await fetch(`${API_BASE}?action=list&table=sites`);
-        const sitesData = await sitesResponse.json();
+        const sitesData = await window.FirestoreHelper.getAllDocuments('sites');
         document.getElementById('totalSites').textContent = sitesData.total || 0;
 
         // 장비 수
-        const equipmentResponse = await fetch(`${API_BASE}?action=list&table=equipment`);
-        const equipmentData = await equipmentResponse.json();
+        const equipmentData = await window.FirestoreHelper.getAllDocuments('equipment');
         document.getElementById('totalEquipment').textContent = equipmentData.total || 0;
 
         // 금일 점검 수
-        const inspectionsResponse = await fetch(`${API_BASE}?action=list&table=inspections`);
-        const inspectionsData = await inspectionsResponse.json();
+        const inspectionsData = await window.FirestoreHelper.getAllDocuments('inspections');
         
         const today = new Date().toISOString().split('T')[0];
         const todayCount = inspectionsData.data.filter(inspection => {
-            const inspectionDate = new Date(inspection.inspection_date).toISOString().split('T')[0];
+            let inspectionDate;
+            // Firebase Timestamp 객체 처리
+            if (inspection.inspection_date && inspection.inspection_date.toDate) {
+                inspectionDate = inspection.inspection_date.toDate().toISOString().split('T')[0];
+            } else {
+                inspectionDate = new Date(inspection.inspection_date).toISOString().split('T')[0];
+            }
             return inspectionDate === today;
         }).length;
         
@@ -69,8 +87,17 @@ function openQRScanner() {
 }
 
 // 날짜 포맷 함수
-function formatDate(dateString) {
-    const date = new Date(dateString);
+function formatDate(dateObj) {
+    let date;
+    // Firebase Timestamp 객체 처리
+    if (dateObj && dateObj.toDate) {
+        date = dateObj.toDate();
+    } else if (typeof dateObj === 'string') {
+        date = new Date(dateObj);
+    } else {
+        date = dateObj;
+    }
+    
     return date.toLocaleString('ko-KR', {
         year: 'numeric',
         month: '2-digit',

@@ -1,20 +1,35 @@
-
 // 전역 변수
 let allEquipmentList = [];
 let allSitesList = [];
 
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', async function() {
+    await waitForFirebase();
     await loadFilters();
     await loadEquipmentList();
 });
+
+// Firebase 초기화 대기
+function waitForFirebase() {
+    return new Promise((resolve) => {
+        if (window.db && window.FirestoreHelper) {
+            resolve();
+        } else {
+            const checkInterval = setInterval(() => {
+                if (window.db && window.FirestoreHelper) {
+                    clearInterval(checkInterval);
+                    resolve();
+                }
+            }, 100);
+        }
+    });
+}
 
 // 필터 옵션 로드
 async function loadFilters() {
     try {
         // 현장 목록
-        const sitesResponse = await fetch(`${API_BASE}?action=list&table=sites`);
-        const sitesData = await sitesResponse.json();
+        const sitesData = await window.FirestoreHelper.getAllDocuments('sites');
         allSitesList = sitesData.data;
         
         const siteFilter = document.getElementById('siteFilterList');
@@ -23,8 +38,7 @@ async function loadFilters() {
         });
         
         // 장비 데이터 로드 후 장비 종류 필터 생성
-        const equipmentResponse = await fetch(`${API_BASE}?action=list&table=equipment`);
-        const equipmentData = await equipmentResponse.json();
+        const equipmentData = await window.FirestoreHelper.getAllDocuments('equipment');
         allEquipmentList = equipmentData.data;
         
         const types = [...new Set(allEquipmentList.map(eq => eq.equipment_type))].sort();
@@ -41,8 +55,7 @@ async function loadFilters() {
 // 장비 목록 로드
 async function loadEquipmentList() {
     try {
-        const equipmentResponse = await fetch(`${API_BASE}?action=list&table=equipment`);
-        const equipmentData = await equipmentResponse.json();
+        const equipmentData = await window.FirestoreHelper.getAllDocuments('equipment');
         allEquipmentList = equipmentData.data;
         
         displayEquipmentList(allEquipmentList);

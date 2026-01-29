@@ -41,6 +41,26 @@
         </div>
     </div>
 
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSvObiEPfQkEfSLRzyg2BdCCJmQENJs8ic",
+            authDomain: "hvac-management-477fb.firebaseapp.com",
+            projectId: "hvac-management-477fb",
+            storageBucket: "hvac-management-477fb.firebasestorage.app",
+            messagingSenderId: "812239966797",
+            appId: "1:812239966797:web:b454d99fde982328f7dea04",
+            measurementId: "G-f14YESP0P1"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        window.db = db;
+    </script>
+    <script src="js/firebase-config.js"></script>
     <script src="js/main.js"></script>
     <script src="js/equipment-list.js"></script>
 </body>

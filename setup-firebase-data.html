@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase 샘플 데이터 추가</title>
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #667eea;
+            text-align: center;
+        }
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin: 10px 0;
+        }
+        .btn:hover {
+            opacity: 0.9;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔥 Firebase 샘플 데이터 추가</h1>
+        <p>이 페이지는 Firebase Firestore에 샘플 데이터를 추가합니다.</p>
+        
+        <button class="btn" onclick="addSampleData()">📝 샘플 데이터 추가하기</button>
+        
+        <div id="status" class="status"></div>
+        
+        <h3>추가될 데이터:</h3>
+        <ul>
+            <li>현장 (Sites): 3개</li>
+            <li>건물 (Buildings): 4개</li>
+            <li>장비 (Equipment): 8개</li>
+            <li>점검자 (Inspectors): 4명</li>
+            <li>점검 기록 (Inspections): 5개</li>
+        </ul>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSvObiEPfQkEfSLRzyg2BdCCJmQENJs8ic",
+            authDomain: "hvac-management-477fb.firebaseapp.com",
+            projectId: "hvac-management-477fb",
+            storageBucket: "hvac-management-477fb.firebasestorage.app",
+            messagingSenderId: "812239966797",
+            appId: "1:812239966797:web:b454d99fde982328f7dea04",
+            measurementId: "G-f14YESP0P1"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        window.db = db;
+        window.firestoreModules = { collection, addDoc, setDoc, doc };
+    </script>
+
+    <script>
+        async function addSampleData() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.style.display = 'block';
+            statusDiv.className = 'status info';
+            statusDiv.innerHTML = '⏳ 데이터 추가 중...';
+
+            try {
+                const { collection, addDoc, setDoc, doc } = window.firestoreModules;
+
+                // 1. 현장 데이터
+                statusDiv.innerHTML += '<br>📍 현장 데이터 추가 중...';
+                const sites = [
+                    { id: 'SITE001', site_name: '서울 본사', address: '서울특별시 강남구 테헤란로 123', manager: '김현장', phone: '02-1234-5678' },
+                    { id: 'SITE002', site_name: '부산 지사', address: '부산광역시 해운대구 센텀중앙로 456', manager: '이관리', phone: '051-9876-5432' },
+                    { id: 'SITE003', site_name: '인천 물류센터', address: '인천광역시 연수구 송도과학로 789', manager: '박담당', phone: '032-5555-6666' }
+                ];
+                
+                for (const site of sites) {
+                    await setDoc(doc(window.db, 'sites', site.id), site);
+                }
+
+                // 2. 건물 데이터
+                statusDiv.innerHTML += '<br>🏢 건물 데이터 추가 중...';
+                const buildings = [
+                    { id: 'BLDG001', site_id: 'SITE001', building_name: 'A동', floors: 15, area: 5000 },
+                    { id: 'BLDG002', site_id: 'SITE001', building_name: 'B동', floors: 10, area: 3500 },
+                    { id: 'BLDG003', site_id: 'SITE002', building_name: '메인빌딩', floors: 20, area: 8000 },
+                    { id: 'BLDG004', site_id: 'SITE003', building_name: '창고동', floors: 5, area: 10000 }
+                ];
+                
+                for (const building of buildings) {
+                    await setDoc(doc(window.db, 'buildings', building.id), building);
+                }
+
+                // 3. 장비 데이터
+                statusDiv.innerHTML += '<br>⚙️ 장비 데이터 추가 중...';
+                const equipment = [
+                    { id: 'EQ001', site_id: 'SITE001', building_id: 'BLDG001', equipment_type: 'AHU(공조기)', floor: '10F', location: '기계실', model: 'AHU-1000', capacity: '50,000 CMH', install_date: '2020-03-15' },
+                    { id: 'EQ002', site_id: 'SITE001', building_id: 'BLDG001', equipment_type: '냉동기', floor: 'B1F', location: '지하 기계실', model: 'CHILLER-2000', capacity: '500 RT', install_date: '2019-11-20' },
+                    { id: 'EQ003', site_id: 'SITE001', building_id: 'BLDG002', equipment_type: 'FCU(팬코일유닛)', floor: '5F', location: '사무실', model: 'FCU-300', capacity: '3,000 CMH', install_date: '2021-01-10' },
+                    { id: 'EQ004', site_id: 'SITE002', building_id: 'BLDG003', equipment_type: '냉각탑', floor: 'RF', location: '옥상', model: 'CT-5000', capacity: '1,000 RT', install_date: '2018-06-25' },
+                    { id: 'EQ005', site_id: 'SITE002', building_id: 'BLDG003', equipment_type: '보일러', floor: 'B2F', location: '보일러실', model: 'BOILER-800', capacity: '800 kW', install_date: '2019-09-30' },
+                    { id: 'EQ006', site_id: 'SITE003', building_id: 'BLDG004', equipment_type: '송풍기', floor: '3F', location: '환기구역', model: 'FAN-1500', capacity: '15,000 CMH', install_date: '2020-07-12' },
+                    { id: 'EQ007', site_id: 'SITE003', building_id: 'BLDG004', equipment_type: '펌프', floor: 'B1F', location: '펌프실', model: 'PUMP-400', capacity: '400 LPM', install_date: '2021-03-05' },
+                    { id: 'EQ008', site_id: 'SITE001', building_id: 'BLDG001', equipment_type: '배기팬', floor: 'RF', location: '옥상', model: 'EXFAN-200', capacity: '20,000 CMH', install_date: '2020-12-15' }
+                ];
+                
+                for (const eq of equipment) {
+                    await setDoc(doc(window.db, 'equipment', eq.id), eq);
+                }
+
+                // 4. 점검자 데이터
+                statusDiv.innerHTML += '<br>👷 점검자 데이터 추가 중...';
+                const inspectors = [
+                    { id: 'INSP001', inspector_name: '홍길동' },
+                    { id: 'INSP002', inspector_name: '김철수' },
+                    { id: 'INSP003', inspector_name: '이영희' },
+                    { id: 'INSP004', inspector_name: '박민수' }
+                ];
+                
+                for (const inspector of inspectors) {
+                    await setDoc(doc(window.db, 'inspectors', inspector.id), inspector);
+                }
+
+                // 5. 점검 기록 샘플 데이터
+                statusDiv.innerHTML += '<br>📋 점검 기록 데이터 추가 중...';
+                const inspections = [
+                    {
+                        equipment_id: 'EQ001',
+                        inspection_type: '일반점검',
+                        inspector_name: '홍길동',
+                        inspection_date: new Date('2025-01-28T09:30:00'),
+                        status: '정상',
+                        temperature: '23.5',
+                        pressure: '150',
+                        operation_status: '정상',
+                        leak_check: '없음',
+                        notes: '모든 항목 정상 작동 중',
+                        photo_url: ''
+                    },
+                    {
+                        equipment_id: 'EQ002',
+                        inspection_type: '세부점검',
+                        inspector_name: '김철수',
+                        inspection_date: new Date('2025-01-28T10:15:00'),
+                        status: '주의',
+                        temperature: '8.2',
+                        pressure: '420',
+                        vibration: '2.8',
+                        noise: '72',
+                        operation_status: '정상',
+                        leak_check: '없음',
+                        clean_status: '보통',
+                        filter_status: '양호',
+                        notes: '소음이 약간 높음. 다음 점검 시 재확인 필요',
+                        photo_url: ''
+                    },
+                    {
+                        equipment_id: 'EQ003',
+                        inspection_type: '일반점검',
+                        inspector_name: '이영희',
+                        inspection_date: new Date('2025-01-29T11:00:00'),
+                        status: '정상',
+                        temperature: '22.0',
+                        pressure: '100',
+                        operation_status: '정상',
+                        leak_check: '없음',
+                        notes: '정상 작동',
+                        photo_url: ''
+                    },
+                    {
+                        equipment_id: 'EQ004',
+                        inspection_type: '세부점검',
+                        inspector_name: '박민수',
+                        inspection_date: new Date('2025-01-29T14:30:00'),
+                        status: '경고',
+                        temperature: '32.5',
+                        pressure: '380',
+                        vibration: '4.5',
+                        noise: '85',
+                        operation_status: '이상',
+                        leak_check: '있음',
+                        clean_status: '불량',
+                        filter_status: '교체필요',
+                        notes: '냉각수 누수 발견. 즉시 조치 필요',
+                        photo_url: ''
+                    },
+                    {
+                        equipment_id: 'EQ005',
+                        inspection_type: '일반점검',
+                        inspector_name: '홍길동',
+                        inspection_date: new Date('2025-01-29T15:45:00'),
+                        status: '정상',
+                        temperature: '75.0',
+                        pressure: '250',
+                        operation_status: '정상',
+                        leak_check: '없음',
+                        notes: '정상 작동 중',
+                        photo_url: ''
+                    }
+                ];
+                
+                for (const inspection of inspections) {
+                    await addDoc(collection(window.db, 'inspections'), inspection);
+                }
+
+                statusDiv.className = 'status success';
+                statusDiv.innerHTML = `
+                    ✅ <strong>샘플 데이터 추가 완료!</strong><br><br>
+                    📍 현장: ${sites.length}개<br>
+                    🏢 건물: ${buildings.length}개<br>
+                    ⚙️ 장비: ${equipment.length}개<br>
+                    👷 점검자: ${inspectors.length}명<br>
+                    📋 점검 기록: ${inspections.length}개<br><br>
+                    <a href="index.html" style="color: #667eea; font-weight: bold;">🏠 메인 페이지로 이동</a>
+                `;
+
+            } catch (error) {
+                console.error('Error:', error);
+                statusDiv.className = 'status error';
+                statusDiv.innerHTML = `❌ <strong>오류 발생:</strong><br>${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
