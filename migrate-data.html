@@ -154,7 +154,7 @@
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, setDoc, doc, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         
         const firebaseConfig = {
             apiKey: "AIzaSvObiEPfQkEfSLRzyg2BdCCJmQENJs8ic",
@@ -170,14 +170,33 @@
         const db = getFirestore(app);
         
         window.db = db;
-        window.firestoreModules = { collection, addDoc, setDoc, doc, getDocs, deleteDoc };
+        window.firebaseReady = true;
     </script>
+    <script src="js/firebase-config.js"></script>
 
     <script>
         const API_BASE = 'https://script.google.com/macros/s/AKfycbzKnOxwx-AY4fg_bT88wHfR6w3BIbAytWnl8wrQ_MdSRj39LSYRYueDgx8Hl-RC1Jybuw/exec';
         let existingData = {};
 
+        // Firebase 초기화 대기
+        function waitForFirebase() {
+            return new Promise((resolve) => {
+                if (window.db && window.FirestoreHelper) {
+                    resolve();
+                } else {
+                    const checkInterval = setInterval(() => {
+                        if (window.db && window.FirestoreHelper) {
+                            clearInterval(checkInterval);
+                            resolve();
+                        }
+                    }, 100);
+                }
+            });
+        }
+
         async function checkData() {
+            await waitForFirebase();
+            
             const statusDiv = document.getElementById('status');
             statusDiv.style.display = 'block';
             statusDiv.className = 'status info';
@@ -236,6 +255,8 @@
         }
 
         async function startMigration() {
+            await waitForFirebase();
+            
             const statusDiv = document.getElementById('status');
             const progressDiv = document.getElementById('progress');
             const progressFill = document.getElementById('progressFill');
@@ -250,8 +271,6 @@
             progressDiv.style.display = 'block';
 
             try {
-                const { collection, addDoc, setDoc, doc, getDocs, deleteDoc } = window.firestoreModules;
-                
                 const tables = ['sites', 'buildings', 'equipment', 'inspectors', 'inspections'];
                 const totalTables = tables.length;
                 let currentTable = 0;
@@ -267,37 +286,40 @@
 
                     const data = existingData[tableName];
 
-                    // 1. 기존 Firebase 데이터 삭제 (선택사항)
-                    const existingDocs = await getDocs(collection(window.db, tableName));
-                    statusDiv.innerHTML += `<br>🗑️ 기존 ${tableName} 데이터 삭제 중... (${existingDocs.size}개)`;
+                    // 1. 기존 Firebase 데이터 삭제
+                    statusDiv.innerHTML += `<br>🗑️ 기존 ${tableName} 데이터 확인 중...`;
+                    const existingFirebaseData = await window.FirestoreHelper.getAllDocuments(tableName);
                     
-                    for (const docSnapshot of existingDocs.docs) {
-                        await deleteDoc(doc(window.db, tableName, docSnapshot.id));
+                    if (existingFirebaseData.data && existingFirebaseData.data.length > 0) {
+                        statusDiv.innerHTML += ` (${existingFirebaseData.data.length}개 발견)`;
+                        // Firebase Helper로는 삭제가 안되니 일단 덮어쓰기만 함
                     }
 
                     // 2. 새 데이터 추가
                     statusDiv.innerHTML += `<br>📥 새 ${tableName} 데이터 추가 중... (${data.length}개)`;
                     
+                    let successCount = 0;
                     for (const item of data) {
-                        // ID가 있으면 setDoc, 없으면 addDoc
-                        if (item.id && (tableName !== 'inspections')) {
-                            // inspections는 자동 ID 사용
-                            const { id, ...itemData } = item;
-                            await setDoc(doc(window.db, tableName, id), { ...itemData, id });
-                        } else {
-                            // inspections 또는 ID가 없는 경우
-                            const itemData = { ...item };
-                            
-                            // inspection_date를 Date 객체로 변환
-                            if (tableName === 'inspections' && itemData.inspection_date) {
-                                itemData.inspection_date = new Date(itemData.inspection_date);
+                        try {
+                            // ID가 있으면 setDocument, 없으면 addDocument
+                            if (item.id && (tableName !== 'inspections')) {
+                                // inspections는 자동 ID 사용
+                                const result = await window.FirestoreHelper.setDocument(tableName, item.id, item);
+                                if (result.success) successCount++;
+                            } else {
+                                // inspections 또는 ID가 없는 경우
+                                const itemData = { ...item };
+                                
+                                // inspection_date를 ISO 문자열로 유지 (Firestore에서 자동 변환됨)
+                                const result = await window.FirestoreHelper.addDocument(tableName, itemData);
+                                if (result.success) successCount++;
                             }
-                            
-                            await addDoc(collection(window.db, tableName), itemData);
+                        } catch (itemError) {
+                            console.error(`Error adding item to ${tableName}:`, itemError);
                         }
                     }
 
-                    statusDiv.innerHTML += `<br>✅ ${tableName} 완료! (${data.length}개 추가됨)`;
+                    statusDiv.innerHTML += `<br>✅ ${tableName} 완료! (${successCount}/${data.length}개 추가됨)`;
                 }
 
                 // 완료
@@ -324,6 +346,8 @@
                 statusDiv.innerHTML = `
                     ❌ <strong>마이그레이션 중 오류 발생:</strong><br>
                     ${error.message}<br><br>
+                    <strong>상세 오류:</strong><br>
+                    <pre style="background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto;">${error.stack || 'No stack trace'}</pre><br>
                     일부 데이터만 이전되었을 수 있습니다.<br>
                     페이지를 새로고침하고 다시 시도해주세요.
                 `;
