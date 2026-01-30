@@ -139,6 +139,21 @@
     <script>
         let allEquipment = [];
 
+        // 장비 아이콘 매핑
+        function getEquipmentIcon(type) {
+            const iconMap = {
+                'AHU': 'fa-wind',
+                'FCU': 'fa-fan',
+                '냉동기': 'fa-snowflake',
+                '냉각탑': 'fa-tower-broadcast',
+                'PACKAGED AIR CONDITIONER UNIT': 'fa-box',
+                'CHILLER': 'fa-temperature-low',
+                'PUMP': 'fa-water',
+                'BOILER': 'fa-fire'
+            };
+            return iconMap[type] || 'fa-cog';
+        }
+
         // Firebase 초기화 대기
         async function waitForFirebase() {
             return new Promise((resolve) => {
@@ -173,17 +188,39 @@
 
         // 페이지 로드 시 장비 목록 로드
         document.addEventListener('DOMContentLoaded', async function() {
-            await waitForFirebase();
-            await waitForQRCode();
-            await loadEquipmentList();
+            console.log('페이지 로드 시작...');
+            
+            try {
+                await waitForFirebase();
+                console.log('Firebase 로드 완료');
+                
+                await waitForQRCode();
+                console.log('QRCode 라이브러리 로드 완료');
+                
+                await loadEquipmentList();
+                console.log('장비 목록 로드 완료');
+            } catch (error) {
+                console.error('초기화 오류:', error);
+                document.getElementById('equipmentList').innerHTML = 
+                    '<p style="text-align: center; color: #dc3545;">초기화 중 오류가 발생했습니다: ' + error.message + '</p>';
+            }
         });
 
         async function loadEquipmentList() {
+            const listContainer = document.getElementById('equipmentList');
+            
             try {
+                console.log('장비 목록 가져오기 시작...');
+                
+                if (!window.FirestoreHelper) {
+                    throw new Error('FirestoreHelper가 로드되지 않았습니다.');
+                }
+                
                 const result = await window.FirestoreHelper.getAllDocuments('equipment');
+                console.log('Firebase 응답:', result);
+                
                 allEquipment = result.data || [];
-
-                const listContainer = document.getElementById('equipmentList');
+                console.log('장비 수:', allEquipment.length);
                 
                 if (allEquipment.length === 0) {
                     listContainer.innerHTML = '<p style="text-align: center; color: #666;">등록된 장비가 없습니다.</p>';
@@ -192,15 +229,17 @@
 
                 listContainer.innerHTML = '';
                 
-                allEquipment.forEach(equipment => {
+                allEquipment.forEach((equipment, index) => {
+                    console.log(`장비 ${index + 1} 카드 생성:`, equipment.id);
+                    
                     const card = document.createElement('div');
                     card.className = 'equipment-card';
                     card.id = `card-${equipment.id}`;
                     card.innerHTML = `
                         <h3><i class="fas ${getEquipmentIcon(equipment.equipment_type)}"></i> ${equipment.equipment_type}</h3>
                         <div class="equipment-id">${equipment.id}</div>
-                        <p><i class="fas fa-map-marker-alt"></i> ${equipment.floor} - ${equipment.location}</p>
-                        <p><i class="fas fa-box"></i> ${equipment.model}</p>
+                        <p><i class="fas fa-map-marker-alt"></i> ${equipment.floor || '-'} - ${equipment.location || '-'}</p>
+                        <p><i class="fas fa-box"></i> ${equipment.model || '-'}</p>
                         <div class="qr-code-container" id="qr-${equipment.id}">
                             <!-- QR 코드가 여기에 생성됩니다 -->
                         </div>
@@ -213,11 +252,16 @@
                     `;
                     listContainer.appendChild(card);
                 });
+                
+                console.log('모든 장비 카드 생성 완료');
 
             } catch (error) {
                 console.error('장비 목록 로드 오류:', error);
-                document.getElementById('equipmentList').innerHTML = 
-                    '<p style="text-align: center; color: #dc3545;">장비 목록을 불러오는데 실패했습니다.</p>';
+                listContainer.innerHTML = 
+                    `<p style="text-align: center; color: #dc3545;">
+                        장비 목록을 불러오는데 실패했습니다.<br>
+                        <small>${error.message}</small>
+                    </p>`;
             }
         }
 
