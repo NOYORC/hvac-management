@@ -110,27 +110,8 @@
         </div>
     </div>
 
-    <!-- QR Code Generator Library - 여러 방법 시도 -->
-    <script src="https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js"></script>
-    <script>
-        // QRCode 라이브러리 백업 - CDN 실패 시 대안
-        if (typeof QRCode === 'undefined') {
-            console.warn('⚠️ QRCode CDN 로딩 실패, 대안 방법 사용...');
-            
-            // 간단한 QR 코드 생성 함수 (HTML5 Canvas 사용)
-            window.QRCode = {
-                toDataURL: function(text, options) {
-                    return new Promise((resolve, reject) => {
-                        // Google Charts API를 사용한 QR 코드 생성
-                        const size = options?.width || 200;
-                        const url = `https://chart.googleapis.com/chart?cht=qr&chs=${size}x${size}&chl=${encodeURIComponent(text)}`;
-                        resolve(url);
-                    });
-                }
-            };
-            console.log('✅ 대체 QR 생성 방법 활성화됨');
-        }
-    </script>
+    <!-- QR Code Generator Library - 로컬 파일 사용 -->
+    <script src="js/qrcode.min.js"></script>
 
     <!-- Firebase SDK -->
     <script type="module">
@@ -375,39 +356,36 @@
             container.innerHTML = '<p style="color: #999; font-size: 12px;">생성 중...</p>';
 
             try {
-                let qrDataUrl;
-                
-                // QRCode 라이브러리가 있으면 사용
-                if (typeof QRCode !== 'undefined' && QRCode.toDataURL) {
-                    qrDataUrl = await QRCode.toDataURL(equipmentId, {
-                        width: 200,
-                        margin: 2,
-                        color: {
-                            dark: '#000000',
-                            light: '#FFFFFF'
-                        }
-                    });
-                } else {
-                    // 라이브러리가 없으면 Google Charts API 사용
-                    console.warn(`⚠️ ${equipmentId}: Google Charts API로 QR 생성`);
-                    qrDataUrl = `https://chart.googleapis.com/chart?cht=qr&chs=200x200&chl=${encodeURIComponent(equipmentId)}`;
+                // QRCodeJS 라이브러리를 사용하여 QR 코드 생성
+                if (typeof QRCode === 'undefined') {
+                    throw new Error('QRCode 라이브러리가 로드되지 않았습니다.');
                 }
 
-                // 이미지로 표시
-                const img = document.createElement('img');
-                img.src = qrDataUrl;
-                img.id = `qr-img-${equipmentId}`;
-                img.style.maxWidth = '100%';
-                img.style.height = 'auto';
-                img.alt = `QR Code for ${equipmentId}`;
-                img.crossOrigin = 'anonymous'; // CORS 처리
-                
+                // 컨테이너 초기화
                 container.innerHTML = '';
-                container.appendChild(img);
+                
+                // QR 코드 생성
+                const qr = new QRCode(container, {
+                    text: equipmentId,
+                    width: 200,
+                    height: 200,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.M
+                });
+                
+                // 생성된 이미지에 ID 추가 (다운로드용)
+                setTimeout(() => {
+                    const img = container.querySelector('img');
+                    if (img) {
+                        img.id = `qr-img-${equipmentId}`;
+                        img.alt = `QR Code for ${equipmentId}`;
+                    }
+                }, 100);
 
             } catch (error) {
                 console.error(`QR 코드 생성 오류 (${equipmentId}):`, error);
-                container.innerHTML = '<p style="color: #dc3545; font-size: 12px;">생성 실패</p>';
+                container.innerHTML = `<p style="color: #dc3545; font-size: 12px;">생성 실패<br><small>${error.message}</small></p>`;
                 throw error; // 상위로 에러 전파
             }
         }
