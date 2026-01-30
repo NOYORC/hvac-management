@@ -110,8 +110,9 @@
         </div>
     </div>
 
-    <!-- QR Code Generator Library -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <!-- QR Code Generator Library - 여러 CDN 백업 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" 
+            onerror="this.onerror=null; this.src='https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js'"></script>
 
     <!-- Firebase SDK -->
     <script type="module">
@@ -182,27 +183,29 @@
         // QR 라이브러리 로딩 대기
         function waitForQRCode() {
             return new Promise((resolve) => {
+                let attempts = 0;
+                const maxAttempts = 100; // 10초
+                
                 if (typeof QRCode !== 'undefined') {
                     console.log('✅ QRCode 라이브러리 이미 로드됨');
                     resolve();
-                } else {
-                    const checkInterval = setInterval(() => {
-                        if (typeof QRCode !== 'undefined') {
-                            clearInterval(checkInterval);
-                            console.log('✅ QRCode 라이브러리 로드 완료');
-                            resolve();
-                        }
-                    }, 100);
-                    
-                    // 10초 타임아웃
-                    setTimeout(() => {
-                        clearInterval(checkInterval);
-                        if (typeof QRCode === 'undefined') {
-                            console.error('❌ QRCode 라이브러리 로드 실패');
-                        }
-                        resolve();
-                    }, 10000);
+                    return;
                 }
+                
+                const checkInterval = setInterval(() => {
+                    attempts++;
+                    
+                    if (typeof QRCode !== 'undefined') {
+                        clearInterval(checkInterval);
+                        console.log('✅ QRCode 라이브러리 로드 완료');
+                        resolve();
+                    } else if (attempts >= maxAttempts) {
+                        clearInterval(checkInterval);
+                        console.error('❌ QRCode 라이브러리 로드 실패 (10초 타임아웃)');
+                        console.warn('⚠️ QR 코드 생성 기능이 비활성화됩니다.');
+                        resolve(); // 계속 진행
+                    }
+                }, 100);
             });
         }
 
@@ -297,7 +300,8 @@
         async function generateAllQRCodes() {
             // QR 라이브러리 확인
             if (typeof QRCode === 'undefined') {
-                alert('QR 코드 라이브러리를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
+                alert('❌ QR 코드 라이브러리를 불러올 수 없습니다.\n\n페이지를 새로고침(Ctrl+Shift+R) 해주세요.');
+                console.error('QRCode library not loaded');
                 return;
             }
 
@@ -306,13 +310,28 @@
             button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 생성 중...';
 
             try {
+                let successCount = 0;
+                let failCount = 0;
+                
                 for (const equipment of allEquipment) {
-                    await generateQRCode(equipment.id);
-                    // 각 QR 코드 생성 후 짧은 지연 (렌더링을 위해)
-                    await new Promise(resolve => setTimeout(resolve, 50));
+                    try {
+                        await generateQRCode(equipment.id);
+                        successCount++;
+                        // 각 QR 코드 생성 후 짧은 지연 (렌더링을 위해)
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                    } catch (error) {
+                        console.error(`QR 생성 실패 (${equipment.id}):`, error);
+                        failCount++;
+                    }
                 }
 
-                button.innerHTML = '<i class="fas fa-check"></i> 생성 완료!';
+                if (failCount > 0) {
+                    button.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${successCount}개 생성 (${failCount}개 실패)`;
+                } else {
+                    button.innerHTML = '<i class="fas fa-check"></i> 생성 완료!';
+                }
+                
+                console.log(`✅ QR 코드 생성 완료: 성공 ${successCount}개, 실패 ${failCount}개`);
                 
                 // 3초 후 버튼 텍스트 원래대로
                 setTimeout(() => {
@@ -323,7 +342,7 @@
                 console.error('QR 코드 생성 중 오류:', error);
                 button.disabled = false;
                 button.innerHTML = '<i class="fas fa-exclamation-triangle"></i> 생성 실패';
-                alert('QR 코드 생성 중 오류가 발생했습니다.');
+                alert('QR 코드 생성 중 오류가 발생했습니다.\n\n' + error.message);
             }
         }
 
