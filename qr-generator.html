@@ -110,10 +110,13 @@
         </div>
     </div>
 
+    <!-- QR Code Generator Library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         
         const firebaseConfig = {
             apiKey: "AIzaSvObiEPfQkEfSLRzyg2BdCCJmQENJs8ic",
@@ -127,14 +130,14 @@
         
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        
+        // 전역 변수로 노출
         window.db = db;
+        window.firestoreModules = { collection, getDocs, doc, getDoc };
+        window.firebaseReady = true;
+        
+        console.log('✅ Firebase 초기화 완료');
     </script>
-
-    <script src="js/firebase-config.js"></script>
-    <script src="js/main.js"></script>
-    
-    <!-- QR Code Generator Library -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     
     <script>
         let allEquipment = [];
@@ -157,16 +160,22 @@
         // Firebase 초기화 대기
         async function waitForFirebase() {
             return new Promise((resolve) => {
-                if (window.db && window.FirestoreHelper) {
-                    resolve();
-                } else {
-                    const checkInterval = setInterval(() => {
-                        if (window.db && window.FirestoreHelper) {
-                            clearInterval(checkInterval);
-                            resolve();
-                        }
-                    }, 100);
-                }
+                const checkInterval = setInterval(() => {
+                    if (window.firebaseReady && window.db && window.firestoreModules) {
+                        clearInterval(checkInterval);
+                        console.log('✅ Firebase 로드 확인 완료');
+                        resolve();
+                    }
+                }, 100);
+                
+                // 10초 타임아웃
+                setTimeout(() => {
+                    clearInterval(checkInterval);
+                    if (!window.firebaseReady) {
+                        console.error('❌ Firebase 로드 타임아웃');
+                        resolve(); // 에러로 처리하지 않고 계속 진행
+                    }
+                }, 10000);
             });
         }
 
@@ -174,33 +183,39 @@
         function waitForQRCode() {
             return new Promise((resolve) => {
                 if (typeof QRCode !== 'undefined') {
+                    console.log('✅ QRCode 라이브러리 이미 로드됨');
                     resolve();
                 } else {
                     const checkInterval = setInterval(() => {
                         if (typeof QRCode !== 'undefined') {
                             clearInterval(checkInterval);
+                            console.log('✅ QRCode 라이브러리 로드 완료');
                             resolve();
                         }
                     }, 100);
+                    
+                    // 10초 타임아웃
+                    setTimeout(() => {
+                        clearInterval(checkInterval);
+                        if (typeof QRCode === 'undefined') {
+                            console.error('❌ QRCode 라이브러리 로드 실패');
+                        }
+                        resolve();
+                    }, 10000);
                 }
             });
         }
 
         // 페이지 로드 시 장비 목록 로드
         document.addEventListener('DOMContentLoaded', async function() {
-            console.log('페이지 로드 시작...');
+            console.log('📄 페이지 로드 시작...');
             
             try {
                 await waitForFirebase();
-                console.log('Firebase 로드 완료');
-                
                 await waitForQRCode();
-                console.log('QRCode 라이브러리 로드 완료');
-                
                 await loadEquipmentList();
-                console.log('장비 목록 로드 완료');
             } catch (error) {
-                console.error('초기화 오류:', error);
+                console.error('❌ 초기화 오류:', error);
                 document.getElementById('equipmentList').innerHTML = 
                     '<p style="text-align: center; color: #dc3545;">초기화 중 오류가 발생했습니다: ' + error.message + '</p>';
             }
@@ -210,40 +225,53 @@
             const listContainer = document.getElementById('equipmentList');
             
             try {
-                console.log('장비 목록 가져오기 시작...');
+                console.log('🔍 장비 목록 가져오기 시작...');
                 
-                if (!window.FirestoreHelper) {
-                    throw new Error('FirestoreHelper가 로드되지 않았습니다.');
+                if (!window.db) {
+                    throw new Error('Firebase가 초기화되지 않았습니다.');
                 }
                 
-                const result = await window.FirestoreHelper.getAllDocuments('equipment');
-                console.log('Firebase 응답:', result);
+                if (!window.firestoreModules) {
+                    throw new Error('Firestore 모듈이 로드되지 않았습니다.');
+                }
                 
-                allEquipment = result.data || [];
-                console.log('장비 수:', allEquipment.length);
+                // Firestore에서 장비 목록 가져오기
+                const { collection, getDocs } = window.firestoreModules;
+                const querySnapshot = await getDocs(collection(window.db, 'equipment'));
+                
+                allEquipment = [];
+                querySnapshot.forEach((doc) => {
+                    allEquipment.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+                
+                console.log('✅ Firebase 응답 성공');
+                console.log('📦 장비 수:', allEquipment.length);
                 
                 if (allEquipment.length === 0) {
-                    listContainer.innerHTML = '<p style="text-align: center; color: #666;">등록된 장비가 없습니다.</p>';
+                    listContainer.innerHTML = '<p style="text-align: center; color: #666;">등록된 장비가 없습니다.<br><small>migrate-data.html에서 데이터를 마이그레이션 해주세요.</small></p>';
                     return;
                 }
 
                 listContainer.innerHTML = '';
                 
                 allEquipment.forEach((equipment, index) => {
-                    console.log(`장비 ${index + 1} 카드 생성:`, equipment.id);
+                    console.log(`📝 장비 ${index + 1} 카드 생성:`, equipment.id);
                     
                     const card = document.createElement('div');
                     card.className = 'equipment-card';
                     card.id = `card-${equipment.id}`;
                     card.innerHTML = `
-                        <h3><i class="fas ${getEquipmentIcon(equipment.equipment_type)}"></i> ${equipment.equipment_type}</h3>
+                        <h3><i class="fas ${getEquipmentIcon(equipment.equipment_type)}"></i> ${equipment.equipment_type || '알 수 없음'}</h3>
                         <div class="equipment-id">${equipment.id}</div>
                         <p><i class="fas fa-map-marker-alt"></i> ${equipment.floor || '-'} - ${equipment.location || '-'}</p>
                         <p><i class="fas fa-box"></i> ${equipment.model || '-'}</p>
                         <div class="qr-code-container" id="qr-${equipment.id}">
                             <!-- QR 코드가 여기에 생성됩니다 -->
                         </div>
-                        <button class="btn-download" onclick="downloadQRCode('${equipment.id}', '${equipment.equipment_type}')">
+                        <button class="btn-download" onclick="downloadQRCode('${equipment.id}', '${equipment.equipment_type || 'equipment'}')">
                             <i class="fas fa-download"></i> 다운로드
                         </button>
                         <button class="btn-print" onclick="printQRCode('${equipment.id}')">
@@ -253,14 +281,15 @@
                     listContainer.appendChild(card);
                 });
                 
-                console.log('모든 장비 카드 생성 완료');
+                console.log('✅ 모든 장비 카드 생성 완료');
 
             } catch (error) {
-                console.error('장비 목록 로드 오류:', error);
+                console.error('❌ 장비 목록 로드 오류:', error);
                 listContainer.innerHTML = 
                     `<p style="text-align: center; color: #dc3545;">
                         장비 목록을 불러오는데 실패했습니다.<br>
-                        <small>${error.message}</small>
+                        <small>오류: ${error.message}</small><br>
+                        <small>Console(F12)에서 자세한 내용을 확인하세요.</small>
                     </p>`;
             }
         }
