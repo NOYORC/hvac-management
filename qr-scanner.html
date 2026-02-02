@@ -10,6 +10,8 @@
         body {
             padding: 0;
             margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
         }
         
         .scanner-container {
@@ -20,25 +22,25 @@
         
         /* QR 카메라를 header 바로 아래에 배치 */
         .camera-section {
-            background: #f8f9fa;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             padding: 20px;
             margin: 0;
-            border-bottom: 2px solid #667eea;
         }
         
         #reader {
-            border: 3px solid #667eea;
+            border: 3px solid #ffffff;
             border-radius: 10px;
             overflow: hidden;
             margin: 0 auto;
             max-width: 500px;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            background: white;
         }
         
         /* 카메라가 작동 중일 때 */
         #reader.active {
             border-color: #28a745;
-            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.6);
         }
         
         .scanner-info {
@@ -126,26 +128,7 @@
     <!-- 나머지 컨텐츠 -->
     <div class="container">
         <div class="scanner-container">
-            <div class="scanner-info">
-                <i class="fas fa-info-circle"></i>
-                <strong>QR 코드를 카메라에 비춰주세요</strong><br>
-                장비에 부착된 QR 코드를 스캔하면 자동으로 점검 페이지로 이동합니다.<br>
-                <small style="color: #666; margin-top: 10px; display: block;">
-                    ⚠️ HTTP 환경에서는 카메라를 사용할 수 없습니다. HTTPS(GitHub Pages)에서 사용하거나, 아래 수동 입력을 이용하세요.
-                </small>
-            </div>
-
-            <!-- 수동 입력 옵션 추가 -->
-            <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0;">
-                <strong>📝 장비 ID 수동 입력</strong><br>
-                <input type="text" id="manualEquipmentId" placeholder="장비 ID 입력 (예: EQ001)" 
-                    style="width: 100%; padding: 10px; margin: 10px 0; border: 2px solid #667eea; border-radius: 5px; font-size: 16px;">
-                <button onclick="loadEquipmentManually()" 
-                    style="background: #667eea; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; width: 100%;">
-                    <i class="fas fa-search"></i> 장비 찾기
-                </button>
-            </div>
-
+            <!-- 스캔 결과를 scanner-info 위로 이동 -->
             <div id="scannerResult" class="scanner-result">
                 <i class="fas fa-check-circle"></i>
                 <strong>QR 코드 인식 성공!</strong>
@@ -165,6 +148,26 @@
                 </button>
                 <button class="scan-again" onclick="resetScanner()">
                     <i class="fas fa-redo"></i> 다시 스캔하기
+                </button>
+            </div>
+
+            <div class="scanner-info">
+                <i class="fas fa-info-circle"></i>
+                <strong>QR 코드를 카메라에 비춰주세요</strong><br>
+                장비에 부착된 QR 코드를 스캔하면 자동으로 점검 페이지로 이동합니다.<br>
+                <small style="color: #666; margin-top: 10px; display: block;">
+                    ⚠️ HTTP 환경에서는 카메라를 사용할 수 없습니다. HTTPS(GitHub Pages)에서 사용하거나, 아래 수동 입력을 이용하세요.
+                </small>
+            </div>
+
+            <!-- 수동 입력 옵션 추가 -->
+            <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                <strong>📝 장비 ID 수동 입력</strong><br>
+                <input type="text" id="manualEquipmentId" placeholder="장비 ID 입력 (예: EQ001)" 
+                    style="width: 100%; padding: 10px; margin: 10px 0; border: 2px solid #667eea; border-radius: 5px; font-size: 16px;">
+                <button onclick="loadEquipmentManually()" 
+                    style="background: #667eea; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; width: 100%;">
+                    <i class="fas fa-search"></i> 장비 찾기
                 </button>
             </div>
         </div>
