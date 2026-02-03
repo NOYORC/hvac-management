@@ -127,21 +127,29 @@ async function loadEquipmentDirectly(equipmentId) {
 
 // 점검자 목록 로드
 async function loadInspectors() {
+    console.log('🔍 점검자 목록 로드 시작...');
     try {
         const data = await window.FirestoreHelper.getAllDocuments('inspectors');
+        console.log('📊 점검자 데이터 응답:', data);
         
         const inspectorSelect = document.getElementById('inspectorName');
         
         if (data.success && data.data && data.data.length > 0) {
-            data.data.forEach(inspector => {
+            console.log(`✅ 점검자 ${data.data.length}명 로드 완료`);
+            data.data.forEach((inspector, index) => {
+                console.log(`  ${index + 1}. ${inspector.inspector_name || inspector.name || JSON.stringify(inspector)}`);
                 const option = document.createElement('option');
-                option.value = inspector.inspector_name;
-                option.textContent = inspector.inspector_name;
+                option.value = inspector.inspector_name || inspector.name;
+                option.textContent = inspector.inspector_name || inspector.name;
                 inspectorSelect.appendChild(option);
             });
+            console.log('✅ 점검자명 드롭다운 생성 완료');
+        } else {
+            console.warn('⚠️ 점검자 데이터가 없습니다:', data);
+            console.warn('Firebase 컬렉션 "inspectors"를 확인하세요.');
         }
     } catch (error) {
-        console.error('점검자 목록 로드 오류:', error);
+        console.error('❌ 점검자 목록 로드 오류:', error);
         // 오류 시 수동 입력으로 폴백
         const inspectorSelect = document.getElementById('inspectorName');
         const input = document.createElement('input');
@@ -150,6 +158,7 @@ async function loadInspectors() {
         input.required = true;
         input.placeholder = '이름을 입력하세요';
         inspectorSelect.parentNode.replaceChild(input, inspectorSelect);
+        console.log('⚠️ 수동 입력 모드로 전환됨');
     }
 }
 
