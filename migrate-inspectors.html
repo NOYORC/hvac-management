@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>점검자 데이터 마이그레이션</title>
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin: 10px 0;
+            transition: all 0.3s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .log-container {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .log-entry {
+            margin: 5px 0;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        .log-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        .log-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .log-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .log-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .card h3 {
+            color: #667eea;
+            margin-top: 0;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-card .number {
+            font-size: 32px;
+            font-weight: bold;
+        }
+        .stat-card .label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>👷 점검자 데이터 마이그레이션</h1>
+        <p class="subtitle">구글 시트에서 Firebase로 점검자 데이터를 가져옵니다</p>
+
+        <div class="card">
+            <h3>📋 마이그레이션 정보</h3>
+            <p><strong>소스:</strong> 구글 스프레드시트 (Apps Script API)</p>
+            <p><strong>대상:</strong> Firebase Firestore - <code>inspectors</code> 컬렉션</p>
+            <p><strong>작업:</strong> 점검자 이름 목록 가져오기 및 저장</p>
+        </div>
+
+        <div class="stats" id="stats" style="display: none;">
+            <div class="stat-card">
+                <div class="number" id="totalCount">0</div>
+                <div class="label">총 점검자</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="successCount">0</div>
+                <div class="label">성공</div>
+            </div>
+            <div class="stat-card">
+                <div class="number" id="errorCount">0</div>
+                <div class="label">실패</div>
+            </div>
+        </div>
+
+        <button class="btn" id="migrateBtn" onclick="migrateInspectors()">
+            🚀 점검자 데이터 마이그레이션 시작
+        </button>
+
+        <button class="btn" onclick="location.href='inspection.html'" style="background: #6c757d;">
+            ← 점검 페이지로 돌아가기
+        </button>
+
+        <div class="log-container" id="logContainer"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, setDoc, doc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSvObiEPfQkEfSLRzyg2BdCCJmQENJs8ic",
+            authDomain: "hvac-management-477fb.firebaseapp.com",
+            projectId: "hvac-management-477fb",
+            storageBucket: "hvac-management-477fb.firebasestorage.app",
+            messagingSenderId: "812239966797",
+            appId: "1:812239966797:web:b454d99fde982328f7dea04",
+            measurementId: "G-f14YESP0P1"
+        };
+        
+        console.log('✅ Firebase 초기화 시작...');
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        window.db = db;
+        window.firestoreModules = { collection, setDoc, doc, getDocs };
+        console.log('✅ Firebase 초기화 완료');
+    </script>
+
+    <script>
+        const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbza7yPwDp_iUlQj1jyTi9h_z1Z40E0I3wBxELbhKGr9TjrCQaDTF7DCbGr8e1JC0VYDlQ/exec';
+
+        function addLog(message, type = 'info') {
+            const logContainer = document.getElementById('logContainer');
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry log-${type}`;
+            logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+            console.log(message);
+        }
+
+        async function migrateInspectors() {
+            const btn = document.getElementById('migrateBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ 마이그레이션 진행 중...';
+
+            const logContainer = document.getElementById('logContainer');
+            logContainer.innerHTML = '';
+
+            const statsDiv = document.getElementById('stats');
+            statsDiv.style.display = 'grid';
+
+            let totalCount = 0;
+            let successCount = 0;
+            let errorCount = 0;
+
+            try {
+                addLog('🔍 구글 시트에서 점검자 데이터 가져오는 중...', 'info');
+
+                // 구글 시트에서 데이터 가져오기
+                const response = await fetch(`${GOOGLE_APPS_SCRIPT_URL}?action=getInspectors`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                addLog(`📊 응답 받음: ${JSON.stringify(result)}`, 'info');
+
+                if (!result.success) {
+                    throw new Error(result.message || '데이터를 가져오는데 실패했습니다');
+                }
+
+                const inspectors = result.data;
+                totalCount = inspectors.length;
+                document.getElementById('totalCount').textContent = totalCount;
+
+                addLog(`✅ 총 ${totalCount}명의 점검자 데이터 수신`, 'success');
+
+                // Firebase에 저장
+                const { setDoc, doc } = window.firestoreModules;
+
+                for (let i = 0; i < inspectors.length; i++) {
+                    const inspector = inspectors[i];
+                    
+                    try {
+                        const inspectorId = `INSP${String(i + 1).padStart(3, '0')}`;
+                        const inspectorData = {
+                            id: inspectorId,
+                            inspector_name: inspector.inspector_name || inspector.name,
+                            created_at: new Date().toISOString()
+                        };
+
+                        await setDoc(doc(window.db, 'inspectors', inspectorId), inspectorData);
+                        
+                        successCount++;
+                        document.getElementById('successCount').textContent = successCount;
+                        addLog(`✅ ${successCount}/${totalCount}: ${inspectorData.inspector_name} 저장 완료`, 'success');
+                    } catch (error) {
+                        errorCount++;
+                        document.getElementById('errorCount').textContent = errorCount;
+                        addLog(`❌ ${inspector.inspector_name || 'Unknown'} 저장 실패: ${error.message}`, 'error');
+                    }
+                }
+
+                // 최종 결과
+                if (errorCount === 0) {
+                    addLog(`🎉 마이그레이션 완료! 총 ${successCount}명의 점검자 저장 완료`, 'success');
+                    btn.textContent = '✅ 마이그레이션 완료!';
+                    btn.style.background = '#28a745';
+                } else {
+                    addLog(`⚠️ 마이그레이션 완료 (성공: ${successCount}, 실패: ${errorCount})`, 'warning');
+                    btn.textContent = '⚠️ 마이그레이션 완료 (일부 실패)';
+                    btn.style.background = '#ffc107';
+                }
+
+                // 저장된 데이터 확인
+                setTimeout(async () => {
+                    addLog('🔍 Firebase에서 저장된 데이터 확인 중...', 'info');
+                    const { collection, getDocs } = window.firestoreModules;
+                    const snapshot = await getDocs(collection(window.db, 'inspectors'));
+                    addLog(`📊 Firebase inspectors 컬렉션: ${snapshot.size}개 문서 확인`, 'success');
+                    
+                    snapshot.forEach(doc => {
+                        addLog(`  - ${doc.id}: ${doc.data().inspector_name}`, 'info');
+                    });
+                }, 1000);
+
+            } catch (error) {
+                console.error('Migration error:', error);
+                addLog(`❌ 오류 발생: ${error.message}`, 'error');
+                btn.textContent = '❌ 마이그레이션 실패';
+                btn.style.background = '#dc3545';
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

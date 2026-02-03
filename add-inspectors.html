@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>점검자 추가 - HVAC 관리</title>
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin: 10px 0;
+            transition: all 0.3s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+        }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+        .info { color: #17a2b8; }
+        .inspector-list {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .inspector-list h3 {
+            color: #667eea;
+            margin-top: 0;
+        }
+        .inspector-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .inspector-item i {
+            color: #667eea;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>👷 점검자 추가</h1>
+
+        <div class="inspector-list">
+            <h3>추가될 점검자 목록</h3>
+            <div class="inspector-item">
+                <i class="fas fa-user"></i>
+                <span><strong>INSP001:</strong> 홍길동</span>
+            </div>
+            <div class="inspector-item">
+                <i class="fas fa-user"></i>
+                <span><strong>INSP002:</strong> 김철수</span>
+            </div>
+            <div class="inspector-item">
+                <i class="fas fa-user"></i>
+                <span><strong>INSP003:</strong> 이영희</span>
+            </div>
+            <div class="inspector-item">
+                <i class="fas fa-user"></i>
+                <span><strong>INSP004:</strong> 박민수</span>
+            </div>
+            <div class="inspector-item">
+                <i class="fas fa-user"></i>
+                <span><strong>INSP005:</strong> 최지훈</span>
+            </div>
+        </div>
+
+        <button class="btn" id="addBtn" onclick="addInspectors()">
+            <i class="fas fa-plus-circle"></i> 점검자 추가하기
+        </button>
+
+        <button class="btn" onclick="location.href='inspection.html'" style="background: #6c757d;">
+            <i class="fas fa-arrow-left"></i> 점검 페이지로 돌아가기
+        </button>
+
+        <div class="log" id="log"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, setDoc, doc, getDocs, collection } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSvObiEPfQkEfSLRzyg2BdCCJmQENJs8ic",
+            authDomain: "hvac-management-477fb.firebaseapp.com",
+            projectId: "hvac-management-477fb",
+            storageBucket: "hvac-management-477fb.firebasestorage.app",
+            messagingSenderId: "812239966797",
+            appId: "1:812239966797:web:b454d99fde982328f7dea04",
+            measurementId: "G-f14YESP0P1"
+        };
+        
+        console.log('✅ Firebase 초기화 중...');
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        window.db = db;
+        window.firestoreModules = { setDoc, doc, getDocs, collection };
+        console.log('✅ Firebase 초기화 완료');
+    </script>
+
+    <script>
+        function addLog(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.innerHTML = `<i class="fas fa-circle"></i> [${new Date().toLocaleTimeString()}] ${message}`;
+            logDiv.appendChild(entry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+
+        async function addInspectors() {
+            const btn = document.getElementById('addBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 추가 중...';
+
+            document.getElementById('log').innerHTML = '';
+
+            try {
+                addLog('🔥 Firebase 연결 확인 중...', 'info');
+                
+                if (!window.db || !window.firestoreModules) {
+                    throw new Error('Firebase가 초기화되지 않았습니다');
+                }
+
+                addLog('✅ Firebase 연결 완료', 'success');
+
+                const { setDoc, doc, getDocs, collection } = window.firestoreModules;
+
+                // 점검자 데이터
+                const inspectors = [
+                    { id: 'INSP001', inspector_name: '홍길동' },
+                    { id: 'INSP002', inspector_name: '김철수' },
+                    { id: 'INSP003', inspector_name: '이영희' },
+                    { id: 'INSP004', inspector_name: '박민수' },
+                    { id: 'INSP005', inspector_name: '최지훈' }
+                ];
+
+                addLog(`📝 총 ${inspectors.length}명의 점검자 추가 시작...`, 'info');
+
+                for (let i = 0; i < inspectors.length; i++) {
+                    const inspector = inspectors[i];
+                    
+                    try {
+                        await setDoc(doc(window.db, 'inspectors', inspector.id), {
+                            ...inspector,
+                            created_at: new Date().toISOString()
+                        });
+                        
+                        addLog(`✅ ${i + 1}/${inspectors.length}: ${inspector.inspector_name} 추가 완료`, 'success');
+                    } catch (error) {
+                        addLog(`❌ ${inspector.inspector_name} 추가 실패: ${error.message}`, 'error');
+                    }
+                }
+
+                // 저장 확인
+                addLog('🔍 저장된 데이터 확인 중...', 'info');
+                const snapshot = await getDocs(collection(window.db, 'inspectors'));
+                addLog(`📊 Firebase inspectors 컬렉션: 총 ${snapshot.size}개 문서`, 'success');
+
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    addLog(`  → ${doc.id}: ${data.inspector_name}`, 'info');
+                });
+
+                addLog('🎉 모든 점검자 추가 완료!', 'success');
+                btn.innerHTML = '<i class="fas fa-check-circle"></i> 추가 완료!';
+                btn.style.background = '#28a745';
+
+                // 3초 후 점검 페이지로 이동
+                setTimeout(() => {
+                    addLog('📄 점검 페이지로 이동합니다...', 'info');
+                    setTimeout(() => {
+                        location.href = 'inspection.html';
+                    }, 1000);
+                }, 2000);
+
+            } catch (error) {
+                console.error('Error:', error);
+                addLog(`❌ 오류 발생: ${error.message}`, 'error');
+                btn.innerHTML = '<i class="fas fa-exclamation-circle"></i> 추가 실패';
+                btn.style.background = '#dc3545';
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
