@@ -92,26 +92,54 @@
         <h1>👷 점검자 추가</h1>
 
         <div class="inspector-list">
-            <h3>추가될 점검자 목록</h3>
+            <h3>추가될 점검자 목록 (총 12명)</h3>
             <div class="inspector-item">
                 <i class="fas fa-user"></i>
-                <span><strong>INSP001:</strong> 홍길동</span>
+                <span><strong>INSP001:</strong> 김민준</span>
             </div>
             <div class="inspector-item">
                 <i class="fas fa-user"></i>
-                <span><strong>INSP002:</strong> 김철수</span>
+                <span><strong>INSP002:</strong> 이서연</span>
             </div>
             <div class="inspector-item">
                 <i class="fas fa-user"></i>
-                <span><strong>INSP003:</strong> 이영희</span>
+                <span><strong>INSP003:</strong> 박지훈</span>
             </div>
             <div class="inspector-item">
                 <i class="fas fa-user"></i>
-                <span><strong>INSP004:</strong> 박민수</span>
+                <span><strong>INSP004:</strong> 최수아</span>
             </div>
             <div class="inspector-item">
                 <i class="fas fa-user"></i>
-                <span><strong>INSP005:</strong> 최지훈</span>
+                <span><strong>INSP005:</strong> 정우진</span>
+            </div>
+            <div class="inspector-item">
+                <i class="fas fa-user"></i>
+                <span><strong>INSP006:</strong> 강하은</span>
+            </div>
+            <div class="inspector-item">
+                <i class="fas fa-user"></i>
+                <span><strong>INSP007:</strong> 윤성민</span>
+            </div>
+            <div class="inspector-item">
+                <i class="fas fa-user"></i>
+                <span><strong>INSP008:</strong> 조예린</span>
+            </div>
+            <div class="inspector-item">
+                <i class="fas fa-user"></i>
+                <span><strong>INSP009:</strong> 임준호</span>
+            </div>
+            <div class="inspector-item">
+                <i class="fas fa-user"></i>
+                <span><strong>INSP010:</strong> 한지우</span>
+            </div>
+            <div class="inspector-item">
+                <i class="fas fa-user"></i>
+                <span><strong>INSP011:</strong> 신동현</span>
+            </div>
+            <div class="inspector-item">
+                <i class="fas fa-user"></i>
+                <span><strong>INSP012:</strong> 오채원</span>
             </div>
         </div>
 
@@ -181,11 +209,18 @@
 
                 // 점검자 데이터
                 const inspectors = [
-                    { id: 'INSP001', inspector_name: '홍길동' },
-                    { id: 'INSP002', inspector_name: '김철수' },
-                    { id: 'INSP003', inspector_name: '이영희' },
-                    { id: 'INSP004', inspector_name: '박민수' },
-                    { id: 'INSP005', inspector_name: '최지훈' }
+                    { id: 'INSP001', inspector_name: '김민준' },
+                    { id: 'INSP002', inspector_name: '이서연' },
+                    { id: 'INSP003', inspector_name: '박지훈' },
+                    { id: 'INSP004', inspector_name: '최수아' },
+                    { id: 'INSP005', inspector_name: '정우진' },
+                    { id: 'INSP006', inspector_name: '강하은' },
+                    { id: 'INSP007', inspector_name: '윤성민' },
+                    { id: 'INSP008', inspector_name: '조예린' },
+                    { id: 'INSP009', inspector_name: '임준호' },
+                    { id: 'INSP010', inspector_name: '한지우' },
+                    { id: 'INSP011', inspector_name: '신동현' },
+                    { id: 'INSP012', inspector_name: '오채원' }
                 ];
 
                 addLog(`📝 총 ${inspectors.length}명의 점검자 추가 시작...`, 'info');
@@ -195,8 +230,8 @@
                     
                     try {
                         await setDoc(doc(window.db, 'inspectors', inspector.id), {
-                            ...inspector,
-                            created_at: new Date().toISOString()
+                            id: inspector.id,
+                            inspector_name: inspector.inspector_name
                         });
                         
                         addLog(`✅ ${i + 1}/${inspectors.length}: ${inspector.inspector_name} 추가 완료`, 'success');
