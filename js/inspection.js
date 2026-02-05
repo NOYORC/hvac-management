@@ -415,8 +415,6 @@ async function submitInspection(e) {
         current_r: document.getElementById('currentR').value || '',
         current_s: document.getElementById('currentS').value || '',
         current_t: document.getElementById('currentT').value || '',
-        operation_status: document.getElementById('operationStatus').value,
-        leak_check: document.getElementById('leakCheck').value,
         notes: document.getElementById('notes').value || '',
         photo_url: '' // 사진 기능은 추후 구현
     };

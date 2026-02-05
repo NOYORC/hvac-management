@@ -493,8 +493,6 @@ async function downloadExcel() {
                 'R상전류(A)': insp.current_r || '-',
                 'S상전류(A)': insp.current_s || '-',
                 'T상전류(A)': insp.current_t || '-',
-                '운전상태': insp.operation_status || '-',
-                '누수확인': insp.leak_check || '-',
                 '진동(mm/s)': insp.vibration || '-',
                 '소음(dB)': insp.noise || '-',
                 '청결상태': insp.clean_status || '-',
@@ -525,8 +523,6 @@ async function downloadExcel() {
             { wch: 12 },  // R상전류
             { wch: 12 },  // S상전류
             { wch: 12 },  // T상전류
-            { wch: 10 },  // 운전상태
-            { wch: 10 },  // 누수확인
             { wch: 12 },  // 진동
             { wch: 10 },  // 소음
             { wch: 10 },  // 청결상태
