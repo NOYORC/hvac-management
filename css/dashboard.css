@@ -402,3 +402,33 @@ table tbody tr:hover {
         font-size: 28px;
     }
 }
+
+/* 엑셀 다운로드 버튼 */
+.btn-download {
+    background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+}
+
+.btn-download:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+}
+
+.btn-download:active {
+    transform: translateY(0);
+}
+
+.btn-download i {
+    font-size: 16px;
+}

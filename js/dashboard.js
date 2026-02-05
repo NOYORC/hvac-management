@@ -439,3 +439,178 @@ function getStatusColor(status) {
     };
     return colors[status] || '#2196F3';
 }
+
+function formatDate(date) {
+    if (!date) return '-';
+    const d = date && date.toDate ? date.toDate() : new Date(date);
+    return d.toLocaleDateString('ko-KR') + ' ' + d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+}
+
+// 엑셀 다운로드 함수
+async function downloadExcel() {
+    try {
+        console.log('📥 엑셀 다운로드 시작...');
+        
+        // 현재 필터링된 데이터 가져오기
+        const filteredData = await getFilteredInspections();
+        
+        if (!filteredData || filteredData.length === 0) {
+            alert('다운로드할 점검 데이터가 없습니다.');
+            return;
+        }
+        
+        console.log(`📊 ${filteredData.length}개의 점검 기록 다운로드 준비 중...`);
+        
+        // 장비 정보 매핑
+        const equipmentData = await window.FirestoreHelper.getAllDocuments('equipment');
+        const equipmentMap = {};
+        if (equipmentData.data) {
+            equipmentData.data.forEach(eq => {
+                equipmentMap[eq.id] = eq;
+            });
+        }
+        
+        // 엑셀 데이터 변환
+        const excelData = filteredData.map(insp => {
+            const eq = equipmentMap[insp.equipment_id] || {};
+            const inspDate = insp.inspection_date && insp.inspection_date.toDate ? 
+                insp.inspection_date.toDate() : new Date(insp.inspection_date);
+            
+            return {
+                '점검일시': inspDate.toLocaleString('ko-KR'),
+                '점검자명': insp.inspector_name || '-',
+                '점검유형': insp.inspection_type || '-',
+                '장비종류': eq.equipment_type || '-',
+                '장비ID': insp.equipment_id || '-',
+                '모델명': eq.model || '-',
+                '위치': eq.location || '-',
+                '층': eq.floor || '-',
+                '상태': insp.status || '-',
+                '실내온도(℃)': insp.indoor_temperature || '-',
+                '설정온도(℃)': insp.set_temperature || '-',
+                '냉매고압(kgf/cm²)': insp.high_pressure || '-',
+                '냉매저압(kgf/cm²)': insp.low_pressure || '-',
+                'R상전류(A)': insp.current_r || '-',
+                'S상전류(A)': insp.current_s || '-',
+                'T상전류(A)': insp.current_t || '-',
+                '운전상태': insp.operation_status || '-',
+                '누수확인': insp.leak_check || '-',
+                '진동(mm/s)': insp.vibration || '-',
+                '소음(dB)': insp.noise || '-',
+                '청결상태': insp.clean_status || '-',
+                '필터상태': insp.filter_status || '-',
+                '특이사항': insp.notes || '-'
+            };
+        });
+        
+        // 워크북 생성
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet(excelData);
+        
+        // 컬럼 너비 설정
+        const colWidths = [
+            { wch: 20 },  // 점검일시
+            { wch: 10 },  // 점검자명
+            { wch: 10 },  // 점검유형
+            { wch: 25 },  // 장비종류
+            { wch: 12 },  // 장비ID
+            { wch: 20 },  // 모델명
+            { wch: 15 },  // 위치
+            { wch: 8 },   // 층
+            { wch: 8 },   // 상태
+            { wch: 12 },  // 실내온도
+            { wch: 12 },  // 설정온도
+            { wch: 15 },  // 냉매고압
+            { wch: 15 },  // 냉매저압
+            { wch: 12 },  // R상전류
+            { wch: 12 },  // S상전류
+            { wch: 12 },  // T상전류
+            { wch: 10 },  // 운전상태
+            { wch: 10 },  // 누수확인
+            { wch: 12 },  // 진동
+            { wch: 10 },  // 소음
+            { wch: 10 },  // 청결상태
+            { wch: 10 },  // 필터상태
+            { wch: 40 }   // 특이사항
+        ];
+        ws['!cols'] = colWidths;
+        
+        // 워크시트 추가
+        XLSX.utils.book_append_sheet(wb, ws, '점검내역');
+        
+        // 파일명 생성 (현재 날짜 포함)
+        const today = new Date();
+        const fileName = `HVAC_점검내역_${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}.xlsx`;
+        
+        // 엑셀 파일 다운로드
+        XLSX.writeFile(wb, fileName);
+        
+        console.log(`✅ 엑셀 다운로드 완료: ${fileName}`);
+        alert(`✅ ${filteredData.length}개의 점검 기록이 다운로드되었습니다.`);
+        
+    } catch (error) {
+        console.error('❌ 엑셀 다운로드 오류:', error);
+        alert('엑셀 다운로드 중 오류가 발생했습니다.\n' + error.message);
+    }
+}
+
+// 필터링된 점검 데이터 가져오기
+async function getFilteredInspections() {
+    try {
+        // 모든 점검 데이터 가져오기
+        const inspectionsData = await window.FirestoreHelper.getAllDocuments('inspections');
+        
+        if (!inspectionsData.success || !inspectionsData.data) {
+            return [];
+        }
+        
+        let filtered = inspectionsData.data;
+        
+        // 기간 필터
+        const periodFilter = document.getElementById('periodFilter').value;
+        const now = new Date();
+        
+        if (periodFilter !== 'all') {
+            filtered = filtered.filter(insp => {
+                const inspDate = insp.inspection_date && insp.inspection_date.toDate ? 
+                    insp.inspection_date.toDate() : new Date(insp.inspection_date);
+                
+                const diffDays = Math.floor((now - inspDate) / (1000 * 60 * 60 * 24));
+                
+                switch(periodFilter) {
+                    case 'today':
+                        return diffDays === 0;
+                    case 'week':
+                        return diffDays <= 7;
+                    case 'month':
+                        return diffDays <= 30;
+                    default:
+                        return true;
+                }
+            });
+        }
+        
+        // 상태 필터
+        const statusFilter = document.getElementById('statusFilter').value;
+        if (statusFilter) {
+            filtered = filtered.filter(insp => insp.status === statusFilter);
+        }
+        
+        // 현장 필터 (장비 ID를 통해)
+        const siteFilter = document.getElementById('siteFilterDash').value;
+        if (siteFilter) {
+            const equipmentData = await window.FirestoreHelper.getAllDocuments('equipment');
+            const siteEquipmentIds = equipmentData.data
+                .filter(eq => eq.site_id === siteFilter)
+                .map(eq => eq.id);
+            
+            filtered = filtered.filter(insp => siteEquipmentIds.includes(insp.equipment_id));
+        }
+        
+        return filtered;
+        
+    } catch (error) {
+        console.error('필터링된 데이터 가져오기 오류:', error);
+        return [];
+    }
+}

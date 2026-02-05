@@ -45,6 +45,11 @@
                     <option value="고장">고장</option>
                 </select>
             </div>
+            <div class="filter-group">
+                <button class="btn-download" onclick="downloadExcel()">
+                    <i class="fas fa-download"></i> 엑셀 다운로드
+                </button>
+            </div>
         </div>
 
         <!-- 통계 카드 -->
@@ -168,6 +173,10 @@
         const db = getFirestore(app);
         window.db = db;
     </script>
+    
+    <!-- SheetJS 라이브러리 -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    
     <script src="js/firebase-config.js"></script>
     <script src="js/main.js"></script>
     <script src="js/dashboard.js"></script>
