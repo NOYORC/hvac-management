@@ -1,0 +1,21 @@
+<svg width="144" height="144" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background with rounded corners -->
+  <rect width="144" height="144" rx="28.8" fill="url(#grad)"/>
+  
+  <!-- Wind icon (3 curved lines) -->
+  <g stroke="white" stroke-width="8.64" stroke-linecap="round" fill="none">
+    <!-- Top curve -->
+    <path d="M 43.199999999999996 50.4 Q 86.39999999999999 36 100.8 50.4"/>
+    <!-- Middle curve (longer) -->
+    <path d="M 36 72 Q 79.2 57.6 108 72"/>
+    <!-- Bottom curve -->
+    <path d="M 43.199999999999996 93.60000000000001 Q 86.39999999999999 108 100.8 93.60000000000001"/>
+  </g>
+</svg>

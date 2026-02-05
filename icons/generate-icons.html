@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Icon Generator</title>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <script>
+        const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+        
+        sizes.forEach(size => {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            
+            // 그라데이션 배경
+            const gradient = ctx.createLinearGradient(0, 0, size, size);
+            gradient.addColorStop(0, '#667eea');
+            gradient.addColorStop(1, '#764ba2');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+            
+            // 둥근 모서리 (maskable용)
+            ctx.globalCompositeOperation = 'destination-in';
+            ctx.beginPath();
+            ctx.roundRect(0, 0, size, size, size * 0.2);
+            ctx.fill();
+            ctx.globalCompositeOperation = 'source-over';
+            
+            // 바람 아이콘 (흰색)
+            ctx.fillStyle = 'white';
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = size * 0.06;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            
+            const centerX = size / 2;
+            const centerY = size / 2;
+            const iconSize = size * 0.5;
+            
+            // 3개의 곡선 (바람 표현)
+            // 위쪽 곡선
+            ctx.beginPath();
+            ctx.moveTo(centerX - iconSize * 0.4, centerY - iconSize * 0.3);
+            ctx.quadraticCurveTo(
+                centerX + iconSize * 0.2, centerY - iconSize * 0.5,
+                centerX + iconSize * 0.4, centerY - iconSize * 0.3
+            );
+            ctx.stroke();
+            
+            // 가운데 곡선 (더 길게)
+            ctx.beginPath();
+            ctx.moveTo(centerX - iconSize * 0.5, centerY);
+            ctx.quadraticCurveTo(
+                centerX + iconSize * 0.1, centerY - iconSize * 0.2,
+                centerX + iconSize * 0.5, centerY
+            );
+            ctx.stroke();
+            
+            // 아래쪽 곡선
+            ctx.beginPath();
+            ctx.moveTo(centerX - iconSize * 0.4, centerY + iconSize * 0.3);
+            ctx.quadraticCurveTo(
+                centerX + iconSize * 0.2, centerY + iconSize * 0.5,
+                centerX + iconSize * 0.4, centerY + iconSize * 0.3
+            );
+            ctx.stroke();
+            
+            // 다운로드
+            canvas.toBlob(blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `icon-${size}x${size}.png`;
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+        });
+    </script>
+</body>
+</html>

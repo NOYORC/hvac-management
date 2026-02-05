@@ -4,6 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HVAC 장비 관리 시스템</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="공조설비 점검 및 관리 시스템">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="HVAC 관리">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/svg+xml" href="/icons/icon-192x192.svg">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.svg">
+    
+    <!-- Stylesheets -->
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
 </head>
@@ -110,5 +126,73 @@
     </script>
     <script src="js/firebase-config.js"></script>
     <script src="js/main.js"></script>
+    
+    <!-- PWA Service Worker Registration -->
+    <script>
+        // Service Worker 등록
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(registration => {
+                        console.log('✅ Service Worker 등록 성공:', registration.scope);
+                        
+                        // 업데이트 확인
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            console.log('🔄 새로운 Service Worker 발견');
+                            
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // 새 버전이 설치됨 - 사용자에게 알림
+                                    console.log('🆕 새 버전이 준비되었습니다. 새로고침하세요.');
+                                    // 선택사항: 사용자에게 알림 표시
+                                    if (confirm('새 버전이 준비되었습니다. 지금 새로고침하시겠습니까?')) {
+                                        window.location.reload();
+                                    }
+                                }
+                            });
+                        });
+                    })
+                    .catch(error => {
+                        console.error('❌ Service Worker 등록 실패:', error);
+                    });
+            });
+            
+            // Service Worker 제어 변경 감지
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                console.log('🔄 Service Worker 제어가 변경되었습니다.');
+            });
+        } else {
+            console.warn('⚠️ 이 브라우저는 Service Worker를 지원하지 않습니다.');
+        }
+        
+        // 설치 프롬프트 처리
+        let deferredPrompt;
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            console.log('📱 PWA 설치 프롬프트 준비');
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // 설치 버튼 표시 (선택사항)
+            // showInstallButton();
+        });
+        
+        window.addEventListener('appinstalled', () => {
+            console.log('✅ PWA가 설치되었습니다!');
+            deferredPrompt = null;
+        });
+        
+        // 온라인/오프라인 상태 감지
+        window.addEventListener('online', () => {
+            console.log('🌐 온라인 상태로 전환');
+            // 선택사항: 사용자에게 알림
+        });
+        
+        window.addEventListener('offline', () => {
+            console.log('📴 오프라인 상태로 전환');
+            // 선택사항: 사용자에게 알림
+        });
+    </script>
 </body>
 </html>
