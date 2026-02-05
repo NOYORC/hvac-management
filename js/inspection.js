@@ -213,7 +213,7 @@ async function selectSite(site) {
                 card.innerHTML = `
                     <div class="icon"><i class="fas fa-building"></i></div>
                     <h3>${building.building_name}</h3>
-                    <p><i class="fas fa-layer-group"></i> ${building.floors}층</p>
+                    <p><i class="fas fa-layer-group"></i> ${building.floors}</p>
                     <p><i class="fas fa-ruler-combined"></i> ${building.area}m²</p>
                 `;
                 buildingList.appendChild(card);
@@ -308,7 +308,7 @@ function displayEquipment(equipment) {
                 </div>
                 <h3>${eq.equipment_name || eq.equipment_type}</h3>
                 <div class="eq-info">
-                    <div><i class="fas fa-layer-group"></i> ${eq.floor}층 - ${eq.location}</div>
+                    <div><i class="fas fa-layer-group"></i> ${eq.floor} - ${eq.location}</div>
                     <div><i class="fas fa-box"></i> ${eq.model || '정보 없음'}</div>
                     <div><i class="fas fa-tachometer-alt"></i> ${eq.capacity || '정보 없음'}</div>
                 </div>
