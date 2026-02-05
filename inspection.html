@@ -65,6 +65,29 @@
                 <button class="btn-change" onclick="changeStep(2)">변경</button>
             </div>
             
+            <!-- QR 스캔 버튼 -->
+            <div class="qr-scan-section">
+                <button type="button" class="btn-qr-scan" onclick="toggleQRScanner()">
+                    <i class="fas fa-qrcode"></i> QR 코드 스캔
+                </button>
+            </div>
+            
+            <!-- QR 스캐너 영역 -->
+            <div id="qrScannerArea" class="qr-scanner-area" style="display: none;">
+                <div class="scanner-info">
+                    <i class="fas fa-info-circle"></i> QR 코드를 카메라에 비춰주세요
+                </div>
+                <div id="cameraSection" class="camera-section">
+                    <video id="qrVideo" playsinline></video>
+                    <div class="scanner-overlay">
+                        <div class="scanner-box"></div>
+                    </div>
+                </div>
+                <button type="button" class="btn-close-scanner" onclick="toggleQRScanner()">
+                    <i class="fas fa-times"></i> 스캔 닫기
+                </button>
+            </div>
+            
             <!-- 필터 -->
             <div class="filter-panel">
                 <div class="filter-group">
@@ -255,6 +278,8 @@
         const db = getFirestore(app);
         window.db = db;
     </script>
+    <!-- HTML5 QR Code Scanner Library -->
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <script src="js/firebase-config.js"></script>
     <script src="js/main.js"></script>
     <script src="js/inspection.js"></script>

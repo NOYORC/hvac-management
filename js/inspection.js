@@ -471,3 +471,153 @@ function changeStep(step) {
     // 스크롤 최상단으로
     window.scrollTo(0, 0);
 }
+
+// ===== QR 스캐너 기능 =====
+let html5QrCode = null;
+let isScannerActive = false;
+
+// QR 스캐너 토글
+async function toggleQRScanner() {
+    const scannerArea = document.getElementById('qrScannerArea');
+    
+    if (isScannerActive) {
+        // 스캐너 닫기
+        await stopScanner();
+        scannerArea.style.display = 'none';
+        isScannerActive = false;
+    } else {
+        // 스캐너 열기
+        scannerArea.style.display = 'block';
+        await startScanner();
+        isScannerActive = true;
+    }
+}
+
+// QR 스캐너 시작
+async function startScanner() {
+    try {
+        // Html5Qrcode 인스턴스가 없으면 생성
+        if (!html5QrCode) {
+            html5QrCode = new Html5Qrcode("cameraSection");
+        }
+        
+        // 카메라 시작
+        await html5QrCode.start(
+            { facingMode: "environment" }, // 후면 카메라 사용
+            {
+                fps: 10,    // 초당 스캔 프레임
+                qrbox: { width: 250, height: 250 }  // 스캔 영역
+            },
+            onScanSuccess,
+            onScanFailure
+        );
+        
+        console.log('✅ QR 스캐너 시작');
+    } catch (err) {
+        console.error('❌ QR 스캐너 시작 오류:', err);
+        alert('카메라를 시작할 수 없습니다. 카메라 권한을 확인해주세요.');
+    }
+}
+
+// QR 스캐너 중지
+async function stopScanner() {
+    if (html5QrCode && html5QrCode.isScanning) {
+        try {
+            await html5QrCode.stop();
+            console.log('✅ QR 스캐너 중지');
+        } catch (err) {
+            console.error('❌ QR 스캐너 중지 오류:', err);
+        }
+    }
+}
+
+// QR 스캔 성공 핸들러
+async function onScanSuccess(decodedText, decodedResult) {
+    console.log('✅ QR 스캔 성공:', decodedText);
+    
+    // 스캐너 중지
+    await stopScanner();
+    document.getElementById('qrScannerArea').style.display = 'none';
+    isScannerActive = false;
+    
+    // 장비 ID 추출 (형식: EQ001, EQ002 등)
+    let equipmentId = decodedText;
+    
+    // URL 형식인 경우 파라미터에서 추출
+    if (decodedText.includes('equipmentId=')) {
+        const urlParams = new URLSearchParams(decodedText.split('?')[1]);
+        equipmentId = urlParams.get('equipmentId');
+    }
+    
+    // 스캔된 장비 정보 표시
+    await displayScannedEquipment(equipmentId);
+}
+
+// QR 스캔 실패 핸들러
+function onScanFailure(error) {
+    // 스캔 실패는 계속 발생하므로 로그 출력 안 함
+}
+
+// 스캔된 장비 정보 표시
+async function displayScannedEquipment(equipmentId) {
+    try {
+        // 장비 정보 조회
+        const result = await window.FirestoreHelper.getDocument('equipment', equipmentId);
+        
+        if (!result.success) {
+            alert('장비 정보를 찾을 수 없습니다.');
+            return;
+        }
+        
+        const equipment = result.data;
+        
+        // 현장과 건물 정보도 조회
+        const siteResult = await window.FirestoreHelper.getDocument('sites', equipment.site_id);
+        const buildingResult = await window.FirestoreHelper.getDocument('buildings', equipment.building_id);
+        
+        // 스캔 정보 표시
+        const equipmentSelection = document.getElementById('equipmentSelection');
+        
+        // 기존 스캔 정보 제거
+        const existingInfo = equipmentSelection.querySelector('.scanned-equipment-info');
+        if (existingInfo) {
+            existingInfo.remove();
+        }
+        
+        // 새 스캔 정보 추가 (scanner-info 위에 배치)
+        const qrScanSection = equipmentSelection.querySelector('.qr-scan-section');
+        const scannedInfo = document.createElement('div');
+        scannedInfo.className = 'scanned-equipment-info';
+        scannedInfo.innerHTML = `
+            <i class="fas fa-qrcode"></i>
+            <div class="scanned-equipment-details">
+                <h4>스캔된 장비: ${equipment.equipment_type} - ${equipment.model}</h4>
+                <p>${siteResult.data.site_name} > ${buildingResult.data.building_name} > ${equipment.floor}층</p>
+            </div>
+        `;
+        
+        // scanner-info 바로 위에 삽입
+        qrScanSection.insertAdjacentElement('afterend', scannedInfo);
+        
+        // 장비 선택 처리
+        selectedSite = siteResult.data;
+        selectedBuilding = buildingResult.data;
+        selectedEquipment = equipment;
+        
+        // Step 4로 이동
+        setTimeout(() => {
+            changeStep(4);
+        }, 1500);
+        
+    } catch (error) {
+        console.error('❌ 스캔된 장비 정보 표시 오류:', error);
+        alert('장비 정보를 불러오는 중 오류가 발생했습니다.');
+    }
+}
+
+// 페이지 언로드 시 스캐너 정리
+window.addEventListener('beforeunload', () => {
+    if (html5QrCode && html5QrCode.isScanning) {
+        html5QrCode.stop();
+    }
+});
