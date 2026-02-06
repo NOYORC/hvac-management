@@ -447,9 +447,27 @@ function formatDate(date) {
 }
 
 // 엑셀 다운로드 함수
+let isDownloading = false; // 다운로드 중복 방지 플래그
+
 async function downloadExcel() {
+    // 중복 실행 방지
+    if (isDownloading) {
+        console.log('⚠️ 이미 다운로드 중입니다...');
+        return;
+    }
+    
+    const downloadBtn = document.getElementById('downloadBtn');
+    
     try {
-        console.log('📥 엑셀 다운로드 시작...');
+        isDownloading = true;
+        
+        // 버튼 비활성화
+        if (downloadBtn) {
+            downloadBtn.disabled = true;
+            downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 다운로드 중...';
+        }
+        
+        console.log('📥 엑셀 다운로드 시작... (Timestamp:', Date.now(), ')');
         
         // 현재 필터링된 데이터 가져오기
         const filteredData = await getFilteredInspections();
@@ -539,7 +557,9 @@ async function downloadExcel() {
         const fileName = `HVAC_점검내역_${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}.xlsx`;
         
         // 엑셀 파일 다운로드
+        console.log(`📦 XLSX.writeFile 호출 전... 파일명: ${fileName}`);
         XLSX.writeFile(wb, fileName);
+        console.log(`📦 XLSX.writeFile 호출 후... 다운로드 완료!`);
         
         console.log(`✅ 엑셀 다운로드 완료: ${fileName}`);
         alert(`✅ ${filteredData.length}개의 점검 기록이 다운로드되었습니다.`);
@@ -547,6 +567,16 @@ async function downloadExcel() {
     } catch (error) {
         console.error('❌ 엑셀 다운로드 오류:', error);
         alert('엑셀 다운로드 중 오류가 발생했습니다.\n' + error.message);
+    } finally {
+        // 버튼 복원 및 다운로드 완료 후 플래그 해제
+        setTimeout(() => {
+            isDownloading = false;
+            if (downloadBtn) {
+                downloadBtn.disabled = false;
+                downloadBtn.innerHTML = '<i class="fas fa-download"></i> 엑셀 다운로드';
+            }
+            console.log('🔓 다운로드 잠금 해제');
+        }, 1000);
     }
 }
 
