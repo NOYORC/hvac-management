@@ -20,10 +20,37 @@ body {
 
 /* ===== 헤더 ===== */
 .header {
+    position: relative;
     text-align: center;
     margin-bottom: 40px;
     color: white;
 }
+
+/* 뒤로가기 버튼 */
+.btn-back {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 18px;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-back:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-50%) translateX(-5px);
+}
+
 
 .logo {
     display: flex;
