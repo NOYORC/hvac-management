@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로그인 - HVAC 관리</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            width: 100%;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo-icon {
+            font-size: 60px;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .logo-section h1 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .logo-section p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+            font-size: 16px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 15px 15px 15px 45px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .btn-login:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 14px;
+            display: none;
+            animation: shake 0.5s ease;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        .divider {
+            text-align: center;
+            margin: 30px 0;
+            position: relative;
+        }
+
+        .divider::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 100%;
+            height: 1px;
+            background: #e0e0e0;
+        }
+
+        .divider span {
+            background: white;
+            padding: 0 15px;
+            color: #999;
+            font-size: 14px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .demo-accounts {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .demo-accounts h3 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .demo-account {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .demo-account:hover {
+            border-color: #667eea;
+            transform: translateX(5px);
+        }
+
+        .demo-account:last-child {
+            margin-bottom: 0;
+        }
+
+        .demo-role {
+            font-size: 12px;
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .demo-email {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .loading-spinner {
+            display: none;
+            margin-left: 10px;
+        }
+
+        .loading-spinner.show {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 30px 20px;
+            }
+
+            .logo-section h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo-section">
+            <div class="logo-icon">
+                <i class="fas fa-wind"></i>
+            </div>
+            <h1>HVAC 관리</h1>
+            <p>장비 점검 및 관리 시스템</p>
+        </div>
+
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">이메일</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-envelope"></i>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        placeholder="이메일을 입력하세요"
+                        required
+                        autocomplete="email"
+                    >
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">비밀번호</label>
+                <div class="input-wrapper">
+                    <i class="fas fa-lock"></i>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        placeholder="비밀번호를 입력하세요"
+                        required
+                        autocomplete="current-password"
+                    >
+                </div>
+            </div>
+
+            <button type="submit" class="btn-login" id="loginBtn">
+                <span>로그인</span>
+                <span class="loading-spinner"></span>
+            </button>
+
+            <div class="error-message" id="errorMessage"></div>
+        </form>
+
+        <div class="divider">
+            <span>테스트 계정</span>
+        </div>
+
+        <div class="demo-accounts">
+            <h3>빠른 로그인 (개발용)</h3>
+            
+            <div class="demo-account" onclick="quickLogin('inspector@hvac.com', 'hvac1234')">
+                <div class="demo-role">👷 점검자</div>
+                <div class="demo-email">inspector@hvac.com / hvac1234</div>
+            </div>
+
+            <div class="demo-account" onclick="quickLogin('manager@hvac.com', 'hvac1234')">
+                <div class="demo-role">👔 관리자</div>
+                <div class="demo-email">manager@hvac.com / hvac1234</div>
+            </div>
+
+            <div class="demo-account" onclick="quickLogin('admin@hvac.com', 'hvac1234')">
+                <div class="demo-role">⚙️ 시스템 관리자</div>
+                <div class="demo-email">admin@hvac.com / hvac1234</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+        import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyD7YfLEw3N7aV9lqT6cboMo-WTN4hKGn8Q",
+            authDomain: "hvac-management-5634d.firebaseapp.com",
+            projectId: "hvac-management-5634d",
+            storageBucket: "hvac-management-5634d.firebasestorage.app",
+            messagingSenderId: "638025486691",
+            appId: "1:638025486691:web:64b7f7f7b0e7577f7ff5c6",
+            measurementId: "G-1M9GPPB9E8"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        window.db = getFirestore(app);
+    </script>
+
+    <!-- Scripts -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/auth-manager.js"></script>
+    <script>
+        // 페이지 로드 시
+        document.addEventListener('DOMContentLoaded', async () => {
+            // AuthManager 초기화
+            await window.AuthManager.initialize();
+
+            // 이미 로그인되어 있으면 메인 페이지로 리다이렉트
+            if (window.AuthManager.isLoggedIn()) {
+                console.log('✅ 이미 로그인됨, 메인 페이지로 이동');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // 로그인 폼 제출
+            const loginForm = document.getElementById('loginForm');
+            const loginBtn = document.getElementById('loginBtn');
+            const errorMessage = document.getElementById('errorMessage');
+
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+
+                // 로딩 상태
+                loginBtn.disabled = true;
+                loginBtn.querySelector('.loading-spinner').classList.add('show');
+                errorMessage.classList.remove('show');
+
+                // 로그인 시도
+                const result = await window.AuthManager.login(email, password);
+
+                if (result.success) {
+                    console.log('✅ 로그인 성공:', result.user);
+                    
+                    // 역할에 따라 리다이렉트
+                    const redirectUrl = getRedirectUrl(result.user.role);
+                    window.location.href = redirectUrl;
+                } else {
+                    // 로그인 실패
+                    errorMessage.textContent = result.error;
+                    errorMessage.classList.add('show');
+                    
+                    loginBtn.disabled = false;
+                    loginBtn.querySelector('.loading-spinner').classList.remove('show');
+                }
+            });
+
+            // Enter 키로 로그인
+            document.getElementById('password').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    loginForm.dispatchEvent(new Event('submit'));
+                }
+            });
+        });
+
+        // 빠른 로그인 (테스트용)
+        async function quickLogin(email, password) {
+            document.getElementById('email').value = email;
+            document.getElementById('password').value = password;
+            document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+        }
+
+        // 역할별 리다이렉트 URL
+        function getRedirectUrl(role) {
+            switch (role) {
+                case window.USER_ROLES.ADMIN:
+                    return 'admin.html';
+                case window.USER_ROLES.MANAGER:
+                    return 'dashboard.html';
+                case window.USER_ROLES.INSPECTOR:
+                    return 'index.html';
+                default:
+                    return 'index.html';
+            }
+        }
+    </script>
+</body>
+</html>

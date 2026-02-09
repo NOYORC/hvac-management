@@ -307,3 +307,67 @@ window.CacheHelper = CacheHelper;
 window.CachedFirestoreHelper = CachedFirestoreHelper;
 
 console.log('✅ Cache Helper 로드 완료');
+    
+    /**
+     * 문서 업데이트 (캐시 무효화)
+     * @param {string} collection - 컬렉션 이름
+     * @param {string} id - 문서 ID
+     * @param {object} data - 업데이트할 데이터
+     * @returns {Promise<object>} 결과
+     */
+    static async updateDocument(collection, id, data) {
+        console.log(`🔄 Firestore 업데이트: ${collection}/${id}`);
+        
+        // Firestore 업데이트
+        const result = await window.FirestoreHelper.setDocument(collection, id, data);
+        
+        // 성공 시 캐시 무효화
+        if (result.success) {
+            CacheHelper.invalidateCollection(collection);
+            console.log(`🔄 캐시 무효화: ${collection}`);
+        }
+        
+        return result;
+    }
+    
+    /**
+     * 문서 삭제 (캐시 무효화)
+     * @param {string} collection - 컬렉션 이름
+     * @param {string} id - 문서 ID
+     * @returns {Promise<object>} 결과
+     */
+    static async deleteDocument(collection, id) {
+        try {
+            console.log(`🗑️ Firestore 삭제: ${collection}/${id}`);
+            
+            // Firestore에서 동적 import
+            const { doc, deleteDoc } = await import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js');
+            
+            // 문서 참조
+            const docRef = doc(window.db, collection, id);
+            
+            // 삭제
+            await deleteDoc(docRef);
+            
+            // 캐시 무효화
+            CacheHelper.invalidateCollection(collection);
+            console.log(`🔄 캐시 무효화: ${collection}`);
+            
+            return { success: true };
+        } catch (error) {
+            console.error(`❌ 삭제 실패:`, error);
+            return { success: false, error: error.message };
+        }
+    }
+}
+
+// 전역 객체로 내보내기
+window.CacheHelper = CacheHelper;
+window.CachedFirestoreHelper = CachedFirestoreHelper;
+
+// 주기적으로 오래된 캐시 정리 (5분마다)
+setInterval(() => {
+    CacheHelper.clearOldCache();
+}, 5 * 60 * 1000);
+
+console.log('✅ Cache Helper 로드 완료');

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>테스트 계정 생성 - HVAC 관리</title>
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 테스트 계정 생성 도구</h1>
+        <p>Firebase Authentication과 Firestore에 테스트 계정을 생성합니다.</p>
+        
+        <div id="output"></div>
+        
+        <button onclick="createTestAccounts()" id="createBtn">테스트 계정 생성</button>
+        
+        <h2>생성될 계정 목록:</h2>
+        <pre>
+1. 점검자 계정
+   - 이메일: inspector@hvac.com
+   - 비밀번호: hvac1234
+   - 역할: inspector
+
+2. 관리자 계정
+   - 이메일: manager@hvac.com
+   - 비밀번호: hvac1234
+   - 역할: manager
+
+3. 시스템 관리자 계정
+   - 이메일: admin@hvac.com
+   - 비밀번호: hvac1234
+   - 역할: admin
+        </pre>
+        
+        <h2>주의사항:</h2>
+        <ul>
+            <li>이 도구는 개발/테스트 용도로만 사용하세요</li>
+            <li>Firebase Console에서 Authentication을 활성화해야 합니다</li>
+            <li>이메일/비밀번호 인증을 사용합니다</li>
+        </ul>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+        import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+        import { getAuth, createUserWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyD7YfLEw3N7aV9lqT6cboMo-WTN4hKGn8Q",
+            authDomain: "hvac-management-5634d.firebaseapp.com",
+            projectId: "hvac-management-5634d",
+            storageBucket: "hvac-management-5634d.firebasestorage.app",
+            messagingSenderId: "638025486691",
+            appId: "1:638025486691:web:64b7f7f7b0e7577f7ff5c6",
+            measurementId: "G-1M9GPPB9E8"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        window.db = getFirestore(app);
+        window.auth = getAuth(app);
+    </script>
+    
+    <script src="js/firebase-config.js"></script>
+    
+    <script>
+        const testAccounts = [
+            { email: 'inspector@hvac.com', password: 'hvac1234', name: '김민준', role: 'inspector' },
+            { email: 'manager@hvac.com', password: 'hvac1234', name: '이서연', role: 'manager' },
+            { email: 'admin@hvac.com', password: 'hvac1234', name: '박지우', role: 'admin' }
+        ];
+
+        function addLog(message, type = 'info') {
+            const output = document.getElementById('output');
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.textContent = message;
+            output.appendChild(div);
+            
+            // 자동 스크롤
+            output.scrollTop = output.scrollHeight;
+        }
+
+        async function createTestAccounts() {
+            const btn = document.getElementById('createBtn');
+            btn.disabled = true;
+            
+            document.getElementById('output').innerHTML = '';
+            addLog('🚀 테스트 계정 생성 시작...', 'info');
+            
+            for (const account of testAccounts) {
+                try {
+                    // Firebase Authentication에 사용자 생성
+                    addLog(`📝 생성 중: ${account.email}`, 'info');
+                    const userCredential = await createUserWithEmailAndPassword(
+                        window.auth,
+                        account.email,
+                        account.password
+                    );
+                    
+                    const uid = userCredential.user.uid;
+                    addLog(`✅ Auth 생성 성공: ${account.email} (UID: ${uid})`, 'success');
+                    
+                    // Firestore에 사용자 정보 저장
+                    const userDoc = {
+                        email: account.email,
+                        name: account.name,
+                        role: account.role,
+                        created_at: new Date().toISOString(),
+                        created_by: 'setup-script'
+                    };
+                    
+                    await window.FirestoreHelper.setDocument('users', uid, userDoc);
+                    addLog(`✅ Firestore 저장 성공: ${account.name} (${account.role})`, 'success');
+                    
+                } catch (error) {
+                    if (error.code === 'auth/email-already-in-use') {
+                        addLog(`⚠️ 이미 존재: ${account.email}`, 'info');
+                    } else {
+                        addLog(`❌ 오류: ${account.email} - ${error.message}`, 'error');
+                    }
+                }
+            }
+            
+            addLog('', 'info');
+            addLog('✅ 모든 작업 완료!', 'success');
+            addLog('📌 로그인 페이지로 이동하여 테스트하세요.', 'info');
+            
+            btn.disabled = false;
+        }
+        
+        // Firebase 초기화 대기
+        function waitForFirebase() {
+            return new Promise((resolve) => {
+                const checkInterval = setInterval(() => {
+                    if (window.db && window.auth && window.FirestoreHelper) {
+                        clearInterval(checkInterval);
+                        resolve();
+                    }
+                }, 100);
+            });
+        }
+        
+        // 페이지 로드 시
+        window.addEventListener('load', async () => {
+            await waitForFirebase();
+            addLog('✅ Firebase 초기화 완료', 'success');
+            addLog('👉 "테스트 계정 생성" 버튼을 클릭하세요', 'info');
+        });
+    </script>
+</body>
+</html>

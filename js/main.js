@@ -1,27 +1,24 @@
-// 비밀번호 설정
-const PASSWORDS = {
-    inspector: '1234',  // 점검자 비밀번호
-    manager: 'admin123' // 관리자 비밀번호
-};
+// 메인 페이지 스크립트
+// Firebase Auth 기반 인증 시스템
 
-// 현재 접근 시도 중인 역할
-let currentRole = null;
-
-// 페이지 로드 시 통계 데이터 가져오기
+// 페이지 로드 시
 document.addEventListener('DOMContentLoaded', async function() {
-    // Firebase config 스크립트 로드 대기
+    // Firebase config & AuthManager 로드 대기
     await waitForFirebase();
-    await loadStatistics();
+    await waitForAuth();
     
-    // 비밀번호 입력 시 엔터키 처리
-    const passwordInput = document.getElementById('passwordInput');
-    if (passwordInput) {
-        passwordInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                submitPassword();
-            }
-        });
+    // 로그인 체크
+    if (!window.AuthManager.isLoggedIn()) {
+        console.log('⚠️ 로그인 필요, 로그인 페이지로 이동');
+        window.location.href = 'login.html';
+        return;
     }
+    
+    // 사용자 정보 표시
+    displayUserInfo();
+    
+    // 관리자 메뉴 표시 (admin 전용)
+    showAdminMenu();
 });
 
 // Firebase 초기화 대기
@@ -40,49 +37,95 @@ function waitForFirebase() {
     });
 }
 
-// 통계 데이터 로드
-async function loadStatistics() {
-    // index.html에만 있는 요소들 확인
-    const totalSitesElement = document.getElementById('totalSites');
-    if (!totalSitesElement) return; // index.html이 아니면 종료
+// AuthManager 초기화 대기
+async function waitForAuth() {
+    return new Promise((resolve) => {
+        if (window.AuthManager) {
+            window.AuthManager.initialize().then(resolve);
+        } else {
+            const checkInterval = setInterval(() => {
+                if (window.AuthManager) {
+                    clearInterval(checkInterval);
+                    window.AuthManager.initialize().then(resolve);
+                }
+            }, 100);
+        }
+    });
+}
+
+// 사용자 정보 표시
+function displayUserInfo() {
+    const user = window.AuthManager.getCurrentUser();
+    if (!user) return;
     
-    try {
-        // 현장 수
-        const sitesData = await window.FirestoreHelper.getAllDocuments('sites');
-        document.getElementById('totalSites').textContent = sitesData.total || 0;
+    const userInfo = document.getElementById('userInfo');
+    const userName = document.getElementById('userName');
+    const userRole = document.getElementById('userRole');
+    
+    if (userInfo && userName && userRole) {
+        userName.textContent = user.name;
+        userRole.textContent = window.AuthManager.getRoleText(user.role);
+        userInfo.style.display = 'flex';
+    }
+}
 
-        // 장비 수
-        const equipmentData = await window.FirestoreHelper.getAllDocuments('equipment');
-        document.getElementById('totalEquipment').textContent = equipmentData.total || 0;
+// 관리자 메뉴 표시
+function showAdminMenu() {
+    const user = window.AuthManager.getCurrentUser();
+    if (!user) return;
+    
+    if (user.role === window.USER_ROLES.ADMIN) {
+        const adminCard = document.querySelector('.admin-only');
+        if (adminCard) {
+            adminCard.style.display = 'block';
+        }
+    }
+}
 
-        // 금일 점검 수
-        const inspectionsData = await window.FirestoreHelper.getAllDocuments('inspections');
-        
-        const today = new Date().toISOString().split('T')[0];
-        const todayCount = inspectionsData.data.filter(inspection => {
-            let inspectionDate;
-            // Firebase Timestamp 객체 처리
-            if (inspection.inspection_date && inspection.inspection_date.toDate) {
-                inspectionDate = inspection.inspection_date.toDate().toISOString().split('T')[0];
-            } else {
-                inspectionDate = new Date(inspection.inspection_date).toISOString().split('T')[0];
-            }
-            return inspectionDate === today;
-        }).length;
-        
-        document.getElementById('todayInspections').textContent = todayCount;
-    } catch (error) {
-        console.error('통계 로드 오류:', error);
-        // 오류 시 기본값 0으로 설정
-        document.getElementById('totalSites').textContent = '0';
-        document.getElementById('totalEquipment').textContent = '0';
-        document.getElementById('todayInspections').textContent = '0';
+// 로그아웃
+async function logout() {
+    if (confirm('로그아웃하시겠습니까?')) {
+        const result = await window.AuthManager.logout();
+        if (result.success) {
+            window.location.href = 'login.html';
+        }
+    }
+}
+
+// 점검 페이지로 이동
+function goToInspection() {
+    if (window.AuthManager.canAccessPage('inspection.html')) {
+        window.location.href = 'inspection.html';
+    } else {
+        alert('접근 권한이 없습니다.');
+    }
+}
+
+// 대시보드로 이동
+function goToDashboard() {
+    if (window.AuthManager.canAccessPage('dashboard.html')) {
+        window.location.href = 'dashboard.html';
+    } else {
+        alert('관리자 권한이 필요합니다.');
+    }
+}
+
+// 관리자 페이지로 이동
+function goToAdmin() {
+    if (window.AuthManager.canAccessPage('admin.html')) {
+        window.location.href = 'admin.html';
+    } else {
+        alert('시스템 관리자 권한이 필요합니다.');
     }
 }
 
 // QR 스캐너 열기
 function openQRScanner() {
-    location.href = 'qr-scanner.html';
+    if (window.AuthManager.canAccessPage('qr-scanner.html')) {
+        window.location.href = 'qr-scanner.html';
+    } else {
+        alert('접근 권한이 없습니다.');
+    }
 }
 
 // 날짜 포맷 함수
@@ -130,82 +173,4 @@ function getEquipmentIcon(type) {
         '배기팬': 'fa-fan'
     };
     return icons[type] || 'fa-cog';
-}
-
-// ===== 비밀번호 인증 시스템 =====
-
-// 비밀번호 확인 팝업 열기
-function checkPassword(role) {
-    currentRole = role;
-    const modal = document.getElementById('passwordModal');
-    const title = document.getElementById('modalTitle');
-    const description = document.getElementById('modalDescription');
-    const passwordInput = document.getElementById('passwordInput');
-    const passwordHint = document.getElementById('passwordHint');
-    
-    // 역할에 따른 텍스트 설정
-    if (role === 'inspector') {
-        title.textContent = '🔒 점검자 인증';
-        description.textContent = '장비 점검 페이지에 접근하려면 비밀번호를 입력해주세요';
-    } else if (role === 'manager') {
-        title.textContent = '🔒 관리자 인증';
-        description.textContent = '관리 대시보드에 접근하려면 비밀번호를 입력해주세요';
-    }
-    
-    // 입력 필드 초기화
-    passwordInput.value = '';
-    passwordHint.textContent = '';
-    passwordHint.className = 'password-hint';
-    
-    // 모달 표시
-    modal.classList.add('active');
-    
-    // 포커스
-    setTimeout(() => {
-        passwordInput.focus();
-    }, 300);
-}
-
-// 비밀번호 모달 닫기
-function closePasswordModal() {
-    const modal = document.getElementById('passwordModal');
-    modal.classList.remove('active');
-    currentRole = null;
-}
-
-// 비밀번호 확인 및 페이지 이동
-function submitPassword() {
-    const passwordInput = document.getElementById('passwordInput');
-    const passwordHint = document.getElementById('passwordHint');
-    const enteredPassword = passwordInput.value.trim();
-    
-    // 비밀번호 확인
-    if (enteredPassword === PASSWORDS[currentRole]) {
-        // 성공
-        passwordHint.textContent = '✓ 인증 성공!';
-        passwordHint.className = 'password-hint success';
-        
-        // 페이지 이동
-        setTimeout(() => {
-            if (currentRole === 'inspector') {
-                location.href = 'inspection.html';
-            } else if (currentRole === 'manager') {
-                location.href = 'dashboard.html';
-            }
-        }, 500);
-    } else {
-        // 실패
-        passwordHint.textContent = '✗ 비밀번호가 올바르지 않습니다';
-        passwordHint.className = 'password-hint error';
-        
-        // 입력 필드 흔들기
-        passwordInput.classList.add('shake');
-        setTimeout(() => {
-            passwordInput.classList.remove('shake');
-        }, 500);
-        
-        // 입력 필드 초기화 및 포커스
-        passwordInput.value = '';
-        passwordInput.focus();
-    }
 }

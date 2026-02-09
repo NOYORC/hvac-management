@@ -31,10 +31,24 @@
                 <h1>HVAC 장비 관리</h1>
             </div>
             <p class="subtitle">공조설비 점검 및 관리 시스템</p>
+            
+            <!-- 사용자 정보 -->
+            <div id="userInfo" class="user-info" style="display: none;">
+                <div class="user-avatar">
+                    <i class="fas fa-user-circle"></i>
+                </div>
+                <div class="user-details">
+                    <div class="user-name" id="userName">사용자</div>
+                    <div class="user-role" id="userRole">역할</div>
+                </div>
+                <button onclick="logout()" class="btn-logout" title="로그아웃">
+                    <i class="fas fa-sign-out-alt"></i> 로그아웃
+                </button>
+            </div>
         </div>
 
         <div class="main-menu">
-            <div class="menu-card" onclick="checkPassword('inspector')">
+            <div class="menu-card" onclick="goToInspection()">
                 <div class="card-icon inspector">
                     <i class="fas fa-clipboard-check"></i>
                 </div>
@@ -43,12 +57,21 @@
                 <div class="card-badge">점검자</div>
             </div>
 
-            <div class="menu-card" onclick="checkPassword('manager')">
+            <div class="menu-card" onclick="goToDashboard()">
                 <div class="card-icon manager">
                     <i class="fas fa-chart-line"></i>
                 </div>
                 <h2>관리 대시보드</h2>
                 <p>통계, 차트 및 점검 내역 조회</p>
+                <div class="card-badge">관리자</div>
+            </div>
+            
+            <div class="menu-card admin-only" onclick="goToAdmin()" style="display: none;">
+                <div class="card-icon admin">
+                    <i class="fas fa-cog"></i>
+                </div>
+                <h2>시스템 관리</h2>
+                <p>점검자 및 장비 관리</p>
                 <div class="card-badge">관리자</div>
             </div>
         </div>
@@ -125,6 +148,7 @@
         window.db = db;
     </script>
     <script src="js/firebase-config.js"></script>
+    <script src="js/auth-manager.js"></script>
     <script src="js/main.js"></script>
     
     <!-- PWA Service Worker Registration -->
