@@ -53,7 +53,7 @@ async function loadEquipmentData() {
         console.log(`📊 장비 ${equipmentId} 데이터 로딩 시작...`);
         
         // 장비 정보 조회
-        const equipmentResult = await window.FirestoreHelper.getDocument('equipment', equipmentId);
+        const equipmentResult = await window.CachedFirestoreHelper.getDocument('equipment', equipmentId);
         
         if (!equipmentResult.success) {
             throw new Error('장비 정보를 찾을 수 없습니다.');
@@ -63,8 +63,8 @@ async function loadEquipmentData() {
         
         // 현장 및 건물 정보 조회
         const [siteResult, buildingResult] = await Promise.all([
-            window.FirestoreHelper.getDocument('sites', equipment.site_id),
-            window.FirestoreHelper.getDocument('buildings', equipment.building_id)
+            window.CachedFirestoreHelper.getDocument('sites', equipment.site_id),
+            window.CachedFirestoreHelper.getDocument('buildings', equipment.building_id)
         ]);
         
         site = siteResult.data;

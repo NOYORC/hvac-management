@@ -29,7 +29,7 @@ function waitForFirebase() {
 // 현장 필터 로드
 async function loadSiteFilter() {
     try {
-        const data = await window.FirestoreHelper.getAllDocuments('sites');
+        const data = await window.CachedFirestoreHelper.getAllDocuments('sites');
         
         const siteFilter = document.getElementById('siteFilterDash');
         siteFilter.innerHTML = '<option value="">전체</option>';
@@ -56,10 +56,10 @@ async function loadDashboardData() {
         const status = document.getElementById('statusFilter').value;
 
         // 점검 데이터 가져오기
-        const inspectionsData = await window.FirestoreHelper.getAllDocuments('inspections');
+        const inspectionsData = await window.CachedFirestoreHelper.getAllDocuments('inspections');
         
         // 장비 데이터 가져오기
-        const equipmentData = await window.FirestoreHelper.getAllDocuments('equipment');
+        const equipmentData = await window.CachedFirestoreHelper.getAllDocuments('equipment');
 
         let inspections = inspectionsData.data || [];
         const equipment = equipmentData.data || [];
@@ -480,7 +480,7 @@ async function downloadExcel() {
         console.log(`📊 ${filteredData.length}개의 점검 기록 다운로드 준비 중...`);
         
         // 장비 정보 매핑
-        const equipmentData = await window.FirestoreHelper.getAllDocuments('equipment');
+        const equipmentData = await window.CachedFirestoreHelper.getAllDocuments('equipment');
         const equipmentMap = {};
         if (equipmentData.data) {
             equipmentData.data.forEach(eq => {
@@ -584,7 +584,7 @@ async function downloadExcel() {
 async function getFilteredInspections() {
     try {
         // 모든 점검 데이터 가져오기
-        const inspectionsData = await window.FirestoreHelper.getAllDocuments('inspections');
+        const inspectionsData = await window.CachedFirestoreHelper.getAllDocuments('inspections');
         
         if (!inspectionsData.success || !inspectionsData.data) {
             return [];
@@ -625,7 +625,7 @@ async function getFilteredInspections() {
         // 현장 필터 (장비 ID를 통해)
         const siteFilter = document.getElementById('siteFilterDash').value;
         if (siteFilter) {
-            const equipmentData = await window.FirestoreHelper.getAllDocuments('equipment');
+            const equipmentData = await window.CachedFirestoreHelper.getAllDocuments('equipment');
             const siteEquipmentIds = equipmentData.data
                 .filter(eq => eq.site_id === siteFilter)
                 .map(eq => eq.id);

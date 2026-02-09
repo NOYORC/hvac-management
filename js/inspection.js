@@ -46,7 +46,7 @@ function waitForFirebase() {
 // QR 스캔으로 장비 직접 로드
 async function loadEquipmentDirectly(equipmentId) {
     try {
-        const result = await window.FirestoreHelper.getDocument('equipment', equipmentId);
+        const result = await window.CachedFirestoreHelper.getDocument('equipment', equipmentId);
         
         if (result.success && result.data) {
             selectedEquipment = result.data;
@@ -129,7 +129,7 @@ async function loadEquipmentDirectly(equipmentId) {
 async function loadInspectors() {
     console.log('🔍 점검자 목록 로드 시작...');
     try {
-        const data = await window.FirestoreHelper.getAllDocuments('inspectors');
+        const data = await window.CachedFirestoreHelper.getAllDocuments('inspectors');
         console.log('📊 점검자 데이터 응답:', data);
         
         const inspectorSelect = document.getElementById('inspectorName');
@@ -165,7 +165,7 @@ async function loadInspectors() {
 // Step 1: 현장 목록 로드
 async function loadSites() {
     try {
-        const data = await window.FirestoreHelper.getAllDocuments('sites');
+        const data = await window.CachedFirestoreHelper.getAllDocuments('sites');
         
         const siteList = document.getElementById('siteList');
         siteList.innerHTML = '';
@@ -195,7 +195,7 @@ async function selectSite(site) {
     document.getElementById('selectedSiteName').textContent = site.site_name;
     
     try {
-        const data = await window.FirestoreHelper.getAllDocuments('buildings');
+        const data = await window.CachedFirestoreHelper.getAllDocuments('buildings');
         
         // 선택된 현장의 건물만 필터링
         const buildings = data.data.filter(b => b.site_id === site.id);
@@ -234,7 +234,7 @@ async function selectBuilding(building) {
     document.getElementById('selectedBuildingName').textContent = building.building_name;
     
     try {
-        const data = await window.FirestoreHelper.getAllDocuments('equipment');
+        const data = await window.CachedFirestoreHelper.getAllDocuments('equipment');
         
         // 선택된 건물의 장비만 필터링
         allEquipment = data.data.filter(e => e.building_id === building.id);
@@ -428,7 +428,7 @@ async function submitInspection(e) {
     }
     
     try {
-        const result = await window.FirestoreHelper.addDocument('inspections', inspectionData);
+        const result = await window.CachedFirestoreHelper.addDocument('inspections', inspectionData);
         
         if (result.success) {
             alert('✅ 점검이 성공적으로 완료되었습니다!');
@@ -562,7 +562,7 @@ function onScanFailure(error) {
 async function displayScannedEquipment(equipmentId) {
     try {
         // 장비 정보 조회
-        const result = await window.FirestoreHelper.getDocument('equipment', equipmentId);
+        const result = await window.CachedFirestoreHelper.getDocument('equipment', equipmentId);
         
         if (!result.success) {
             alert('장비 정보를 찾을 수 없습니다.');

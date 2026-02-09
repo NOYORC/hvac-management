@@ -29,7 +29,7 @@ function waitForFirebase() {
 async function loadFilters() {
     try {
         // 현장 목록
-        const sitesData = await window.FirestoreHelper.getAllDocuments('sites');
+        const sitesData = await window.CachedFirestoreHelper.getAllDocuments('sites');
         allSitesList = sitesData.data;
         
         const siteFilter = document.getElementById('siteFilterList');
@@ -38,7 +38,7 @@ async function loadFilters() {
         });
         
         // 장비 데이터 로드 후 장비 종류 필터 생성
-        const equipmentData = await window.FirestoreHelper.getAllDocuments('equipment');
+        const equipmentData = await window.CachedFirestoreHelper.getAllDocuments('equipment');
         allEquipmentList = equipmentData.data;
         
         const types = [...new Set(allEquipmentList.map(eq => eq.equipment_type))].sort();
@@ -55,7 +55,7 @@ async function loadFilters() {
 // 장비 목록 로드
 async function loadEquipmentList() {
     try {
-        const equipmentData = await window.FirestoreHelper.getAllDocuments('equipment');
+        const equipmentData = await window.CachedFirestoreHelper.getAllDocuments('equipment');
         allEquipmentList = equipmentData.data;
         
         displayEquipmentList(allEquipmentList);

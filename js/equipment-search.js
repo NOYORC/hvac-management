@@ -43,10 +43,10 @@ async function loadAllData() {
         
         // 병렬로 모든 데이터 로드
         const [sitesResult, buildingsResult, equipmentResult, inspectionsResult] = await Promise.all([
-            window.FirestoreHelper.getAllDocuments('sites'),
-            window.FirestoreHelper.getAllDocuments('buildings'),
-            window.FirestoreHelper.getAllDocuments('equipment'),
-            window.FirestoreHelper.getAllDocuments('inspections')
+            window.CachedFirestoreHelper.getAllDocuments('sites'),
+            window.CachedFirestoreHelper.getAllDocuments('buildings'),
+            window.CachedFirestoreHelper.getAllDocuments('equipment'),
+            window.CachedFirestoreHelper.getAllDocuments('inspections')
         ]);
         
         if (!sitesResult.success || !buildingsResult.success || !equipmentResult.success) {

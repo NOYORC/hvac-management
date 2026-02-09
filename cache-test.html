@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>캐시 테스트 - HVAC 관리</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <style>
+        .test-panel {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%);
+            color: white;
+        }
+        .btn-danger {
+            background: linear-gradient(135deg, #F44336 0%, #E91E63 100%);
+            color: white;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        #logOutput {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        .log-entry {
+            padding: 5px 0;
+            border-bottom: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="btn-back" onclick="location.href='index.html'">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <h1><i class="fas fa-database"></i> 캐시 시스템 테스트</h1>
+        </div>
+
+        <!-- 캐시 통계 -->
+        <div class="test-panel">
+            <h2><i class="fas fa-chart-bar"></i> 캐시 통계</h2>
+            <div class="stats-grid" id="statsGrid">
+                <!-- 동적 생성 -->
+            </div>
+        </div>
+
+        <!-- 테스트 버튼 -->
+        <div class="test-panel">
+            <h2><i class="fas fa-flask"></i> 캐시 테스트</h2>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="testLoadSites()">
+                    <i class="fas fa-map-marker-alt"></i> 현장 데이터 로드
+                </button>
+                <button class="btn btn-primary" onclick="testLoadEquipment()">
+                    <i class="fas fa-cogs"></i> 장비 데이터 로드
+                </button>
+                <button class="btn btn-primary" onclick="testLoadInspections()">
+                    <i class="fas fa-clipboard-check"></i> 점검 데이터 로드
+                </button>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-success" onclick="refreshStats()">
+                    <i class="fas fa-sync"></i> 통계 새로고침
+                </button>
+                <button class="btn btn-danger" onclick="clearAllCache()">
+                    <i class="fas fa-trash"></i> 모든 캐시 삭제
+                </button>
+            </div>
+        </div>
+
+        <!-- 로그 출력 -->
+        <div class="test-panel">
+            <h2><i class="fas fa-terminal"></i> 실행 로그</h2>
+            <div id="logOutput"></div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSvObiEPfQkEfSLRzyg2BdCCJmQENJs8ic",
+            authDomain: "hvac-management-477fb.firebaseapp.com",
+            projectId: "hvac-management-477fb",
+            storageBucket: "hvac-management-477fb.firebasestorage.app",
+            messagingSenderId: "812239966797",
+            appId: "1:812239966797:web:b454d99fde982328f7dea04",
+            measurementId: "G-f14YESP0P1"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        window.db = db;
+    </script>
+    
+    <script src="js/cache-helper.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script>
+        // 로그 출력 함수
+        const originalConsoleLog = console.log;
+        console.log = function(...args) {
+            originalConsoleLog.apply(console, args);
+            addLog(args.join(' '));
+        };
+
+        function addLog(message) {
+            const logOutput = document.getElementById('logOutput');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logOutput.appendChild(entry);
+            logOutput.scrollTop = logOutput.scrollHeight;
+        }
+
+        // 통계 표시
+        async function refreshStats() {
+            await waitForFirebase();
+            const stats = CacheHelper.getCacheStats();
+            
+            const statsGrid = document.getElementById('statsGrid');
+            statsGrid.innerHTML = `
+                <div class="stat-box">
+                    <div class="stat-label">총 캐시 수</div>
+                    <div class="stat-value">${stats.totalCount}</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">유효 캐시</div>
+                    <div class="stat-value">${stats.validCount}</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">만료 캐시</div>
+                    <div class="stat-value">${stats.expiredCount}</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">캐시 크기</div>
+                    <div class="stat-value">${stats.totalSize}</div>
+                </div>
+            `;
+            
+            console.log('캐시 통계 새로고침 완료');
+        }
+
+        // Firebase 대기
+        function waitForFirebase() {
+            return new Promise((resolve) => {
+                if (window.db && window.FirestoreHelper && window.CachedFirestoreHelper) {
+                    resolve();
+                } else {
+                    const checkInterval = setInterval(() => {
+                        if (window.db && window.FirestoreHelper && window.CachedFirestoreHelper) {
+                            clearInterval(checkInterval);
+                            resolve();
+                        }
+                    }, 100);
+                }
+            });
+        }
+
+        // 테스트 함수들
+        async function testLoadSites() {
+            await waitForFirebase();
+            console.log('========== 현장 데이터 로드 테스트 ==========');
+            const startTime = Date.now();
+            
+            const result = await CachedFirestoreHelper.getAllDocuments('sites');
+            
+            const duration = Date.now() - startTime;
+            console.log(`✅ 현장 ${result.data?.length || 0}개 로드 완료 (${duration}ms)`);
+            
+            refreshStats();
+        }
+
+        async function testLoadEquipment() {
+            await waitForFirebase();
+            console.log('========== 장비 데이터 로드 테스트 ==========');
+            const startTime = Date.now();
+            
+            const result = await CachedFirestoreHelper.getAllDocuments('equipment');
+            
+            const duration = Date.now() - startTime;
+            console.log(`✅ 장비 ${result.data?.length || 0}개 로드 완료 (${duration}ms)`);
+            
+            refreshStats();
+        }
+
+        async function testLoadInspections() {
+            await waitForFirebase();
+            console.log('========== 점검 데이터 로드 테스트 ==========');
+            const startTime = Date.now();
+            
+            const result = await CachedFirestoreHelper.getAllDocuments('inspections');
+            
+            const duration = Date.now() - startTime;
+            console.log(`✅ 점검 ${result.data?.length || 0}개 로드 완료 (${duration}ms)`);
+            
+            refreshStats();
+        }
+
+        async function clearAllCache() {
+            if (confirm('모든 캐시를 삭제하시겠습니까?')) {
+                CacheHelper.clearAllCache();
+                console.log('🗑️ 모든 캐시 삭제 완료');
+                refreshStats();
+            }
+        }
+
+        // 페이지 로드 시 통계 표시
+        document.addEventListener('DOMContentLoaded', () => {
+            waitForFirebase().then(() => {
+                refreshStats();
+                console.log('✅ 캐시 테스트 페이지 준비 완료');
+            });
+        });
+    </script>
+</body>
+</html>
