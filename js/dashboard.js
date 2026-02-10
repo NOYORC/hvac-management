@@ -286,10 +286,19 @@ function updateAlertList(inspections, equipment) {
 function updateRecentInspections(inspections, equipment) {
     const tbody = document.querySelector('#recentInspections tbody');
     
+    console.log('📋 updateRecentInspections 호출 - inspections 개수:', inspections.length);
+    
     if (inspections.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">점검 내역이 없습니다.</td></tr>';
         return;
     }
+
+    // 첫 3개의 inspection_date 타입 확인
+    inspections.slice(0, 3).forEach((insp, idx) => {
+        console.log(`🔍 점검 ${idx + 1} - inspection_date 타입:`, typeof insp.inspection_date, 
+                    'toDate 존재:', !!insp.inspection_date?.toDate,
+                    '값:', insp.inspection_date);
+    });
 
     const equipmentMap = {};
     equipment.forEach(eq => {
@@ -308,10 +317,13 @@ function updateRecentInspections(inspections, equipment) {
     tbody.innerHTML = recentInspections.map(insp => {
         const eq = equipmentMap[insp.equipment_id] || {};
         const statusColor = getStatusColor(insp.status);
+        const formattedDate = formatDate(insp.inspection_date);
+        
+        console.log('📅 포맷된 날짜:', formattedDate, '원본:', insp.inspection_date);
         
         return `
             <tr>
-                <td>${formatDate(insp.inspection_date)}</td>
+                <td>${formattedDate}</td>
                 <td>${insp.inspector_name}</td>
                 <td>${eq.equipment_type || '알 수 없음'}<br><small>${eq.model || '-'}</small></td>
                 <td>${eq.location || '-'}<br><small>${eq.floor || '-'}</small></td>
