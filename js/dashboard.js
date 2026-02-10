@@ -229,11 +229,7 @@ function updateStatusChart(inspections) {
     }
 }
 
-// 점검 추이 차트는 제거되었습니다
-
-// 장비 유형별 바 차트
-// 장비 유형별 차트와 현장별 차트는 제거되었습니다
-}
+// 점검 추이, 장비 유형별, 현장별 차트는 제거되었습니다
 
 // 이상 장비 목록 업데이트
 function updateAlertList(inspections, equipment) {
