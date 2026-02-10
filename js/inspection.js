@@ -415,15 +415,11 @@ async function submitInspection(e) {
     }
     
     // 점검 데이터 구성
-    const timestamp = window.FirestoreTimestamp.now();
-    console.log('🕐 Timestamp 생성:', timestamp);
-    console.log('🕐 Timestamp.toDate():', timestamp.toDate ? timestamp.toDate() : 'toDate() 없음');
-    
     const inspectionData = {
         equipment_id: selectedEquipment.id,
         inspection_type: inspectionType,
         inspector_name: inspectorName,
-        inspection_date: timestamp,
+        inspection_date: window.FirestoreTimestamp.now(),
         status: status,
         indoor_temperature: document.getElementById('indoorTemperature').value || '',
         set_temperature: document.getElementById('setTemperature').value || '',
@@ -435,8 +431,6 @@ async function submitInspection(e) {
         notes: notes,
         photo_url: '' // 사진 기능은 추후 구현
     };
-    
-    console.log('📦 저장할 점검 데이터:', inspectionData);
     
     try {
         const result = await window.CachedFirestoreHelper.addDocument('inspections', inspectionData);

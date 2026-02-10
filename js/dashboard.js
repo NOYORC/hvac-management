@@ -87,26 +87,16 @@ async function loadDashboardData() {
 
         // 기간 필터링
         const now = new Date();
-        console.log('🔍 기간 필터링 시작 - period:', period, '현재 시각:', now);
-        console.log('📦 필터링 전 점검 개수:', inspections.length);
-        
         inspections = inspections.filter(inspection => {
             let inspectionDate;
-            
-            console.log('🔍 점검 ID:', inspection.id, 'inspection_date 타입:', typeof inspection.inspection_date, 
-                        'toDate 타입:', typeof inspection.inspection_date?.toDate,
-                        '값:', inspection.inspection_date);
             
             // Firebase Timestamp 처리
             if (inspection.inspection_date && typeof inspection.inspection_date.toDate === 'function') {
                 inspectionDate = inspection.inspection_date.toDate();
-                console.log('✅ toDate() 호출 성공:', inspectionDate);
             } else if (inspection.inspection_date) {
                 inspectionDate = new Date(inspection.inspection_date);
-                console.log('✅ new Date() 변환:', inspectionDate);
             } else {
                 // inspection_date가 없는 경우 제외
-                console.log('❌ inspection_date가 없음');
                 return false;
             }
             
@@ -116,24 +106,18 @@ async function loadDashboardData() {
                 return false;
             }
             
-            let result = true;
             if (period === 'today') {
-                result = inspectionDate.toDateString() === now.toDateString();
-                console.log('📅 today 필터:', result, '점검일:', inspectionDate.toDateString(), '오늘:', now.toDateString());
+                return inspectionDate.toDateString() === now.toDateString();
             } else if (period === 'week') {
                 const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-                result = inspectionDate >= weekAgo;
-                console.log('📅 week 필터:', result, '점검일:', inspectionDate, '7일 전:', weekAgo);
+                return inspectionDate >= weekAgo;
             } else if (period === 'month') {
                 const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-                result = inspectionDate >= monthAgo;
-                console.log('📅 month 필터:', result, '점검일:', inspectionDate, '30일 전:', monthAgo);
+                return inspectionDate >= monthAgo;
             }
             
-            return result;
+            return true;
         });
-        
-        console.log('✅ 기간 필터링 완료 - 남은 점검 개수:', inspections.length);
 
         // 현장 필터링
         if (siteId) {
@@ -304,19 +288,10 @@ function updateAlertList(inspections, equipment) {
 function updateRecentInspections(inspections, equipment) {
     const tbody = document.querySelector('#recentInspections tbody');
     
-    console.log('📋 updateRecentInspections 호출 - inspections 개수:', inspections.length);
-    
     if (inspections.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">점검 내역이 없습니다.</td></tr>';
         return;
     }
-
-    // 첫 3개의 inspection_date 타입 확인
-    inspections.slice(0, 3).forEach((insp, idx) => {
-        console.log(`🔍 점검 ${idx + 1} - inspection_date 타입:`, typeof insp.inspection_date, 
-                    'toDate 존재:', !!insp.inspection_date?.toDate,
-                    '값:', insp.inspection_date);
-    });
 
     const equipmentMap = {};
     equipment.forEach(eq => {
@@ -336,8 +311,6 @@ function updateRecentInspections(inspections, equipment) {
         const eq = equipmentMap[insp.equipment_id] || {};
         const statusColor = getStatusColor(insp.status);
         const formattedDate = formatDate(insp.inspection_date);
-        
-        console.log('📅 포맷된 날짜:', formattedDate, '원본:', insp.inspection_date);
         
         return `
             <tr>
