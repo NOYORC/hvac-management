@@ -70,8 +70,20 @@ async function addDocument(collectionName, data) {
         const { collection, addDoc, Timestamp } = await getFirestoreFunctions();
         
         // 타임스탬프 필드 변환
-        if (data.inspection_date && typeof data.inspection_date === 'string') {
-            data.inspection_date = Timestamp.fromDate(new Date(data.inspection_date));
+        if (data.inspection_date) {
+            // 이미 Timestamp 객체인 경우 그대로 사용
+            if (data.inspection_date instanceof Timestamp || 
+                (data.inspection_date && typeof data.inspection_date.toDate === 'function')) {
+                // 이미 Timestamp - 그대로 사용
+            } 
+            // Date 객체인 경우 Timestamp로 변환
+            else if (data.inspection_date instanceof Date) {
+                data.inspection_date = Timestamp.fromDate(data.inspection_date);
+            }
+            // 문자열인 경우 Timestamp로 변환
+            else if (typeof data.inspection_date === 'string') {
+                data.inspection_date = Timestamp.fromDate(new Date(data.inspection_date));
+            }
         }
         
         const docRef = await addDoc(collection(window.db, collectionName), data);
