@@ -92,8 +92,17 @@ async function loadDashboardData() {
             // Firebase Timestamp 처리
             if (inspection.inspection_date && inspection.inspection_date.toDate) {
                 inspectionDate = inspection.inspection_date.toDate();
-            } else {
+            } else if (inspection.inspection_date) {
                 inspectionDate = new Date(inspection.inspection_date);
+            } else {
+                // inspection_date가 없는 경우 제외
+                return false;
+            }
+            
+            // Invalid Date 체크
+            if (isNaN(inspectionDate.getTime())) {
+                console.error('Invalid inspection_date:', inspection.inspection_date, 'for inspection:', inspection.id);
+                return false;
             }
             
             if (period === 'today') {
@@ -105,7 +114,7 @@ async function loadDashboardData() {
                 const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
                 return inspectionDate >= monthAgo;
             }
-            return true;
+            return true; // 'all' 또는 기타
         });
 
         // 현장 필터링
