@@ -85,10 +85,17 @@ function switchTab(tabName) {
 
 // ===== 점검자 관리 =====
 async function loadUsers() {
+    console.log('📋 점검자 데이터 로드 시작...');
     const result = await window.CachedFirestoreHelper.getAllDocuments('users');
+    console.log('📋 점검자 데이터 로드 결과:', result);
+    
     if (result.success) {
         users = result.data;
+        console.log('✅ 점검자 수:', users.length, '명');
+        console.log('📊 점검자 목록:', users);
         renderUsers();
+    } else {
+        console.error('❌ 점검자 로드 실패:', result.error);
     }
 }
 
@@ -229,10 +236,17 @@ async function deleteUser(userId) {
 
 // ===== 장비 관리 =====
 async function loadEquipment() {
+    console.log('🔧 장비 데이터 로드 시작...');
     const result = await window.CachedFirestoreHelper.getAllDocuments('equipment');
+    console.log('🔧 장비 데이터 로드 결과:', result);
+    
     if (result.success) {
         equipment = result.data;
+        console.log('✅ 장비 수:', equipment.length, '개');
+        console.log('📊 장비 목록:', equipment);
         renderEquipment();
+    } else {
+        console.error('❌ 장비 로드 실패:', result.error);
     }
 }
 
