@@ -69,24 +69,33 @@ async function addDocument(collectionName, data) {
     try {
         const { collection, addDoc, Timestamp } = await getFirestoreFunctions();
         
+        console.log('📝 addDocument 호출:', collectionName, 'inspection_date 타입:', typeof data.inspection_date, data.inspection_date);
+        
         // 타임스탬프 필드 변환
         if (data.inspection_date) {
-            // 이미 Timestamp 객체인 경우 그대로 사용
-            if (data.inspection_date instanceof Timestamp || 
-                (data.inspection_date && typeof data.inspection_date.toDate === 'function')) {
-                // 이미 Timestamp - 그대로 사용
+            // toDate 메서드가 있으면 이미 Timestamp (어떤 버전이든)
+            if (typeof data.inspection_date.toDate === 'function') {
+                // Timestamp → Date → Timestamp로 재변환 (동일한 Timestamp 클래스 사용)
+                const dateValue = data.inspection_date.toDate();
+                data.inspection_date = Timestamp.fromDate(dateValue);
+                console.log('✅ Timestamp 재변환 완료');
             } 
-            // Date 객체인 경우 Timestamp로 변환
+            // Date 객체인 경우
             else if (data.inspection_date instanceof Date) {
                 data.inspection_date = Timestamp.fromDate(data.inspection_date);
+                console.log('✅ Date → Timestamp 변환 완료');
             }
-            // 문자열인 경우 Timestamp로 변환
+            // 문자열인 경우
             else if (typeof data.inspection_date === 'string') {
                 data.inspection_date = Timestamp.fromDate(new Date(data.inspection_date));
+                console.log('✅ String → Timestamp 변환 완료');
             }
         }
         
+        console.log('💾 저장할 데이터:', { ...data, inspection_date: data.inspection_date });
+        
         const docRef = await addDoc(collection(window.db, collectionName), data);
+        console.log('✅ 문서 저장 완료:', docRef.id);
         return { success: true, id: docRef.id };
     } catch (error) {
         console.error(`Error adding document:`, error);
