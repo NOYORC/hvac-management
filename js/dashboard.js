@@ -1,13 +1,30 @@
 // 페이지 로드 시 실행
 document.addEventListener('DOMContentLoaded', async function() {
+    console.log('📱 페이지 로드 시작');
+    
     await waitForFirebase();
     await loadSiteFilter();
+    
+    // DOM이 완전히 렌더링될 때까지 대기
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
     await loadDashboardData();
     
     // 필터 변경 이벤트 리스너 등록
-    document.getElementById('periodFilter').addEventListener('change', loadDashboardData);
-    document.getElementById('siteFilterDash').addEventListener('change', loadDashboardData);
-    document.getElementById('statusFilter').addEventListener('change', loadDashboardData);
+    document.getElementById('periodFilter').addEventListener('change', () => {
+        console.log('🔄 기간 필터 변경');
+        loadDashboardData();
+    });
+    document.getElementById('siteFilterDash').addEventListener('change', () => {
+        console.log('🔄 현장 필터 변경');
+        loadDashboardData();
+    });
+    document.getElementById('statusFilter').addEventListener('change', () => {
+        console.log('🔄 상태 필터 변경');
+        loadDashboardData();
+    });
+    
+    console.log('✅ 페이지 로드 완료');
 });
 
 // Firebase 초기화 대기
@@ -144,9 +161,41 @@ function updateStatistics(inspections) {
 // 차트 업데이트
 let statusChart, trendChart, equipmentTypeChart, siteChart;
 
+// 캔버스 준비 확인
+function isCanvasReady(canvasId) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) {
+        console.warn(`❌ ${canvasId} 캔버스를 찾을 수 없습니다`);
+        return false;
+    }
+    
+    // 캔버스가 화면에 표시되고 크기가 있는지 확인
+    const rect = canvas.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) {
+        console.warn(`❌ ${canvasId} 캔버스 크기가 0입니다: ${rect.width}x${rect.height}`);
+        return false;
+    }
+    
+    console.log(`✅ ${canvasId} 캔버스 준비됨: ${rect.width}x${rect.height}`);
+    return true;
+}
+
 function updateCharts(inspections, equipment) {
     try {
         console.log('📈 차트 업데이트 시작...');
+        
+        // 모든 캔버스가 준비될 때까지 대기
+        const canvasIds = ['statusChart', 'trendChart', 'equipmentTypeChart', 'siteChart'];
+        const allReady = canvasIds.every(id => {
+            const canvas = document.getElementById(id);
+            return canvas && canvas.offsetWidth > 0 && canvas.offsetHeight > 0;
+        });
+        
+        if (!allReady) {
+            console.warn('⚠️ 일부 캔버스가 준비되지 않음. 100ms 후 재시도...');
+            setTimeout(() => updateCharts(inspections, equipment), 100);
+            return;
+        }
         
         // 상태 분포 차트
         updateStatusChart(inspections);
@@ -170,18 +219,26 @@ function updateCharts(inspections, equipment) {
 // 상태 분포 도넛 차트
 function updateStatusChart(inspections) {
     try {
+        const canvas = document.getElementById('statusChart');
+        if (!canvas) {
+            console.warn('❌ statusChart 캔버스를 찾을 수 없습니다');
+            return;
+        }
+        
+        // 캔버스 크기 확인
+        if (canvas.offsetWidth === 0 || canvas.offsetHeight === 0) {
+            console.warn(`❌ statusChart 크기가 0입니다: ${canvas.offsetWidth}x${canvas.offsetHeight}`);
+            return;
+        }
+        
         const statusCounts = {
             '정상': inspections.filter(i => i.status === '정상').length,
             '주의': inspections.filter(i => i.status === '주의').length,
             '경고': inspections.filter(i => i.status === '경고').length,
             '고장': inspections.filter(i => i.status === '고장').length
         };
-
-        const canvas = document.getElementById('statusChart');
-        if (!canvas) {
-            console.warn('statusChart 캔버스를 찾을 수 없습니다');
-            return;
-        }
+        
+        console.log('📊 상태 차트 데이터:', statusCounts);
         
         const ctx = canvas.getContext('2d');
         
@@ -192,6 +249,7 @@ function updateStatusChart(inspections) {
             } catch (e) {
                 console.warn('기존 차트 파괴 실패:', e);
             }
+            statusChart = null;
         }
 
         statusChart = new Chart(ctx, {
@@ -213,14 +271,29 @@ function updateStatusChart(inspections) {
                 }
             }
         });
+        
+        console.log('✅ 상태 차트 생성 완료');
     } catch (error) {
         console.error('❌ 상태 차트 업데이트 오류:', error);
+        console.error('오류 스택:', error.stack);
     }
 }
 
 // 점검 추이 선 차트
 function updateTrendChart(inspections) {
     try {
+        const canvas = document.getElementById('trendChart');
+        if (!canvas) {
+            console.warn('❌ trendChart 캔버스를 찾을 수 없습니다');
+            return;
+        }
+        
+        // 캔버스 크기 확인
+        if (canvas.offsetWidth === 0 || canvas.offsetHeight === 0) {
+            console.warn(`❌ trendChart 크기가 0입니다: ${canvas.offsetWidth}x${canvas.offsetHeight}`);
+            return;
+        }
+        
         // 최근 7일 데이터
         const last7Days = [];
         const now = new Date();
@@ -242,12 +315,8 @@ function updateTrendChart(inspections) {
                 return inspDate === date;
             }).length;
         });
-
-        const canvas = document.getElementById('trendChart');
-        if (!canvas) {
-            console.warn('trendChart 캔버스를 찾을 수 없습니다');
-            return;
-        }
+        
+        console.log('📊 추이 차트 데이터:', { dates: last7Days, counts: dailyCounts });
         
         const ctx = canvas.getContext('2d');
         
@@ -258,6 +327,7 @@ function updateTrendChart(inspections) {
             } catch (e) {
                 console.warn('기존 차트 파괴 실패:', e);
             }
+            trendChart = null;
         }
 
         trendChart = new Chart(ctx, {
@@ -294,14 +364,29 @@ function updateTrendChart(inspections) {
                 }
             }
         });
+        
+        console.log('✅ 추이 차트 생성 완료');
     } catch (error) {
         console.error('❌ 추이 차트 업데이트 오류:', error);
+        console.error('오류 스택:', error.stack);
     }
 }
 
 // 장비 유형별 바 차트
 function updateEquipmentTypeChart(inspections, equipment) {
     try {
+        const canvas = document.getElementById('equipmentTypeChart');
+        if (!canvas) {
+            console.warn('❌ equipmentTypeChart 캔버스를 찾을 수 없습니다');
+            return;
+        }
+        
+        // 캔버스 크기 확인
+        if (canvas.offsetWidth === 0 || canvas.offsetHeight === 0) {
+            console.warn(`❌ equipmentTypeChart 크기가 0입니다: ${canvas.offsetWidth}x${canvas.offsetHeight}`);
+            return;
+        }
+        
         const equipmentMap = {};
         equipment.forEach(eq => {
             equipmentMap[eq.id] = eq.equipment_type;
@@ -312,12 +397,8 @@ function updateEquipmentTypeChart(inspections, equipment) {
             const type = equipmentMap[insp.equipment_id] || '기타';
             typeCounts[type] = (typeCounts[type] || 0) + 1;
         });
-
-        const canvas = document.getElementById('equipmentTypeChart');
-        if (!canvas) {
-            console.warn('equipmentTypeChart 캔버스를 찾을 수 없습니다');
-            return;
-        }
+        
+        console.log('📊 장비 유형 차트 데이터:', typeCounts);
         
         const ctx = canvas.getContext('2d');
         
@@ -328,6 +409,7 @@ function updateEquipmentTypeChart(inspections, equipment) {
             } catch (e) {
                 console.warn('기존 차트 파괴 실패:', e);
             }
+            equipmentTypeChart = null;
         }
 
         equipmentTypeChart = new Chart(ctx, {
@@ -358,14 +440,29 @@ function updateEquipmentTypeChart(inspections, equipment) {
                 }
             }
         });
+        
+        console.log('✅ 장비 유형 차트 생성 완료');
     } catch (error) {
         console.error('❌ 장비 유형 차트 업데이트 오류:', error);
+        console.error('오류 스택:', error.stack);
     }
 }
 
 // 현장별 가로 바 차트
 function updateSiteChart(inspections, equipment) {
     try {
+        const canvas = document.getElementById('siteChart');
+        if (!canvas) {
+            console.warn('❌ siteChart 캔버스를 찾을 수 없습니다');
+            return;
+        }
+        
+        // 캔버스 크기 확인
+        if (canvas.offsetWidth === 0 || canvas.offsetHeight === 0) {
+            console.warn(`❌ siteChart 크기가 0입니다: ${canvas.offsetWidth}x${canvas.offsetHeight}`);
+            return;
+        }
+        
         const equipmentMap = {};
         equipment.forEach(eq => {
             equipmentMap[eq.id] = eq.site_id;
@@ -376,12 +473,8 @@ function updateSiteChart(inspections, equipment) {
             const siteId = equipmentMap[insp.equipment_id];
             siteCounts[siteId] = (siteCounts[siteId] || 0) + 1;
         });
-
-        const canvas = document.getElementById('siteChart');
-        if (!canvas) {
-            console.warn('siteChart 캔버스를 찾을 수 없습니다');
-            return;
-        }
+        
+        console.log('📊 현장별 차트 데이터:', siteCounts);
         
         const ctx = canvas.getContext('2d');
         
@@ -392,6 +485,7 @@ function updateSiteChart(inspections, equipment) {
             } catch (e) {
                 console.warn('기존 차트 파괴 실패:', e);
             }
+            siteChart = null;
         }
 
         siteChart = new Chart(ctx, {
@@ -423,8 +517,11 @@ function updateSiteChart(inspections, equipment) {
                 }
             }
         });
+        
+        console.log('✅ 현장별 차트 생성 완료');
     } catch (error) {
         console.error('❌ 현장별 차트 업데이트 오류:', error);
+        console.error('오류 스택:', error.stack);
     }
 }
 
