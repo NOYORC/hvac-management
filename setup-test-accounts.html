@@ -119,6 +119,9 @@
         const app = initializeApp(firebaseConfig);
         window.db = getFirestore(app);
         window.auth = getAuth(app);
+        
+        // Auth 함수를 전역으로 노출
+        window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
     </script>
     
     <script src="js/firebase-config.js"></script>
@@ -152,7 +155,7 @@
                 try {
                     // Firebase Authentication에 사용자 생성
                     addLog(`📝 생성 중: ${account.email}`, 'info');
-                    const userCredential = await createUserWithEmailAndPassword(
+                    const userCredential = await window.createUserWithEmailAndPassword(
                         window.auth,
                         account.email,
                         account.password
