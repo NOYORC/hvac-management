@@ -2,7 +2,7 @@
   "name": "HVAC 장비 관리 시스템",
   "short_name": "HVAC 관리",
   "description": "공조설비 점검 및 관리 시스템",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#667eea",
   "theme_color": "#667eea",
@@ -64,12 +64,12 @@
       "name": "장비 점검",
       "short_name": "점검",
       "description": "현장 장비 점검 시작",
-      "url": "/inspection.html",
+      "url": "./inspection.html",
       "icons": [
         {
-          "src": "icons/icon-192x192.svg",
+          "src": "icons/icon-192x192.png",
           "sizes": "192x192",
-          "type": "image/svg+xml"
+          "type": "image/png"
         }
       ]
     },
@@ -77,12 +77,12 @@
       "name": "장비 검색",
       "short_name": "검색",
       "description": "장비 검색 및 정비내역 조회",
-      "url": "/equipment-search.html",
+      "url": "./equipment-search.html",
       "icons": [
         {
-          "src": "icons/icon-192x192.svg",
+          "src": "icons/icon-192x192.png",
           "sizes": "192x192",
-          "type": "image/svg+xml"
+          "type": "image/png"
         }
       ]
     },
@@ -90,12 +90,12 @@
       "name": "대시보드",
       "short_name": "대시보드",
       "description": "통계 및 점검 내역 조회",
-      "url": "/dashboard.html",
+      "url": "./dashboard.html",
       "icons": [
         {
-          "src": "icons/icon-192x192.svg",
+          "src": "icons/icon-192x192.png",
           "sizes": "192x192",
-          "type": "image/svg+xml"
+          "type": "image/png"
         }
       ]
     }

@@ -214,9 +214,10 @@ async function createInspections() {
         
         const inspections = [];
         
-        // 최근 30일간의 랜덤 점검 기록 20개 생성
+        // 최근 7일: 15개, 8-30일: 5개 (총 20개)
         for (let i = 0; i < 20; i++) {
-            const daysAgo = Math.floor(Math.random() * 30);
+            // 처음 15개는 최근 7일, 나머지 5개는 8-30일
+            const daysAgo = i < 15 ? Math.floor(Math.random() * 7) : (7 + Math.floor(Math.random() * 23));
             const date = new Date();
             date.setDate(date.getDate() - daysAgo);
             date.setHours(9 + Math.floor(Math.random() * 8), Math.floor(Math.random() * 60), 0);
@@ -229,7 +230,7 @@ async function createInspections() {
                 equipment_id: equipmentId,
                 inspector_id: inspectorIds[inspectorIdx],
                 inspector_name: inspectorNames[inspectorIdx],
-                inspection_date: date.toISOString(),
+                inspection_date: date.toISOString(), // ISO 문자열로 일단 저장
                 inspection_type: '정기점검',
                 status: status,
                 indoor_temperature: (22 + Math.random() * 4).toFixed(1),
