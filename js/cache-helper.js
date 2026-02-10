@@ -22,6 +22,43 @@ class CacheHelper {
      * @param {string} cacheKey - 캐시 키
      * @returns {object|null} 캐시된 데이터 또는 null
      */
+    /**
+     * Timestamp 객체 복원 (JSON 직렬화로 손실된 메서드 복원)
+     * @param {object} obj - 복원할 객체
+     * @returns {object} Timestamp가 복원된 객체
+     */
+    static restoreTimestamps(obj) {
+        if (!obj) return obj;
+        
+        // 배열인 경우
+        if (Array.isArray(obj)) {
+            return obj.map(item => this.restoreTimestamps(item));
+        }
+        
+        // 객체인 경우
+        if (typeof obj === 'object') {
+            // Timestamp 객체 복원 (seconds와 nanoseconds가 있으면 Timestamp로 간주)
+            if (obj.seconds !== undefined && obj.nanoseconds !== undefined) {
+                // window.FirestoreTimestamp가 있는지 확인
+                if (window.FirestoreTimestamp && window.FirestoreTimestamp.fromMillis) {
+                    const millis = obj.seconds * 1000 + obj.nanoseconds / 1000000;
+                    return window.FirestoreTimestamp.fromMillis(millis);
+                }
+            }
+            
+            // 중첩된 객체 처리
+            const restored = {};
+            for (const key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    restored[key] = this.restoreTimestamps(obj[key]);
+                }
+            }
+            return restored;
+        }
+        
+        return obj;
+    }
+    
     static getFromCache(cacheKey) {
         try {
             const cached = localStorage.getItem(cacheKey);
@@ -36,8 +73,11 @@ class CacheHelper {
                 return null;
             }
             
+            // Timestamp 복원
+            const restoredData = this.restoreTimestamps(data);
+            
             console.log(`✅ 캐시 적중: ${cacheKey} (${Math.floor((Date.now() - timestamp) / 1000)}초 전)`);
-            return data;
+            return restoredData;
             
         } catch (error) {
             console.error('캐시 읽기 오류:', error);
