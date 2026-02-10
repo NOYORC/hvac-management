@@ -379,12 +379,17 @@ function selectEquipment(equipment) {
 // 점검 유형에 따라 폼 필드 업데이트
 function updateFormFields() {
     const inspectionType = document.querySelector('input[name="inspectionType"]:checked').value;
-    const detailedFields = document.getElementById('detailedFields');
+    const normalNotes = document.getElementById('normalNotes');
+    const repairFields = document.getElementById('repairFields');
     
-    if (inspectionType === '세부점검') {
-        detailedFields.style.display = 'block';
+    if (inspectionType === '고장정비') {
+        // 고장정비: 특이사항 숨기고 정비내용 표시
+        normalNotes.style.display = 'none';
+        repairFields.style.display = 'block';
     } else {
-        detailedFields.style.display = 'none';
+        // 일반점검: 특이사항 표시하고 정비내용 숨김
+        normalNotes.style.display = 'block';
+        repairFields.style.display = 'none';
     }
 }
 
@@ -401,6 +406,14 @@ async function submitInspection(e) {
         return;
     }
     
+    // 점검 유형에 따라 notes 필드 선택
+    let notes = '';
+    if (inspectionType === '고장정비') {
+        notes = document.getElementById('notesRepair').value || '';
+    } else {
+        notes = document.getElementById('notesNormal').value || '';
+    }
+    
     // 점검 데이터 구성
     const inspectionData = {
         equipment_id: selectedEquipment.id,
@@ -415,12 +428,9 @@ async function submitInspection(e) {
         current_r: document.getElementById('currentR').value || '',
         current_s: document.getElementById('currentS').value || '',
         current_t: document.getElementById('currentT').value || '',
-        notes: document.getElementById('notes').value || '',
+        notes: notes,
         photo_url: '' // 사진 기능은 추후 구현
     };
-    
-    // 고장정비인 경우 추가 필드 (제거됨)
-    // 이전: vibration, noise, clean_status, filter_status
     
     try {
         const result = await window.CachedFirestoreHelper.addDocument('inspections', inspectionData);

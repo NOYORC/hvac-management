@@ -207,14 +207,19 @@
                     </div>
                 </div>
 
-                <!-- 고장정비 추가 필드 -->
-                <div id="detailedFields" class="form-section" style="display: none;">
-                    <h3>정비 내용</h3>
+                <!-- 일반점검: 특이사항 -->
+                <div id="normalNotes" class="form-group">
+                    <label><i class="fas fa-comment"></i> 특이사항</label>
+                    <textarea id="notesNormal" rows="4" placeholder="특이사항이 있으면 입력하세요"></textarea>
                 </div>
 
-                <div class="form-group">
-                    <label><i class="fas fa-comment"></i> 정비내용</label>
-                    <textarea id="notes" rows="4" placeholder="정비 내용을 입력하세요"></textarea>
+                <!-- 고장정비: 정비내용 섹션 -->
+                <div id="repairFields" class="form-section" style="display: none;">
+                    <h3>정비 내용</h3>
+                    <div class="form-group">
+                        <label><i class="fas fa-wrench"></i> 정비내용</label>
+                        <textarea id="notesRepair" rows="4" placeholder="정비 내용을 상세히 입력하세요"></textarea>
+                    </div>
                 </div>
 
                 <!-- 사진 첨부 섹션 -->

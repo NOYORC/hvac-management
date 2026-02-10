@@ -263,7 +263,7 @@ function updateAlertList(inspections, equipment) {
                     <i class="fas fa-map-marker-alt"></i> ${eq.location || '-'} (${eq.floor || '-'})
                 </div>
                 <div class="alert-info">
-                    <i class="fas fa-exclamation-circle"></i> ${insp.notes || '정비내용 없음'}
+                    <i class="fas fa-exclamation-circle"></i> ${insp.notes || (insp.inspection_type === '고장정비' ? '정비내용 없음' : '특이사항 없음')}
                 </div>
                 <div class="alert-info">
                     <i class="fas fa-clock"></i> ${formatDate(insp.inspection_date)}
@@ -434,7 +434,7 @@ async function downloadExcel() {
                 'R상전류(A)': insp.current_r || '-',
                 'S상전류(A)': insp.current_s || '-',
                 'T상전류(A)': insp.current_t || '-',
-                '정비내용': insp.notes || '-'
+                '정비내용/특이사항': insp.notes || '-'
             };
         });
         
