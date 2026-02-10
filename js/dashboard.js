@@ -1,6 +1,6 @@
 // 페이지 로드 시 실행
 document.addEventListener('DOMContentLoaded', async function() {
-    console.log('📱 페이지 로드 시작');
+    // console.log('📱 페이지 로드 시작');
     
     await waitForFirebase();
     await loadSiteFilter();
@@ -12,19 +12,19 @@ document.addEventListener('DOMContentLoaded', async function() {
     
     // 필터 변경 이벤트 리스너 등록
     document.getElementById('periodFilter').addEventListener('change', () => {
-        console.log('🔄 기간 필터 변경');
+        // console.log('🔄 기간 필터 변경');
         loadDashboardData();
     });
     document.getElementById('siteFilterDash').addEventListener('change', () => {
-        console.log('🔄 현장 필터 변경');
+        // console.log('🔄 현장 필터 변경');
         loadDashboardData();
     });
     document.getElementById('statusFilter').addEventListener('change', () => {
-        console.log('🔄 상태 필터 변경');
+        // console.log('🔄 상태 필터 변경');
         loadDashboardData();
     });
     
-    console.log('✅ 페이지 로드 완료');
+    // console.log('✅ 페이지 로드 완료');
 });
 
 // Firebase 초기화 대기
@@ -67,7 +67,7 @@ async function loadSiteFilter() {
 // 대시보드 데이터 로드
 async function loadDashboardData() {
     try {
-        console.log('📊 대시보드 데이터 로드 시작...');
+        // console.log('📊 대시보드 데이터 로드 시작...');
         
         // 필터 값 가져오기
         const period = document.getElementById('periodFilter').value;
@@ -83,7 +83,7 @@ async function loadDashboardData() {
         let inspections = inspectionsData.data || [];
         const equipment = equipmentData.data || [];
         
-        console.log(`📦 로드된 데이터: 점검 ${inspections.length}개, 장비 ${equipment.length}개`);
+        // console.log(`📦 로드된 데이터: 점검 ${inspections.length}개, 장비 ${equipment.length}개`);
 
         // 기간 필터링
         const now = new Date();
@@ -120,7 +120,7 @@ async function loadDashboardData() {
             inspections = inspections.filter(insp => insp.status === status);
         }
         
-        console.log(`✅ 필터링 후: ${inspections.length}개 점검`);
+        // console.log(`✅ 필터링 후: ${inspections.length}개 점검`);
 
         // 통계 업데이트
         updateStatistics(inspections);
@@ -134,7 +134,7 @@ async function loadDashboardData() {
         // 최근 점검 내역 업데이트
         updateRecentInspections(inspections, equipment);
         
-        console.log('✅ 대시보드 데이터 로드 완료');
+        // console.log('✅ 대시보드 데이터 로드 완료');
 
     } catch (error) {
         console.error('❌ 대시보드 데이터 로드 오류:', error);
@@ -165,51 +165,30 @@ let statusChart, equipmentTypeChart, siteChart;
 function isCanvasReady(canvasId) {
     const canvas = document.getElementById(canvasId);
     if (!canvas) {
-        console.warn(`❌ ${canvasId} 캔버스를 찾을 수 없습니다`);
+        // console.warn(`❌ ${canvasId} 캔버스를 찾을 수 없습니다`);
         return false;
     }
     
     // 캔버스가 화면에 표시되고 크기가 있는지 확인
     const rect = canvas.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) {
-        console.warn(`❌ ${canvasId} 캔버스 크기가 0입니다: ${rect.width}x${rect.height}`);
+        // console.warn(`❌ ${canvasId} 캔버스 크기가 0입니다: ${rect.width}x${rect.height}`);
         return false;
     }
     
-    console.log(`✅ ${canvasId} 캔버스 준비됨: ${rect.width}x${rect.height}`);
+    // console.log(`✅ ${canvasId} 캔버스 준비됨: ${rect.width}x${rect.height}`);
     return true;
 }
 
+// 차트 업데이트 - 장비 유형별과 현장별 차트 제거
+let statusChart;
+
 function updateCharts(inspections, equipment) {
     try {
-        console.log('📈 차트 업데이트 시작...');
-        
-        // 모든 캔버스가 준비될 때까지 대기
-        const canvasIds = ['statusChart', 'equipmentTypeChart', 'siteChart'];
-        const allReady = canvasIds.every(id => {
-            const canvas = document.getElementById(id);
-            return canvas && canvas.offsetWidth > 0 && canvas.offsetHeight > 0;
-        });
-        
-        if (!allReady) {
-            console.warn('⚠️ 일부 캔버스가 준비되지 않음. 100ms 후 재시도...');
-            setTimeout(() => updateCharts(inspections, equipment), 100);
-            return;
-        }
-        
-        // 상태 분포 차트
+        // 상태 분포 차트만 업데이트
         updateStatusChart(inspections);
-        
-        // 장비 유형별 차트
-        updateEquipmentTypeChart(inspections, equipment);
-        
-        // 현장별 차트
-        updateSiteChart(inspections, equipment);
-        
-        console.log('✅ 차트 업데이트 완료');
     } catch (error) {
         console.error('❌ 차트 업데이트 오류:', error);
-        console.error('오류 스택:', error.stack);
     }
 }
 
@@ -218,13 +197,13 @@ function updateStatusChart(inspections) {
     try {
         const canvas = document.getElementById('statusChart');
         if (!canvas) {
-            console.warn('❌ statusChart 캔버스를 찾을 수 없습니다');
+            // console.warn('❌ statusChart 캔버스를 찾을 수 없습니다');
             return;
         }
         
         // 캔버스 크기 확인
         if (canvas.offsetWidth === 0 || canvas.offsetHeight === 0) {
-            console.warn(`❌ statusChart 크기가 0입니다: ${canvas.offsetWidth}x${canvas.offsetHeight}`);
+            // console.warn(`❌ statusChart 크기가 0입니다: ${canvas.offsetWidth}x${canvas.offsetHeight}`);
             return;
         }
         
@@ -235,17 +214,13 @@ function updateStatusChart(inspections) {
             '고장': inspections.filter(i => i.status === '고장').length
         };
         
-        console.log('📊 상태 차트 데이터:', statusCounts);
+        // console.log('📊 상태 차트 데이터:', statusCounts);
         
         const ctx = canvas.getContext('2d');
         
         // 기존 차트 파괴
         if (statusChart) {
-            try {
-                statusChart.destroy();
-            } catch (e) {
-                console.warn('기존 차트 파괴 실패:', e);
-            }
+            statusChart.destroy();
             statusChart = null;
         }
 
@@ -269,7 +244,7 @@ function updateStatusChart(inspections) {
             }
         });
         
-        console.log('✅ 상태 차트 생성 완료');
+        // console.log('✅ 상태 차트 생성 완료');
     } catch (error) {
         console.error('❌ 상태 차트 업데이트 오류:', error);
         console.error('오류 스택:', error.stack);
@@ -279,156 +254,7 @@ function updateStatusChart(inspections) {
 // 점검 추이 차트는 제거되었습니다
 
 // 장비 유형별 바 차트
-function updateEquipmentTypeChart(inspections, equipment) {
-    try {
-        const canvas = document.getElementById('equipmentTypeChart');
-        if (!canvas) {
-            console.warn('❌ equipmentTypeChart 캔버스를 찾을 수 없습니다');
-            return;
-        }
-        
-        // 캔버스 크기 확인
-        if (canvas.offsetWidth === 0 || canvas.offsetHeight === 0) {
-            console.warn(`❌ equipmentTypeChart 크기가 0입니다: ${canvas.offsetWidth}x${canvas.offsetHeight}`);
-            return;
-        }
-        
-        const equipmentMap = {};
-        equipment.forEach(eq => {
-            equipmentMap[eq.id] = eq.equipment_type;
-        });
-
-        const typeCounts = {};
-        inspections.forEach(insp => {
-            const type = equipmentMap[insp.equipment_id] || '기타';
-            typeCounts[type] = (typeCounts[type] || 0) + 1;
-        });
-        
-        console.log('📊 장비 유형 차트 데이터:', typeCounts);
-        
-        const ctx = canvas.getContext('2d');
-        
-        // 기존 차트 파괴
-        if (equipmentTypeChart) {
-            try {
-                equipmentTypeChart.destroy();
-            } catch (e) {
-                console.warn('기존 차트 파괴 실패:', e);
-            }
-            equipmentTypeChart = null;
-        }
-
-        equipmentTypeChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: Object.keys(typeCounts),
-                datasets: [{
-                    label: '점검 수',
-                    data: Object.values(typeCounts),
-                    backgroundColor: '#667eea'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1
-                        }
-                    }
-                }
-            }
-        });
-        
-        console.log('✅ 장비 유형 차트 생성 완료');
-    } catch (error) {
-        console.error('❌ 장비 유형 차트 업데이트 오류:', error);
-        console.error('오류 스택:', error.stack);
-    }
-}
-
-// 현장별 가로 바 차트
-function updateSiteChart(inspections, equipment) {
-    try {
-        const canvas = document.getElementById('siteChart');
-        if (!canvas) {
-            console.warn('❌ siteChart 캔버스를 찾을 수 없습니다');
-            return;
-        }
-        
-        // 캔버스 크기 확인
-        if (canvas.offsetWidth === 0 || canvas.offsetHeight === 0) {
-            console.warn(`❌ siteChart 크기가 0입니다: ${canvas.offsetWidth}x${canvas.offsetHeight}`);
-            return;
-        }
-        
-        const equipmentMap = {};
-        equipment.forEach(eq => {
-            equipmentMap[eq.id] = eq.site_id;
-        });
-
-        const siteCounts = {};
-        inspections.forEach(insp => {
-            const siteId = equipmentMap[insp.equipment_id];
-            siteCounts[siteId] = (siteCounts[siteId] || 0) + 1;
-        });
-        
-        console.log('📊 현장별 차트 데이터:', siteCounts);
-        
-        const ctx = canvas.getContext('2d');
-        
-        // 기존 차트 파괴
-        if (siteChart) {
-            try {
-                siteChart.destroy();
-            } catch (e) {
-                console.warn('기존 차트 파괴 실패:', e);
-            }
-            siteChart = null;
-        }
-
-        siteChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: Object.keys(siteCounts),
-                datasets: [{
-                    label: '점검 수',
-                    data: Object.values(siteCounts),
-                    backgroundColor: '#764ba2'
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    x: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1
-                        }
-                    }
-                }
-            }
-        });
-        
-        console.log('✅ 현장별 차트 생성 완료');
-    } catch (error) {
-        console.error('❌ 현장별 차트 업데이트 오류:', error);
-        console.error('오류 스택:', error.stack);
-    }
+// 장비 유형별 차트와 현장별 차트는 제거되었습니다
 }
 
 // 이상 장비 목록 업데이트
@@ -575,7 +401,7 @@ function showErrorMessage(message) {
 async function downloadExcel() {
     // 중복 실행 방지
     if (isDownloading) {
-        console.log('⚠️ 이미 다운로드 중입니다...');
+        // console.log('⚠️ 이미 다운로드 중입니다...');
         return;
     }
     
@@ -590,7 +416,7 @@ async function downloadExcel() {
             downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 다운로드 중...';
         }
         
-        console.log('📥 엑셀 다운로드 시작... (Timestamp:', Date.now(), ')');
+        // console.log('📥 엑셀 다운로드 시작... (Timestamp:', Date.now(), ')');
         
         // 현재 필터링된 데이터 가져오기
         const filteredData = await getFilteredInspections();
@@ -600,7 +426,7 @@ async function downloadExcel() {
             return;
         }
         
-        console.log(`📊 ${filteredData.length}개의 점검 기록 다운로드 준비 중...`);
+        // console.log(`📊 ${filteredData.length}개의 점검 기록 다운로드 준비 중...`);
         
         // 장비 정보 매핑
         const equipmentData = await window.CachedFirestoreHelper.getAllDocuments('equipment');
@@ -680,11 +506,11 @@ async function downloadExcel() {
         const fileName = `HVAC_점검내역_${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}.xlsx`;
         
         // 엑셀 파일 다운로드
-        console.log(`📦 XLSX.writeFile 호출 전... 파일명: ${fileName}`);
+        // console.log(`📦 XLSX.writeFile 호출 전... 파일명: ${fileName}`);
         XLSX.writeFile(wb, fileName);
-        console.log(`📦 XLSX.writeFile 호출 후... 다운로드 완료!`);
+        // console.log(`📦 XLSX.writeFile 호출 후... 다운로드 완료!`);
         
-        console.log(`✅ 엑셀 다운로드 완료: ${fileName}`);
+        // console.log(`✅ 엑셀 다운로드 완료: ${fileName}`);
         alert(`✅ ${filteredData.length}개의 점검 기록이 다운로드되었습니다.`);
         
     } catch (error) {
@@ -698,7 +524,7 @@ async function downloadExcel() {
                 downloadBtn.disabled = false;
                 downloadBtn.innerHTML = '<i class="fas fa-download"></i> 엑셀 다운로드';
             }
-            console.log('🔓 다운로드 잠금 해제');
+            // console.log('🔓 다운로드 잠금 해제');
         }, 1000);
     }
 }
