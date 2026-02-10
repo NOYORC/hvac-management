@@ -159,7 +159,7 @@ function updateStatistics(inspections) {
 }
 
 // 차트 업데이트
-let statusChart, trendChart, equipmentTypeChart, siteChart;
+let statusChart, equipmentTypeChart, siteChart;
 
 // 캔버스 준비 확인
 function isCanvasReady(canvasId) {
@@ -185,7 +185,7 @@ function updateCharts(inspections, equipment) {
         console.log('📈 차트 업데이트 시작...');
         
         // 모든 캔버스가 준비될 때까지 대기
-        const canvasIds = ['statusChart', 'trendChart', 'equipmentTypeChart', 'siteChart'];
+        const canvasIds = ['statusChart', 'equipmentTypeChart', 'siteChart'];
         const allReady = canvasIds.every(id => {
             const canvas = document.getElementById(id);
             return canvas && canvas.offsetWidth > 0 && canvas.offsetHeight > 0;
@@ -199,9 +199,6 @@ function updateCharts(inspections, equipment) {
         
         // 상태 분포 차트
         updateStatusChart(inspections);
-        
-        // 점검 추이 차트
-        updateTrendChart(inspections);
         
         // 장비 유형별 차트
         updateEquipmentTypeChart(inspections, equipment);
@@ -279,98 +276,7 @@ function updateStatusChart(inspections) {
     }
 }
 
-// 점검 추이 선 차트
-function updateTrendChart(inspections) {
-    try {
-        const canvas = document.getElementById('trendChart');
-        if (!canvas) {
-            console.warn('❌ trendChart 캔버스를 찾을 수 없습니다');
-            return;
-        }
-        
-        // 캔버스 크기 확인
-        if (canvas.offsetWidth === 0 || canvas.offsetHeight === 0) {
-            console.warn(`❌ trendChart 크기가 0입니다: ${canvas.offsetWidth}x${canvas.offsetHeight}`);
-            return;
-        }
-        
-        // 최근 7일 데이터
-        const last7Days = [];
-        const now = new Date();
-        
-        for (let i = 6; i >= 0; i--) {
-            const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
-            last7Days.push(date.toISOString().split('T')[0]);
-        }
-
-        const dailyCounts = last7Days.map(date => {
-            return inspections.filter(insp => {
-                let inspDate;
-                // Firebase Timestamp 처리
-                if (insp.inspection_date && insp.inspection_date.toDate) {
-                    inspDate = insp.inspection_date.toDate().toISOString().split('T')[0];
-                } else {
-                    inspDate = new Date(insp.inspection_date).toISOString().split('T')[0];
-                }
-                return inspDate === date;
-            }).length;
-        });
-        
-        console.log('📊 추이 차트 데이터:', { dates: last7Days, counts: dailyCounts });
-        
-        const ctx = canvas.getContext('2d');
-        
-        // 기존 차트 파괴
-        if (trendChart) {
-            try {
-                trendChart.destroy();
-            } catch (e) {
-                console.warn('기존 차트 파괴 실패:', e);
-            }
-            trendChart = null;
-        }
-
-        trendChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: last7Days.map(date => {
-                    const d = new Date(date);
-                    return `${d.getMonth() + 1}/${d.getDate()}`;
-                }),
-                datasets: [{
-                    label: '점검 수',
-                    data: dailyCounts,
-                    borderColor: '#667eea',
-                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
-                    tension: 0.4,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1
-                        }
-                    }
-                }
-            }
-        });
-        
-        console.log('✅ 추이 차트 생성 완료');
-    } catch (error) {
-        console.error('❌ 추이 차트 업데이트 오류:', error);
-        console.error('오류 스택:', error.stack);
-    }
-}
+// 점검 추이 차트는 제거되었습니다
 
 // 장비 유형별 바 차트
 function updateEquipmentTypeChart(inspections, equipment) {
