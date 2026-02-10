@@ -5,7 +5,7 @@
 ### 1. Authentication 활성화
 
 1. [Firebase Console](https://console.firebase.google.com/) 접속
-2. 프로젝트 선택: `hvac-management-5634d`
+2. 프로젝트 선택: `hvac-management-477fb`
 3. 좌측 메뉴에서 **Authentication** 클릭
 4. **Sign-in method** 탭 선택
 5. **이메일/비밀번호** 공급업체 선택
