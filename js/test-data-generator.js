@@ -230,7 +230,7 @@ async function createInspections() {
                 equipment_id: equipmentId,
                 inspector_id: inspectorIds[inspectorIdx],
                 inspector_name: inspectorNames[inspectorIdx],
-                inspection_date: window.firebase.firestore.Timestamp.fromDate(date), // Timestamp로 저장
+                inspection_date: window.FirestoreTimestamp.fromDate(date), // Timestamp로 저장
                 inspection_type: '정기점검',
                 status: status,
                 indoor_temperature: (22 + Math.random() * 4).toFixed(1),

@@ -199,7 +199,7 @@
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, Timestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         
         const firebaseConfig = {
             apiKey: "AIzaSyCpTEePTOkEfSLRzyszq0dCCJmQEWJsBic",
@@ -214,6 +214,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         window.db = db;
+        window.FirestoreTimestamp = Timestamp; // Timestamp를 전역으로 export
     </script>
     
     <script src="js/firebase-config.js"></script>

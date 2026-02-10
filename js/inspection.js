@@ -419,7 +419,7 @@ async function submitInspection(e) {
         equipment_id: selectedEquipment.id,
         inspection_type: inspectionType,
         inspector_name: inspectorName,
-        inspection_date: window.firebase.firestore.Timestamp.now(),
+        inspection_date: window.FirestoreTimestamp.now(),
         status: status,
         indoor_temperature: document.getElementById('indoorTemperature').value || '',
         set_temperature: document.getElementById('setTemperature').value || '',
