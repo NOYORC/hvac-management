@@ -139,8 +139,8 @@
                     <span>일반점검</span>
                 </label>
                 <label>
-                    <input type="radio" name="inspectionType" value="세부점검" onchange="updateFormFields()">
-                    <span>세부점검</span>
+                    <input type="radio" name="inspectionType" value="고장정비" onchange="updateFormFields()">
+                    <span>고장정비</span>
                 </label>
             </div>
 
@@ -207,42 +207,14 @@
                     </div>
                 </div>
 
-                <!-- 세부점검 추가 필드 -->
+                <!-- 고장정비 추가 필드 -->
                 <div id="detailedFields" class="form-section" style="display: none;">
-                    <h3>세부 점검 항목</h3>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label><i class="fas fa-wave-square"></i> 진동(mm/s)</label>
-                            <input type="number" step="0.1" id="vibration" placeholder="예: 2.5">
-                        </div>
-                        <div class="form-group">
-                            <label><i class="fas fa-volume-up"></i> 소음(dB)</label>
-                            <input type="number" step="0.1" id="noise" placeholder="예: 65">
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label><i class="fas fa-broom"></i> 청결상태</label>
-                        <select id="cleanStatus">
-                            <option value="양호">양호</option>
-                            <option value="보통">보통</option>
-                            <option value="불량">불량</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label><i class="fas fa-filter"></i> 필터상태</label>
-                        <select id="filterStatus">
-                            <option value="양호">양호</option>
-                            <option value="교체필요">교체필요</option>
-                        </select>
-                    </div>
+                    <h3>정비 내용</h3>
                 </div>
 
                 <div class="form-group">
-                    <label><i class="fas fa-comment"></i> 특이사항</label>
-                    <textarea id="notes" rows="4" placeholder="특이사항이 있으면 입력하세요"></textarea>
+                    <label><i class="fas fa-comment"></i> 정비내용</label>
+                    <textarea id="notes" rows="4" placeholder="정비 내용을 입력하세요"></textarea>
                 </div>
 
                 <!-- 사진 첨부 섹션 -->

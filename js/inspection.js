@@ -406,7 +406,7 @@ async function submitInspection(e) {
         equipment_id: selectedEquipment.id,
         inspection_type: inspectionType,
         inspector_name: inspectorName,
-        inspection_date: new Date().toISOString(),
+        inspection_date: window.firebase.firestore.Timestamp.now(),
         status: status,
         indoor_temperature: document.getElementById('indoorTemperature').value || '',
         set_temperature: document.getElementById('setTemperature').value || '',
@@ -419,13 +419,8 @@ async function submitInspection(e) {
         photo_url: '' // 사진 기능은 추후 구현
     };
     
-    // 세부점검인 경우 추가 필드
-    if (inspectionType === '세부점검') {
-        inspectionData.vibration = document.getElementById('vibration').value || '';
-        inspectionData.noise = document.getElementById('noise').value || '';
-        inspectionData.clean_status = document.getElementById('cleanStatus').value;
-        inspectionData.filter_status = document.getElementById('filterStatus').value;
-    }
+    // 고장정비인 경우 추가 필드 (제거됨)
+    // 이전: vibration, noise, clean_status, filter_status
     
     try {
         const result = await window.CachedFirestoreHelper.addDocument('inspections', inspectionData);

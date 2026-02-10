@@ -230,7 +230,7 @@ async function createInspections() {
                 equipment_id: equipmentId,
                 inspector_id: inspectorIds[inspectorIdx],
                 inspector_name: inspectorNames[inspectorIdx],
-                inspection_date: date.toISOString(), // ISO 문자열로 일단 저장
+                inspection_date: window.firebase.firestore.Timestamp.fromDate(date), // Timestamp로 저장
                 inspection_type: '정기점검',
                 status: status,
                 indoor_temperature: (22 + Math.random() * 4).toFixed(1),
@@ -240,10 +240,6 @@ async function createInspections() {
                 current_r: (8 + Math.random() * 2).toFixed(1),
                 current_s: (8 + Math.random() * 2).toFixed(1),
                 current_t: (8 + Math.random() * 2).toFixed(1),
-                vibration: (0.5 + Math.random() * 0.5).toFixed(2),
-                noise: Math.floor(55 + Math.random() * 10),
-                clean_status: status === '정상' ? '양호' : '보통',
-                filter_status: status === '정상' ? '양호' : '교체필요',
                 notes: status === '정상' ? '정상 작동 중' : '점검 필요',
                 created_at: new Date().toISOString()
             });
