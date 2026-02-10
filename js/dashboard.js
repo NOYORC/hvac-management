@@ -326,7 +326,28 @@ function getStatusColor(status) {
 
 function formatDate(date) {
     if (!date) return '-';
-    const d = date && date.toDate ? date.toDate() : new Date(date);
+    
+    let d;
+    if (date && date.toDate) {
+        // Firestore Timestamp
+        d = date.toDate();
+    } else if (date && typeof date === 'string') {
+        // ISO 문자열
+        d = new Date(date);
+    } else if (date instanceof Date) {
+        // Date 객체
+        d = date;
+    } else {
+        // console.error('알 수 없는 날짜 형식:', date);
+        return '-';
+    }
+    
+    // Invalid Date 체크
+    if (isNaN(d.getTime())) {
+        // console.error('Invalid Date:', date);
+        return '-';
+    }
+    
     return d.toLocaleDateString('ko-KR') + ' ' + d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
 }
 
