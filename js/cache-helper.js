@@ -272,50 +272,6 @@ class CachedFirestoreHelper {
      * @returns {Promise<object>} 결과
      */
     static async updateDocument(collection, id, data) {
-        const result = await window.FirestoreHelper.updateDocument(collection, id, data);
-        
-        // 해당 문서 및 컬렉션 캐시 무효화
-        if (result.success) {
-            CacheHelper.clearCache(CacheHelper.getCacheKey(collection, id));
-            CacheHelper.invalidateCollection(collection);
-        }
-        
-        return result;
-    }
-    
-    /**
-     * 문서 삭제 (캐시 무효화)
-     * @param {string} collection - 컬렉션 이름
-     * @param {string} id - 문서 ID
-     * @returns {Promise<object>} 결과
-     */
-    static async deleteDocument(collection, id) {
-        const result = await window.FirestoreHelper.deleteDocument(collection, id);
-        
-        // 해당 문서 및 컬렉션 캐시 무효화
-        if (result.success) {
-            CacheHelper.clearCache(CacheHelper.getCacheKey(collection, id));
-            CacheHelper.invalidateCollection(collection);
-        }
-        
-        return result;
-    }
-}
-
-// 전역으로 내보내기
-window.CacheHelper = CacheHelper;
-window.CachedFirestoreHelper = CachedFirestoreHelper;
-
-console.log('✅ Cache Helper 로드 완료');
-    
-    /**
-     * 문서 업데이트 (캐시 무효화)
-     * @param {string} collection - 컬렉션 이름
-     * @param {string} id - 문서 ID
-     * @param {object} data - 업데이트할 데이터
-     * @returns {Promise<object>} 결과
-     */
-    static async updateDocument(collection, id, data) {
         console.log(`🔄 Firestore 업데이트: ${collection}/${id}`);
         
         // Firestore 업데이트
@@ -323,6 +279,7 @@ console.log('✅ Cache Helper 로드 완료');
         
         // 성공 시 캐시 무효화
         if (result.success) {
+            CacheHelper.clearCache(CacheHelper.getCacheKey(collection, id));
             CacheHelper.invalidateCollection(collection);
             console.log(`🔄 캐시 무효화: ${collection}`);
         }
@@ -350,6 +307,7 @@ console.log('✅ Cache Helper 로드 완료');
             await deleteDoc(docRef);
             
             // 캐시 무효화
+            CacheHelper.clearCache(CacheHelper.getCacheKey(collection, id));
             CacheHelper.invalidateCollection(collection);
             console.log(`🔄 캐시 무효화: ${collection}`);
             
@@ -358,6 +316,17 @@ console.log('✅ Cache Helper 로드 완료');
             console.error(`❌ 삭제 실패:`, error);
             return { success: false, error: error.message };
         }
+    }
+    
+    /**
+     * 조건부 조회 (캐싱 없음 - 동적 쿼리)
+     * @param {string} collection - 컬렉션 이름
+     * @param {Array} conditions - 조건 배열
+     * @returns {Promise<object>} 조회 결과
+     */
+    static async queryDocuments(collection, conditions) {
+        console.log(`🔄 Firestore 조회 (조건부): ${collection}`);
+        return await window.FirestoreHelper.queryDocuments(collection, conditions);
     }
 }
 
