@@ -158,29 +158,7 @@ function updateStatistics(inspections) {
     document.getElementById('failureCount').textContent = failure;
 }
 
-// 차트 업데이트
-let statusChart, equipmentTypeChart, siteChart;
-
-// 캔버스 준비 확인
-function isCanvasReady(canvasId) {
-    const canvas = document.getElementById(canvasId);
-    if (!canvas) {
-        // console.warn(`❌ ${canvasId} 캔버스를 찾을 수 없습니다`);
-        return false;
-    }
-    
-    // 캔버스가 화면에 표시되고 크기가 있는지 확인
-    const rect = canvas.getBoundingClientRect();
-    if (rect.width === 0 || rect.height === 0) {
-        // console.warn(`❌ ${canvasId} 캔버스 크기가 0입니다: ${rect.width}x${rect.height}`);
-        return false;
-    }
-    
-    // console.log(`✅ ${canvasId} 캔버스 준비됨: ${rect.width}x${rect.height}`);
-    return true;
-}
-
-// 차트 업데이트 - 장비 유형별과 현장별 차트 제거
+// 차트 업데이트 - 상태 차트만 유지
 let statusChart;
 
 function updateCharts(inspections, equipment) {
