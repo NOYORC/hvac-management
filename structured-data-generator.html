@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>체계적 데이터 생성 - HVAC 관리</title>
+    
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    
+    <style>
+        .generator-container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .generator-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .generator-title {
+            font-size: 32px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        
+        .generator-subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .config-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .config-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .info-box h4 {
+            margin-top: 0;
+            color: #1976D2;
+        }
+        
+        .info-box ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #f44336 0%, #e91e63 100%);
+            color: white;
+        }
+        
+        .btn-danger:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(244, 67, 54, 0.3);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .progress-container {
+            display: none;
+            margin: 20px 0;
+        }
+        
+        .progress-bar-wrapper {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .status {
+            display: none;
+            padding: 15px;
+            border-radius: 12px;
+            margin: 20px 0;
+            font-weight: 600;
+        }
+        
+        .status.info {
+            background: #e3f2fd;
+            color: #1976D2;
+            border-left: 4px solid #2196F3;
+        }
+        
+        .status.success {
+            background: #e8f5e9;
+            color: #388E3C;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .status.error {
+            background: #ffebee;
+            color: #C62828;
+            border-left: 4px solid #F44336;
+        }
+        
+        .summary {
+            display: none;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+        
+        .summary h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        
+        .summary h4 {
+            color: #555;
+            margin-top: 20px;
+        }
+        
+        .summary ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .summary li {
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .summary li:last-child {
+            border-bottom: none;
+        }
+        
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="generator-container">
+        <div class="generator-header">
+            <h1 class="generator-title">📊 체계적 데이터 생성</h1>
+            <p class="generator-subtitle">현장별로 체계적으로 구분된 데이터를 생성합니다</p>
+        </div>
+        
+        <div class="info-box">
+            <h4>📋 데이터 구조</h4>
+            <ul>
+                <li><strong>현장(Sites):</strong> SITE001, SITE002, SITE003, ...</li>
+                <li><strong>건물(Buildings):</strong> 각 현장당 10개 (BLD001~BLD010, BLD011~BLD020, ...)</li>
+                <li><strong>장비(Equipment):</strong> 각 현장당 1000개</li>
+            </ul>
+            <h4>💡 장비 번호 규칙</h4>
+            <ul>
+                <li><strong>SITE001:</strong> EQ0001 ~ EQ0999 (1000개)</li>
+                <li><strong>SITE002:</strong> EQ1000 ~ EQ1999 (1000개)</li>
+                <li><strong>SITE003:</strong> EQ2000 ~ EQ2999 (1000개)</li>
+                <li>...</li>
+            </ul>
+        </div>
+        
+        <div class="config-section">
+            <h3 class="config-title">⚙️ 생성 설정</h3>
+            
+            <div class="form-group">
+                <label for="siteCount">생성할 현장 개수</label>
+                <input type="number" id="siteCount" value="10" min="1" max="100">
+            </div>
+            
+            <div class="form-group">
+                <label for="equipmentPerSite">현장당 장비 개수</label>
+                <input type="number" id="equipmentPerSite" value="1000" min="100" max="10000" step="100">
+            </div>
+        </div>
+        
+        <div id="status" class="status"></div>
+        
+        <div id="progressContainer" class="progress-container">
+            <div class="progress-bar-wrapper">
+                <div id="progressBar" class="progress-bar" style="width: 0%"></div>
+                <div id="progressText" class="progress-text">준비 중...</div>
+            </div>
+        </div>
+        
+        <div id="summary" class="summary"></div>
+        
+        <div class="button-group">
+            <button id="btnGenerate" class="btn btn-primary" onclick="generateAllData()">
+                <i class="fas fa-magic"></i> 데이터 생성 시작
+            </button>
+            <button id="btnDelete" class="btn btn-danger" onclick="deleteAllData()">
+                <i class="fas fa-trash"></i> 모든 데이터 삭제
+            </button>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, Timestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyCpTEePTOkEfSLRzyszq0dCCJmQEWJsBic",
+            authDomain: "hvac-management-477fb.firebaseapp.com",
+            projectId: "hvac-management-477fb",
+            storageBucket: "hvac-management-477fb.firebasestorage.app",
+            messagingSenderId: "312239966797",
+            appId: "1:312239966797:web:b454d99fde9823207dea04",
+            measurementId: "G-FT4YE5FDP1"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        window.db = getFirestore(app);
+        window.FirestoreTimestamp = Timestamp;
+    </script>
+
+    <script src="js/firebase-config.js"></script>
+    <script src="js/structured-data-generator.js"></script>
+</body>
+</html>

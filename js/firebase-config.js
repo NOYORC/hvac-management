@@ -16,6 +16,7 @@ async function getFirestoreFunctions() {
             getDoc: module.getDoc,
             addDoc: module.addDoc,
             setDoc: module.setDoc,
+            deleteDoc: module.deleteDoc,
             doc: module.doc,
             query: module.query,
             where: module.where,
@@ -135,11 +136,25 @@ async function queryDocuments(collectionName, conditions = []) {
     }
 }
 
+// 문서 삭제
+async function deleteDocument(collectionName, documentId) {
+    try {
+        const { doc, deleteDoc } = await getFirestoreFunctions();
+        const docRef = doc(window.db, collectionName, documentId);
+        await deleteDoc(docRef);
+        return { success: true };
+    } catch (error) {
+        console.error(`Error deleting document:`, error);
+        return { success: false, error: error.message };
+    }
+}
+
 // 전역 객체로 내보내기
 window.FirestoreHelper = {
     getAllDocuments,
     getDocument,
     addDocument,
     setDocument,
-    queryDocuments
+    queryDocuments,
+    deleteDocument
 };
