@@ -49,8 +49,7 @@
 #### ⚙️ Equipment 시트 (장비 정보)
 | 컬럼명 | 필수 여부 | 설명 | 예시 |
 |--------|----------|------|------|
-| id | ✅ 필수 | 장비 고유 ID | EQ0001 |
-| equipment_id | ✅ 필수 | 장비 식별 번호 | EQ0001 |
+| id | ✅ 필수 | 장비 고유 ID (문서 ID로 사용) | EQ0001 |
 | site_id | ✅ 필수 | 소속 현장 ID | SITE001 |
 | building_id | ✅ 필수 | 소속 건물 ID | BLD001 |
 | equipment_type | ✅ 필수 | 장비 유형 | 냉동기 |
@@ -219,12 +218,12 @@ BLD021   | SITE003 | 1관           | 10
 
 **Equipment 시트**:
 ```
-id      | equipment_id | site_id | building_id | equipment_type | model      | location | floor | capacity
---------|--------------|---------|-------------|----------------|------------|----------|-------|----------
-EQ0001  | EQ0001       | SITE001 | BLD001      | 냉동기         | ABC-1000   | 기계실   | B1    | 500RT
-EQ0002  | EQ0002       | SITE001 | BLD001      | 보일러         | XYZ-500    | 기계실   | B1    | 300kW
-EQ1000  | EQ1000       | SITE002 | BLD011      | 냉동기         | ABC-2000   | 옥상     | RF    | 800RT
-EQ2000  | EQ2000       | SITE003 | BLD021      | 냉각탑         | DEF-1500   | 옥상     | RF    | 1000RT
+id      | site_id | building_id | equipment_type | model      | location | floor | capacity
+--------|---------|-------------|----------------|------------|----------|-------|----------
+EQ0001  | SITE001 | BLD001      | 냉동기         | ABC-1000   | 기계실   | B1    | 500RT
+EQ0002  | SITE001 | BLD001      | 보일러         | XYZ-500    | 기계실   | B1    | 300kW
+EQ1000  | SITE002 | BLD011      | 냉동기         | ABC-2000   | 옥상     | RF    | 800RT
+EQ2000  | SITE003 | BLD021      | 냉각탑         | DEF-1500   | 옥상     | RF    | 1000RT
 ```
 
 #### 2단계: 파일 업로드

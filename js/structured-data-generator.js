@@ -126,7 +126,6 @@ async function generateEquipment(siteCount = 10, equipmentPerSite = 1000) {
             
             equipment.push({
                 id: equipmentId,
-                equipment_id: equipmentId,
                 site_id: siteId,
                 building_id: buildingId,
                 equipment_type: equipmentType,

@@ -268,7 +268,7 @@ function processItemData(type, item) {
         }
     } else if (type === 'equipment') {
         // 장비 데이터 처리
-        // 필수 필드: id, equipment_id, site_id, building_id, equipment_type, model, location, floor, capacity
+        // 필수 필드: id, site_id, building_id, equipment_type, model, location
         if (processed.capacity) {
             processed.capacity = parseFloat(processed.capacity);
         }
@@ -354,7 +354,6 @@ function downloadEquipmentTemplate() {
     const template = [
         {
             id: 'EQ0001',
-            equipment_id: 'EQ0001',
             site_id: 'SITE001',
             building_id: 'BLD001',
             equipment_type: 'PACKAGED AIR CONDITIONER UNIT',
@@ -365,7 +364,6 @@ function downloadEquipmentTemplate() {
         },
         {
             id: 'EQ0002',
-            equipment_id: 'EQ0002',
             site_id: 'SITE001',
             building_id: 'BLD001',
             equipment_type: 'TURBO CHILLER',
@@ -699,7 +697,6 @@ function downloadAllTemplate() {
     const equipmentData = [
         {
             id: 'EQ0001',
-            equipment_id: 'EQ0001',
             site_id: 'SITE001',
             building_id: 'BLD001',
             equipment_type: 'PACKAGED AIR CONDITIONER UNIT',
@@ -710,7 +707,6 @@ function downloadAllTemplate() {
         },
         {
             id: 'EQ0002',
-            equipment_id: 'EQ0002',
             site_id: 'SITE001',
             building_id: 'BLD001',
             equipment_type: 'TURBO CHILLER',

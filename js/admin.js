@@ -273,7 +273,7 @@ function renderEquipment() {
                 <div class="item-header">
                     <div>
                         <div class="item-title">${eq.type}</div>
-                        <div class="item-subtitle">${eq.equipment_id}</div>
+                        <div class="item-subtitle">${eq.id}</div>
                     </div>
                     <div class="item-actions">
                         <button class="btn-edit" onclick="editEquipment('${eq.id}')" title="수정">
@@ -380,12 +380,6 @@ async function handleEquipmentSubmit(e) {
         location: formData.get('location'),
         floor: formData.get('floor')
     };
-    
-    if (!currentEditId) {
-        // 장비 ID 자동 생성
-        const count = equipment.length + 1;
-        equipmentData.equipment_id = `EQ${String(count).padStart(4, '0')}`;
-    }
     
     let result;
     if (currentEditId) {

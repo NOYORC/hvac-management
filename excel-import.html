@@ -380,7 +380,7 @@
                     <ul>
                         <li><strong>시트1: Sites</strong> - 현장 데이터 (id, site_name, address, contact_name, contact_phone)</li>
                         <li><strong>시트2: Buildings</strong> - 건물 데이터 (id, site_id, building_name, floors)</li>
-                        <li><strong>시트3: Equipment</strong> - 장비 데이터 (id, equipment_id, site_id, building_id, equipment_type, model, location, floor, capacity)</li>
+                        <li><strong>시트3: Equipment</strong> - 장비 데이터 (id, site_id, building_id, equipment_type, model, location, floor, capacity)</li>
                     </ul>
                     <p><strong>⚠️ 주의:</strong> 시트 이름이 정확히 일치해야 합니다!</p>
                 </div>
@@ -553,8 +553,7 @@
                 <div class="info-box">
                     <h4>📋 필수 컬럼</h4>
                     <ul>
-                        <li><code>id</code>: 장비 ID (예: EQ0001)</li>
-                        <li><code>equipment_id</code>: 장비 번호 (예: EQ0001)</li>
+                        <li><code>id</code>: 장비 고유 ID (예: EQ0001) - Firestore 문서 ID로 사용됩니다</li>
                         <li><code>site_id</code>: 현장 ID (예: SITE001)</li>
                         <li><code>building_id</code>: 건물 ID (예: BLD001)</li>
                         <li><code>equipment_type</code>: 장비 유형</li>
