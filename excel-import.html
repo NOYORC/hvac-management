@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>엑셀/CSV 데이터 가져오기 - HVAC 관리</title>
+    
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    
+    <style>
+        .import-container {
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 30px;
+        }
+        
+        .import-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .import-title {
+            font-size: 36px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        
+        .import-subtitle {
+            color: #666;
+            font-size: 16px;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 15px 25px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .upload-section {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .drop-zone {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 60px 30px;
+            text-align: center;
+            background: #f8f9ff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+        
+        .drop-zone:hover, .drop-zone.dragover {
+            background: #e3f2fd;
+            border-color: #764ba2;
+            transform: scale(1.02);
+        }
+        
+        .drop-zone-icon {
+            font-size: 64px;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        
+        .drop-zone-text {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .drop-zone-hint {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .file-info {
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .file-info.show {
+            display: block;
+        }
+        
+        .file-name {
+            font-weight: 600;
+            color: #388E3C;
+        }
+        
+        .info-box {
+            background: #fff3e0;
+            border-left: 4px solid #FF9800;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .info-box h4 {
+            margin-top: 0;
+            color: #F57C00;
+        }
+        
+        .info-box ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        .info-box code {
+            background: rgba(0,0,0,0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .preview-section {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            display: none;
+        }
+        
+        .preview-section.show {
+            display: block;
+        }
+        
+        .preview-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            overflow-x: auto;
+            display: block;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .preview-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px;
+            text-align: left;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .preview-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .preview-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .status {
+            display: none;
+            padding: 15px;
+            border-radius: 12px;
+            margin: 20px 0;
+            font-weight: 600;
+        }
+        
+        .status.info {
+            background: #e3f2fd;
+            color: #1976D2;
+            border-left: 4px solid #2196F3;
+        }
+        
+        .status.success {
+            background: #e8f5e9;
+            color: #388E3C;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .status.error {
+            background: #ffebee;
+            color: #C62828;
+            border-left: 4px solid #F44336;
+        }
+        
+        .progress-container {
+            display: none;
+            margin: 20px 0;
+        }
+        
+        .progress-bar-wrapper {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+        }
+        
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+        
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .download-template {
+            margin-bottom: 20px;
+        }
+        
+        .template-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 24px;
+            background: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .template-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(76, 175, 80, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="import-container">
+        <div class="import-header">
+            <h1 class="import-title">📥 데이터 가져오기</h1>
+            <p class="import-subtitle">엑셀(XLSX) 또는 CSV 파일에서 데이터를 가져와 Firestore에 저장합니다</p>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('sites')">
+                <i class="fas fa-building"></i> 현장 데이터
+            </button>
+            <button class="tab" onclick="switchTab('buildings')">
+                <i class="fas fa-city"></i> 건물 데이터
+            </button>
+            <button class="tab" onclick="switchTab('equipment')">
+                <i class="fas fa-toolbox"></i> 장비 데이터
+            </button>
+        </div>
+        
+        <!-- 현장 데이터 탭 -->
+        <div id="tab-sites" class="tab-content active">
+            <div class="upload-section">
+                <h3 class="section-title">🏢 현장 데이터 업로드</h3>
+                
+                <div class="download-template">
+                    <a href="#" class="template-link" onclick="downloadSitesTemplate(); return false;">
+                        <i class="fas fa-download"></i>
+                        엑셀 템플릿 다운로드
+                    </a>
+                </div>
+                
+                <div class="info-box">
+                    <h4>📋 필수 컬럼</h4>
+                    <ul>
+                        <li><code>id</code>: 현장 ID (예: SITE001)</li>
+                        <li><code>site_name</code>: 현장명 (예: 강남 오피스 빌딩)</li>
+                        <li><code>address</code>: 주소</li>
+                        <li><code>contact_name</code>: 담당자명</li>
+                        <li><code>contact_phone</code>: 담당자 연락처</li>
+                    </ul>
+                </div>
+                
+                <div class="drop-zone" id="dropZoneSites" onclick="document.getElementById('fileInputSites').click()">
+                    <div class="drop-zone-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                    <div class="drop-zone-text">파일을 드래그하거나 클릭하여 선택하세요</div>
+                    <div class="drop-zone-hint">지원 형식: .xlsx, .csv</div>
+                </div>
+                <input type="file" id="fileInputSites" class="file-input" accept=".xlsx,.csv" onchange="handleFileUpload('sites', this.files[0])">
+                
+                <div id="fileInfoSites" class="file-info">
+                    <i class="fas fa-file-excel"></i> <span class="file-name" id="fileNameSites"></span>
+                </div>
+            </div>
+            
+            <div id="previewSites" class="preview-section">
+                <h3 class="section-title">📊 데이터 미리보기</h3>
+                <div style="overflow-x: auto;">
+                    <table class="preview-table" id="previewTableSites"></table>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="resetUpload('sites')">
+                        <i class="fas fa-redo"></i> 다시 선택
+                    </button>
+                    <button class="btn btn-primary" id="btnImportSites" onclick="importData('sites')">
+                        <i class="fas fa-upload"></i> Firestore에 저장
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 건물 데이터 탭 -->
+        <div id="tab-buildings" class="tab-content">
+            <div class="upload-section">
+                <h3 class="section-title">🏗️ 건물 데이터 업로드</h3>
+                
+                <div class="download-template">
+                    <a href="#" class="template-link" onclick="downloadBuildingsTemplate(); return false;">
+                        <i class="fas fa-download"></i>
+                        엑셀 템플릿 다운로드
+                    </a>
+                </div>
+                
+                <div class="info-box">
+                    <h4>📋 필수 컬럼</h4>
+                    <ul>
+                        <li><code>id</code>: 건물 ID (예: BLD001)</li>
+                        <li><code>site_id</code>: 현장 ID (예: SITE001)</li>
+                        <li><code>building_name</code>: 건물명 (예: A동)</li>
+                        <li><code>floors</code>: 층수 (예: 15)</li>
+                    </ul>
+                </div>
+                
+                <div class="drop-zone" id="dropZoneBuildings" onclick="document.getElementById('fileInputBuildings').click()">
+                    <div class="drop-zone-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                    <div class="drop-zone-text">파일을 드래그하거나 클릭하여 선택하세요</div>
+                    <div class="drop-zone-hint">지원 형식: .xlsx, .csv</div>
+                </div>
+                <input type="file" id="fileInputBuildings" class="file-input" accept=".xlsx,.csv" onchange="handleFileUpload('buildings', this.files[0])">
+                
+                <div id="fileInfoBuildings" class="file-info">
+                    <i class="fas fa-file-excel"></i> <span class="file-name" id="fileNameBuildings"></span>
+                </div>
+            </div>
+            
+            <div id="previewBuildings" class="preview-section">
+                <h3 class="section-title">📊 데이터 미리보기</h3>
+                <div style="overflow-x: auto;">
+                    <table class="preview-table" id="previewTableBuildings"></table>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="resetUpload('buildings')">
+                        <i class="fas fa-redo"></i> 다시 선택
+                    </button>
+                    <button class="btn btn-primary" id="btnImportBuildings" onclick="importData('buildings')">
+                        <i class="fas fa-upload"></i> Firestore에 저장
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 장비 데이터 탭 -->
+        <div id="tab-equipment" class="tab-content">
+            <div class="upload-section">
+                <h3 class="section-title">⚙️ 장비 데이터 업로드</h3>
+                
+                <div class="download-template">
+                    <a href="#" class="template-link" onclick="downloadEquipmentTemplate(); return false;">
+                        <i class="fas fa-download"></i>
+                        엑셀 템플릿 다운로드
+                    </a>
+                </div>
+                
+                <div class="info-box">
+                    <h4>📋 필수 컬럼</h4>
+                    <ul>
+                        <li><code>id</code>: 장비 ID (예: EQ0001)</li>
+                        <li><code>equipment_id</code>: 장비 번호 (예: EQ0001)</li>
+                        <li><code>site_id</code>: 현장 ID (예: SITE001)</li>
+                        <li><code>building_id</code>: 건물 ID (예: BLD001)</li>
+                        <li><code>equipment_type</code>: 장비 유형</li>
+                        <li><code>model</code>: 모델명</li>
+                        <li><code>location</code>: 위치 (예: R-5-12)</li>
+                        <li><code>floor</code>: 층수 (예: 5F)</li>
+                        <li><code>capacity</code>: 용량 (예: 25)</li>
+                    </ul>
+                </div>
+                
+                <div class="drop-zone" id="dropZoneEquipment" onclick="document.getElementById('fileInputEquipment').click()">
+                    <div class="drop-zone-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                    <div class="drop-zone-text">파일을 드래그하거나 클릭하여 선택하세요</div>
+                    <div class="drop-zone-hint">지원 형식: .xlsx, .csv</div>
+                </div>
+                <input type="file" id="fileInputEquipment" class="file-input" accept=".xlsx,.csv" onchange="handleFileUpload('equipment', this.files[0])">
+                
+                <div id="fileInfoEquipment" class="file-info">
+                    <i class="fas fa-file-excel"></i> <span class="file-name" id="fileNameEquipment"></span>
+                </div>
+            </div>
+            
+            <div id="previewEquipment" class="preview-section">
+                <h3 class="section-title">📊 데이터 미리보기</h3>
+                <div style="overflow-x: auto;">
+                    <table class="preview-table" id="previewTableEquipment"></table>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="resetUpload('equipment')">
+                        <i class="fas fa-redo"></i> 다시 선택
+                    </button>
+                    <button class="btn btn-primary" id="btnImportEquipment" onclick="importData('equipment')">
+                        <i class="fas fa-upload"></i> Firestore에 저장
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="status" class="status"></div>
+        
+        <div id="progressContainer" class="progress-container">
+            <div class="progress-bar-wrapper">
+                <div id="progressBar" class="progress-bar" style="width: 0%"></div>
+                <div id="progressText" class="progress-text">준비 중...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, Timestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyCpTEePTOkEfSLRzyszq0dCCJmQEWJsBic",
+            authDomain: "hvac-management-477fb.firebaseapp.com",
+            projectId: "hvac-management-477fb",
+            storageBucket: "hvac-management-477fb.firebasestorage.app",
+            messagingSenderId: "312239966797",
+            appId: "1:312239966797:web:b454d99fde9823207dea04",
+            measurementId: "G-FT4YE5FDP1"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        window.db = getFirestore(app);
+        window.FirestoreTimestamp = Timestamp;
+    </script>
+
+    <!-- SheetJS 라이브러리 -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    
+    <script src="js/firebase-config.js"></script>
+    <script src="js/excel-import.js"></script>
+</body>
+</html>
