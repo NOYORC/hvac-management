@@ -1,3 +1,7 @@
+// 전역 변수
+let allSites = [];
+let allBuildings = [];
+
 // 페이지 로드 시 실행
 document.addEventListener('DOMContentLoaded', async function() {
     // console.log('📱 페이지 로드 시작');
@@ -47,6 +51,7 @@ function waitForFirebase() {
 async function loadSiteFilter() {
     try {
         const data = await window.CachedFirestoreHelper.getAllDocuments('sites');
+        allSites = data.data || []; // 전역 변수에 저장
         
         const siteFilter = document.getElementById('siteFilterDash');
         siteFilter.innerHTML = '<option value="">전체</option>';
@@ -79,6 +84,10 @@ async function loadDashboardData() {
         
         // 장비 데이터 가져오기
         const equipmentData = await window.CachedFirestoreHelper.getAllDocuments('equipment');
+        
+        // 건물 데이터 가져오기 (위치 표시용)
+        const buildingsData = await window.CachedFirestoreHelper.getAllDocuments('buildings');
+        allBuildings = buildingsData.data || [];
 
         let inspections = inspectionsData.data || [];
         const equipment = equipmentData.data || [];
@@ -311,13 +320,14 @@ function updateRecentInspections(inspections, equipment) {
         const eq = equipmentMap[insp.equipment_id] || {};
         const statusColor = getStatusColor(insp.status);
         const formattedDate = formatDate(insp.inspection_date);
+        const fullLocation = eq.id ? getFullLocation(eq) : '-';
         
         return `
             <tr>
                 <td>${formattedDate}</td>
                 <td>${insp.inspector_name}</td>
                 <td>${eq.equipment_type || '알 수 없음'}<br><small>${eq.model || '-'}</small></td>
-                <td>${eq.location || '-'}<br><small>${eq.floor || '-'}</small></td>
+                <td>${fullLocation}</td>
                 <td><span class="status-badge" style="background-color: ${statusColor}">${insp.status}</span></td>
                 <td>${insp.notes || '-'}</td>
             </tr>
@@ -449,6 +459,7 @@ async function downloadExcel() {
             const eq = equipmentMap[insp.equipment_id] || {};
             const inspDate = insp.inspection_date && insp.inspection_date.toDate ? 
                 insp.inspection_date.toDate() : new Date(insp.inspection_date);
+            const fullLocation = eq.id ? getFullLocation(eq) : '-';
             
             return {
                 '점검일시': inspDate.toLocaleString('ko-KR'),
@@ -457,8 +468,7 @@ async function downloadExcel() {
                 '장비종류': eq.equipment_type || '-',
                 '장비ID': insp.equipment_id || '-',
                 '모델명': eq.model || '-',
-                '위치': eq.location || '-',
-                '층': eq.floor || '-',
+                '위치': fullLocation,
                 '상태': insp.status || '-',
                 '실내온도(℃)': insp.indoor_temperature || '-',
                 '설정온도(℃)': insp.set_temperature || '-',
@@ -483,8 +493,7 @@ async function downloadExcel() {
             { wch: 25 },  // 장비종류
             { wch: 12 },  // 장비ID
             { wch: 20 },  // 모델명
-            { wch: 15 },  // 위치
-            { wch: 8 },   // 층
+            { wch: 35 },  // 위치 (전체 위치 표시로 더 넓게)
             { wch: 8 },   // 상태
             { wch: 12 },  // 실내온도
             { wch: 12 },  // 설정온도
@@ -587,4 +596,18 @@ async function getFilteredInspections() {
         console.error('필터링된 데이터 가져오기 오류:', error);
         return [];
     }
+}
+
+// 장비 전체 위치 정보 생성 헬퍼 함수
+function getFullLocation(equipment) {
+    const site = allSites.find(s => s.id === equipment.site_id);
+    const building = allBuildings.find(b => b.id === equipment.building_id);
+    
+    const parts = [];
+    if (site) parts.push(site.site_name);
+    if (building) parts.push(building.building_name);
+    if (equipment.floor) parts.push(equipment.floor);
+    if (equipment.location) parts.push(equipment.location);
+    
+    return parts.join(' ') || equipment.location || '위치 정보 없음';
 }

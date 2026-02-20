@@ -4,6 +4,8 @@ let selectedSite = null;
 let selectedBuilding = null;
 let selectedEquipment = null;
 let allEquipment = [];
+let allSites = [];      // 모든 현장 데이터 저장
+let allBuildings = [];  // 모든 건물 데이터 저장
 
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', async function() {
@@ -166,6 +168,7 @@ async function loadInspectors() {
 async function loadSites() {
     try {
         const data = await window.CachedFirestoreHelper.getAllDocuments('sites');
+        allSites = data.data; // 전역 변수에 저장
         
         const siteList = document.getElementById('siteList');
         siteList.innerHTML = '';
@@ -196,6 +199,7 @@ async function selectSite(site) {
     
     try {
         const data = await window.CachedFirestoreHelper.getAllDocuments('buildings');
+        allBuildings = data.data; // 전역 변수에 저장
         
         // 선택된 현장의 건물만 필터링
         const buildings = data.data.filter(b => b.site_id === site.id);
@@ -301,6 +305,9 @@ function displayEquipment(equipment) {
             const card = document.createElement('div');
             card.className = 'equipment-card';
             card.onclick = () => selectEquipment(eq);
+            
+            const fullLocation = getFullLocation(eq);
+            
             card.innerHTML = `
                 <div class="eq-header">
                     <div class="eq-icon"><i class="fas ${getEquipmentIcon(eq.equipment_type)}"></i></div>
@@ -308,7 +315,7 @@ function displayEquipment(equipment) {
                 </div>
                 <h3>${eq.equipment_name || eq.equipment_type}</h3>
                 <div class="eq-info">
-                    <div><i class="fas fa-layer-group"></i> ${eq.floor} - ${eq.location}</div>
+                    <div><i class="fas fa-map-marker-alt"></i> ${fullLocation}</div>
                     <div><i class="fas fa-box"></i> ${eq.model || '정보 없음'}</div>
                     <div><i class="fas fa-tachometer-alt"></i> ${eq.capacity || '정보 없음'}</div>
                 </div>
@@ -323,6 +330,8 @@ function selectEquipment(equipment) {
     selectedEquipment = equipment;
     document.getElementById('selectedEquipmentName').textContent = 
         `${equipment.equipment_type} (${equipment.id})`;
+    
+    const fullLocation = getFullLocation(equipment);
     
     // 장비 상세 정보 표시
     const detailDiv = document.getElementById('equipmentDetail');
@@ -343,10 +352,10 @@ function selectEquipment(equipment) {
                 </div>
             </div>
             <div class="detail-item">
-                <i class="fas fa-layer-group"></i>
+                <i class="fas fa-map-marker-alt"></i>
                 <div>
                     <div class="detail-label">위치</div>
-                    <div class="detail-value">${equipment.floor} - ${equipment.location}</div>
+                    <div class="detail-value">${fullLocation}</div>
                 </div>
             </div>
             <div class="detail-item">
@@ -626,3 +635,19 @@ window.addEventListener('beforeunload', () => {
         html5QrCode.stop();
     }
 });
+
+// 장비 전체 위치 정보 생성 헬퍼 함수
+function getFullLocation(equipment) {
+    // equipment에 site_id, building_id가 있을 때 조합
+    const site = allSites.find(s => s.id === equipment.site_id);
+    const building = allBuildings.find(b => b.id === equipment.building_id);
+    
+    const parts = [];
+    if (site) parts.push(site.site_name);
+    if (building) parts.push(building.building_name);
+    if (equipment.floor) parts.push(equipment.floor);
+    if (equipment.location) parts.push(equipment.location);
+    
+    return parts.join(' ') || equipment.location || '위치 정보 없음';
+}
+

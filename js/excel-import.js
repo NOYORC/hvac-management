@@ -357,20 +357,20 @@ function downloadEquipmentTemplate() {
             site_id: 'SITE001',
             building_id: 'BLD001',
             equipment_type: 'PACKAGED AIR CONDITIONER UNIT',
-            model: 'MODEL-001',
-            location: 'R-5-12',
+            model: 'CARRIER-30XA',
+            location: '기계실',
             floor: '5F',
-            capacity: 25
+            capacity: '25RT'
         },
         {
             id: 'EQ0002',
             site_id: 'SITE001',
             building_id: 'BLD001',
             equipment_type: 'TURBO CHILLER',
-            model: 'MODEL-002',
-            location: 'R-10-05',
-            floor: '10F',
-            capacity: 50
+            model: 'TRANE-CVHE',
+            location: '기계실',
+            floor: 'B1',
+            capacity: '500RT'
         }
     ];
     
@@ -700,20 +700,20 @@ function downloadAllTemplate() {
             site_id: 'SITE001',
             building_id: 'BLD001',
             equipment_type: 'PACKAGED AIR CONDITIONER UNIT',
-            model: 'MODEL-001',
-            location: 'R-5-12',
+            model: 'CARRIER-30XA',
+            location: '기계실',
             floor: '5F',
-            capacity: 25
+            capacity: '25RT'
         },
         {
             id: 'EQ0002',
             site_id: 'SITE001',
             building_id: 'BLD001',
             equipment_type: 'TURBO CHILLER',
-            model: 'MODEL-002',
-            location: 'R-10-05',
-            floor: '10F',
-            capacity: 50
+            model: 'TRANE-CVHE',
+            location: '기계실',
+            floor: 'B1',
+            capacity: '500RT'
         }
     ];
     const equipmentSheet = XLSX.utils.json_to_sheet(equipmentData);

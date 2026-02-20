@@ -120,19 +120,24 @@ async function generateEquipment(siteCount = 10, equipmentPerSite = 1000) {
             // 층수 (1~19)
             const floor = `${Math.floor(Math.random() * 19) + 1}F`;
             
-            // 위치 (R-층수-번호)
-            const locationNum = String(eqOffset % 100 + 1).padStart(2, '0');
-            const location = `R-${floor.replace('F', '')}-${locationNum}`;
+            // 위치 (실 이름)
+            const locations = ['기계실', '전기실', '보일러실', '옥상', '지하기계실'];
+            const location = locations[Math.floor(Math.random() * locations.length)];
+            
+            // 모델명 (제조사-모델시리즈)
+            const manufacturers = ['CARRIER', 'TRANE', 'DAIKIN', 'LG', 'SAMSUNG'];
+            const manufacturer = manufacturers[Math.floor(Math.random() * manufacturers.length)];
+            const model = `${manufacturer}-${equipmentType.substring(0, 3).toUpperCase()}${String(Math.floor(Math.random() * 9000) + 1000)}`;
             
             equipment.push({
                 id: equipmentId,
                 site_id: siteId,
                 building_id: buildingId,
                 equipment_type: equipmentType,
-                model: `MODEL-${equipmentId}`,
+                model: model,
                 location: location,
                 floor: floor,
-                capacity: Math.floor(Math.random() * 50) + 10, // 10~59 RT
+                capacity: `${Math.floor(Math.random() * 50) + 10}RT`, // 10~59 RT
                 installation_date: window.FirestoreTimestamp.now(),
                 created_at: window.FirestoreTimestamp.now()
             });
