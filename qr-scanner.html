@@ -20,16 +20,20 @@
         .scanner-container {
             max-width: 600px;
             margin: 0 auto;
-            text-align: center;
+        }
+        
+        /* 공통 카드 스타일 */
+        .info-card {
+            background: white;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
         
         /* QR 카메라 섹션 */
         .camera-section {
-            background: white;
-            padding: 30px 20px;
-            margin-bottom: 20px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
         }
         
         #reader {
@@ -56,11 +60,8 @@
         
         .scanner-info {
             background: linear-gradient(135deg, #e3f2fd 0%, #e8eaf6 100%);
-            padding: 20px;
-            border-radius: 12px;
-            margin: 20px 0;
             border-left: 4px solid #667eea;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: left;
         }
         
         .scanner-info strong {
@@ -70,31 +71,20 @@
         
         .scanner-result {
             background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-            padding: 20px;
-            border-radius: 12px;
-            margin: 20px 0;
             border-left: 4px solid #28a745;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             display: none;
+            text-align: center;
         }
         
         .scanner-error {
             background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
-            padding: 20px;
-            border-radius: 12px;
-            margin: 20px 0;
             border-left: 4px solid #dc3545;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             display: none;
+            text-align: left;
         }
         .equipment-preview {
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            margin: 20px 0;
-            display: none;
             border: 2px solid #667eea;
+            display: none;
         }
         .equipment-preview h3 {
             color: #667eea;
@@ -145,6 +135,76 @@
             background: #5a6268;
             transform: translateY(-2px);
         }
+        
+        /* 수동 입력 섹션 */
+        .manual-input-section {
+            background: linear-gradient(135deg, #fff9e6 0%, #fffbf0 100%);
+            border-left: 4px solid #ffc107;
+        }
+        
+        .manual-input-section .section-title {
+            margin-bottom: 15px;
+        }
+        
+        .manual-input-section .section-title i {
+            color: #ffc107;
+            font-size: 20px;
+            margin-right: 8px;
+        }
+        
+        .manual-input-section .section-title strong {
+            color: #856404;
+            font-size: 16px;
+        }
+        
+        .manual-input-section input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        
+        .manual-input-section .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 10px;
+            font-weight: 600;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+        
+        .manual-input-section .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .manual-input-section .btn-secondary {
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: 600;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(118, 75, 162, 0.3);
+        }
+        
+        .manual-input-section .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(118, 75, 162, 0.4);
+        }
     </style>
 </head>
 <body>
@@ -156,26 +216,28 @@
         <h1><i class="fas fa-qrcode"></i> QR 코드 스캔</h1>
         </div>
 
-        <!-- QR 카메라 섹션 -->
-        <div class="camera-section">
-        <div id="reader"></div>
-        </div>
-
-        <!-- 나머지 컨텐츠 -->
+        <!-- 모든 컨텐츠를 scanner-container로 통일 -->
         <div class="scanner-container">
-            <!-- 스캔 결과를 scanner-info 위로 이동 -->
-            <div id="scannerResult" class="scanner-result">
+            <!-- QR 카메라 섹션 -->
+            <div class="info-card camera-section">
+                <div id="reader"></div>
+            </div>
+
+            <!-- 스캔 결과 -->
+            <div id="scannerResult" class="info-card scanner-result">
                 <i class="fas fa-check-circle"></i>
                 <strong>QR 코드 인식 성공!</strong>
             </div>
 
-            <div id="scannerError" class="scanner-error">
+            <!-- 오류 메시지 -->
+            <div id="scannerError" class="info-card scanner-error">
                 <i class="fas fa-exclamation-triangle"></i>
                 <strong>오류 발생</strong><br>
                 <span id="errorMessage"></span>
             </div>
 
-            <div id="equipmentPreview" class="equipment-preview">
+            <!-- 스캔된 장비 정보 -->
+            <div id="equipmentPreview" class="info-card equipment-preview">
                 <h3><i class="fas fa-wrench"></i> 스캔된 장비 정보</h3>
                 <div id="equipmentInfo"></div>
                 <button class="btn-start-inspection" onclick="startInspection()">
@@ -186,7 +248,8 @@
                 </button>
             </div>
 
-            <div class="scanner-info">
+            <!-- 안내 메시지 -->
+            <div class="info-card scanner-info">
                 <i class="fas fa-info-circle"></i>
                 <strong>QR 코드를 카메라에 비춰주세요</strong><br>
                 장비에 부착된 QR 코드를 스캔하면 자동으로 점검 페이지로 이동합니다.<br>
@@ -195,24 +258,17 @@
                 </small>
             </div>
 
-            <!-- 수동 입력 옵션 추가 -->
-            <div style="background: linear-gradient(135deg, #fff9e6 0%, #fffbf0 100%); padding: 20px; border-radius: 12px; margin: 20px 0; border-left: 4px solid #ffc107; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                <div style="margin-bottom: 15px;">
-                    <i class="fas fa-keyboard" style="color: #ffc107; font-size: 20px; margin-right: 8px;"></i>
-                    <strong style="color: #856404; font-size: 16px;">장비 ID 수동 입력</strong>
+            <!-- 수동 입력 섹션 -->
+            <div class="info-card manual-input-section">
+                <div class="section-title">
+                    <i class="fas fa-keyboard"></i>
+                    <strong>장비 ID 수동 입력</strong>
                 </div>
-                <input type="text" id="manualEquipmentId" placeholder="장비 ID 입력 (예: EQ0001)" 
-                    style="width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #667eea; border-radius: 8px; font-size: 16px; box-sizing: border-box;">
-                <button onclick="loadEquipmentManually()" 
-                    style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; width: 100%; margin-bottom: 10px; font-weight: 600; font-size: 15px; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);"
-                    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(102, 126, 234, 0.4)'"
-                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(102, 126, 234, 0.3)'">
+                <input type="text" id="manualEquipmentId" placeholder="장비 ID 입력 (예: EQ0001)">
+                <button class="btn-primary" onclick="loadEquipmentManually()">
                     <i class="fas fa-search"></i> 장비 찾기
                 </button>
-                <button onclick="location.href='qr-generator.html'" 
-                    style="background: linear-gradient(135deg, #764ba2 0%, #667eea 100%); color: white; padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 600; font-size: 15px; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(118, 75, 162, 0.3);"
-                    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(118, 75, 162, 0.4)'"
-                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(118, 75, 162, 0.3)'">
+                <button class="btn-secondary" onclick="location.href='qr-generator.html'">
                     <i class="fas fa-qrcode"></i> QR 코드 생성
                 </button>
             </div>
