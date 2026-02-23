@@ -280,7 +280,7 @@ function updateAlertList(inspections, equipment) {
                     <span class="alert-status" style="background-color: ${statusColor}">${insp.status}</span>
                 </div>
                 <div class="alert-info">
-                    <i class="fas fa-map-marker-alt"></i> ${eq.location || '-'} (${eq.floor || '-'})
+                    <i class="fas fa-map-marker-alt"></i> ${eq.location || '-'} (${eq.floor ? eq.floor + '층' : '-'})
                 </div>
                 <div class="alert-info">
                     <i class="fas fa-exclamation-circle"></i> ${insp.notes || (insp.inspection_type === '고장정비' ? '정비내용 없음' : '특이사항 없음')}

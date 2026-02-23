@@ -88,7 +88,7 @@ async function loadEquipmentDirectly(equipmentId) {
                         <i class="fas fa-layer-group"></i>
                         <div>
                             <div class="detail-label">위치</div>
-                            <div class="detail-value">${selectedEquipment.floor} - ${selectedEquipment.location}</div>
+                            <div class="detail-value">${selectedEquipment.floor}층 - ${selectedEquipment.location}</div>
                         </div>
                     </div>
                     <div class="detail-item">
@@ -217,8 +217,7 @@ async function selectSite(site) {
                 card.innerHTML = `
                     <div class="icon"><i class="fas fa-building"></i></div>
                     <h3>${building.building_name}</h3>
-                    <p><i class="fas fa-layer-group"></i> ${building.floors}</p>
-                    <p><i class="fas fa-ruler-combined"></i> ${building.area}m²</p>
+                    <p><i class="fas fa-layer-group"></i> ${building.floors ? building.floors + '층' : '층수 미등록'}</p>
                 `;
                 buildingList.appendChild(card);
             });
@@ -263,7 +262,7 @@ function populateFilters() {
     const floorFilter = document.getElementById('floorFilter');
     floorFilter.innerHTML = '<option value="">전체</option>';
     floors.forEach(floor => {
-        floorFilter.innerHTML += `<option value="${floor}">${floor}</option>`;
+        floorFilter.innerHTML += `<option value="${floor}">${floor}층</option>`;
     });
     
     // 장비 종류 필터
