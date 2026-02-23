@@ -123,9 +123,6 @@ function displayEquipmentList(equipment) {
                 <button class="btn-inspect" onclick="startInspection('${eq.id}')">
                     <i class="fas fa-clipboard-check"></i> 점검 시작
                 </button>
-                <button class="btn-qr-code" onclick="showQRCode('${eq.id}')" title="QR 코드">
-                    <i class="fas fa-qrcode"></i>
-                </button>
             </div>
         `;
         container.appendChild(card);
@@ -169,8 +166,4 @@ function startInspection(equipmentId) {
     location.href = `inspection.html?equipment=${equipmentId}`;
 }
 
-// QR 코드 표시
-function showQRCode(equipmentId) {
-    // QR 코드 생성 기능 (향후 구현)
-    alert(`장비 ID: ${equipmentId}\n\nQR 코드 생성 기능은 곧 제공될 예정입니다.\n현재는 이 장비 ID를 사용하여 점검을 진행할 수 있습니다.`);
-}
+

@@ -298,6 +298,10 @@ function displayResults() {
                                 ${equipment.inspection_count}건
                             </span>
                         </button>
+                        <button class="btn-inspect" onclick="startInspection('${equipment.id}')">
+                            <i class="fas fa-clipboard-check"></i>
+                            점검 시작
+                        </button>
                         <button class="btn-view-detail" onclick="viewDetail('${equipment.id}')">
                             <i class="fas fa-info-circle"></i>
                             상세정보
@@ -307,6 +311,12 @@ function displayResults() {
             </div>
         `;
     }).join('');
+}
+
+// 점검 시작
+function startInspection(equipmentId) {
+    console.log('🔧 점검 시작:', equipmentId);
+    window.location.href = `inspection.html?equipmentId=${equipmentId}`;
 }
 
 // 정비내역 보기
