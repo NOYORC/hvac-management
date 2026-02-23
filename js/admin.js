@@ -503,6 +503,8 @@ function editSite(siteId) {
     document.getElementById('siteId').value = site.id;
     document.getElementById('siteName').value = site.site_name;
     document.getElementById('siteAddress').value = site.address || '';
+    document.getElementById('siteContactName').value = site.contact_name || '';
+    document.getElementById('siteContactPhone').value = site.contact_phone || '';
     document.getElementById('siteModal').classList.add('active');
     currentEditId = siteId;
 }
@@ -518,7 +520,9 @@ async function handleSiteSubmit(e) {
     const formData = new FormData(e.target);
     const siteData = {
         site_name: formData.get('site_name'),
-        address: formData.get('address')
+        address: formData.get('address'),
+        contact_name: formData.get('contact_name'),
+        contact_phone: formData.get('contact_phone')
     };
     
     let result;
