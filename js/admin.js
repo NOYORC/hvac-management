@@ -66,10 +66,13 @@ function waitForAuth() {
 async function loadAllData() {
     await Promise.all([
         loadUsers(),
-        loadEquipment(),
-        loadSites(),
-        loadBuildings()
+        loadEquipment()
     ]);
+    
+    // 현장과 건물은 순서대로 로드 후 렌더링
+    await loadSites();
+    await loadBuildings();
+    renderSites();
 }
 
 // ===== 탭 전환 =====
@@ -272,7 +275,7 @@ function renderEquipment() {
             <div class="item-card">
                 <div class="item-header">
                     <div>
-                        <div class="item-title">${eq.type}</div>
+                        <div class="item-title">${eq.equipment_type || eq.type || 'undefined'}</div>
                         <div class="item-subtitle">${eq.id}</div>
                     </div>
                     <div class="item-actions">
@@ -298,7 +301,7 @@ function renderEquipment() {
                     ${eq.location ? `
                         <div class="item-detail">
                             <i class="fas fa-map-marker-alt"></i>
-                            ${eq.location} ${eq.floor || ''}
+                            ${eq.floor ? `${eq.floor}층 ` : ''}${eq.location}
                         </div>
                     ` : ''}
                 </div>
@@ -439,7 +442,6 @@ async function loadSites() {
     const result = await window.CachedFirestoreHelper.getAllDocuments('sites');
     if (result.success) {
         sites = result.data;
-        renderSites();
     }
 }
 
