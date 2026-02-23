@@ -285,7 +285,7 @@ function filterEquipment() {
     let filtered = allEquipment;
     
     if (floorFilter) {
-        filtered = filtered.filter(e => e.floor === floorFilter);
+        filtered = filtered.filter(e => String(e.floor) === String(floorFilter));
         console.log(`✅ 층 필터 적용 (${floorFilter}): ${filtered.length}개 장비 발견`);
     }
     

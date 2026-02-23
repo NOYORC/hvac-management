@@ -209,7 +209,7 @@ function applyFilters() {
         const matchesType = !equipmentType || equipment.equipment_type === equipmentType;
         
         // 층 필터
-        const matchesFloor = !floor || equipment.floor.toString() === floor;
+        const matchesFloor = !floor || String(equipment.floor || '') === String(floor);
         
         return matchesSearch && matchesSite && matchesBuilding && matchesType && matchesFloor;
     });
