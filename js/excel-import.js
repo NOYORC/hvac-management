@@ -96,8 +96,11 @@ function handleFileUpload(type, file) {
             const sheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[sheetName];
             
-            // JSON으로 변환
-            const jsonData = XLSX.utils.sheet_to_json(worksheet);
+            // JSON으로 변환 (날짜 형식 유지)
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, {
+                raw: false,
+                dateNF: 'yyyy-mm-dd'
+            });
             
             if (jsonData.length === 0) {
                 showStatus('error', '❌ 파일에 데이터가 없습니다.');
@@ -260,6 +263,7 @@ function processItemData(type, item) {
     if (type === 'sites') {
         // 현장 데이터 처리
         // 필수 필드: id, site_name, address, contact_name, contact_phone
+        console.log('Sites data being processed:', processed);
     } else if (type === 'buildings') {
         // 건물 데이터 처리
         // 필수 필드: id, site_id, building_name, floors
@@ -273,17 +277,35 @@ function processItemData(type, item) {
             processed.capacity = parseFloat(processed.capacity);
         }
         
-        // installation_date가 있으면 Timestamp로 변환
+        // installation_date 처리
         if (processed.installation_date) {
             try {
-                const date = new Date(processed.installation_date);
-                if (!isNaN(date.getTime())) {
+                // Excel 시리얼 날짜 처리
+                let date;
+                if (typeof processed.installation_date === 'number') {
+                    // Excel serial date (1900년 1월 1일 기준)
+                    date = new Date((processed.installation_date - 25569) * 86400 * 1000);
+                } else if (typeof processed.installation_date === 'string') {
+                    // 문자열 날짜
+                    date = new Date(processed.installation_date);
+                } else if (processed.installation_date instanceof Date) {
+                    // 이미 Date 객체
+                    date = processed.installation_date;
+                }
+                
+                if (date && !isNaN(date.getTime())) {
                     processed.installation_date = window.FirestoreTimestamp.fromDate(date);
+                    console.log('✅ installation_date converted:', processed.id, date);
+                } else {
+                    console.warn('⚠️ Invalid installation_date for', processed.id, '- using current time');
+                    processed.installation_date = window.FirestoreTimestamp.now();
                 }
             } catch (e) {
-                delete processed.installation_date;
+                console.error('❌ installation_date conversion error for', processed.id, e);
+                processed.installation_date = window.FirestoreTimestamp.now();
             }
         } else {
+            console.log('ℹ️ No installation_date for', processed.id, '- using current time');
             processed.installation_date = window.FirestoreTimestamp.now();
         }
     }
@@ -436,7 +458,12 @@ function handleAllFileUpload(file) {
                 showStatus('error', '❌ "Sites" 시트를 찾을 수 없습니다.');
                 return;
             }
-            const sitesData = XLSX.utils.sheet_to_json(sitesSheet);
+            const sitesData = XLSX.utils.sheet_to_json(sitesSheet, {
+                raw: false,
+                dateNF: 'yyyy-mm-dd'
+            });
+            console.log('📊 Sites data loaded:', sitesData.length, 'rows');
+            if (sitesData.length > 0) console.log('Sample site:', sitesData[0]);
             
             // Buildings 시트 읽기
             const buildingsSheet = workbook.Sheets['Buildings'] || workbook.Sheets['buildings'];
@@ -444,7 +471,11 @@ function handleAllFileUpload(file) {
                 showStatus('error', '❌ "Buildings" 시트를 찾을 수 없습니다.');
                 return;
             }
-            const buildingsData = XLSX.utils.sheet_to_json(buildingsSheet);
+            const buildingsData = XLSX.utils.sheet_to_json(buildingsSheet, {
+                raw: false,
+                dateNF: 'yyyy-mm-dd'
+            });
+            console.log('📊 Buildings data loaded:', buildingsData.length, 'rows');
             
             // Equipment 시트 읽기
             const equipmentSheet = workbook.Sheets['Equipment'] || workbook.Sheets['equipment'];
@@ -452,7 +483,12 @@ function handleAllFileUpload(file) {
                 showStatus('error', '❌ "Equipment" 시트를 찾을 수 없습니다.');
                 return;
             }
-            const equipmentData = XLSX.utils.sheet_to_json(equipmentSheet);
+            const equipmentData = XLSX.utils.sheet_to_json(equipmentSheet, {
+                raw: false,
+                dateNF: 'yyyy-mm-dd'
+            });
+            console.log('📊 Equipment data loaded:', equipmentData.length, 'rows');
+            if (equipmentData.length > 0) console.log('Sample equipment:', equipmentData[0]);
             
             // 데이터 저장
             currentData.all = {
