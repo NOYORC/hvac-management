@@ -279,14 +279,19 @@ function filterEquipment() {
     const floorFilter = document.getElementById('floorFilter').value;
     const typeFilter = document.getElementById('typeFilter').value;
     
+    console.log('🔍 필터링 조건:', { floor: floorFilter, type: typeFilter });
+    console.log('📊 전체 장비 층 데이터:', allEquipment.map(e => ({ id: e.id, floor: e.floor, type: typeof e.floor })));
+    
     let filtered = allEquipment;
     
     if (floorFilter) {
         filtered = filtered.filter(e => e.floor === floorFilter);
+        console.log(`✅ 층 필터 적용 (${floorFilter}): ${filtered.length}개 장비 발견`);
     }
     
     if (typeFilter) {
         filtered = filtered.filter(e => e.equipment_type === typeFilter);
+        console.log(`✅ 종류 필터 적용 (${typeFilter}): ${filtered.length}개 장비 발견`);
     }
     
     displayEquipment(filtered);

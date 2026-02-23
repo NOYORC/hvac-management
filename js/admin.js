@@ -325,10 +325,25 @@ async function editEquipment(equipmentId) {
     
     document.getElementById('equipmentModalTitle').textContent = '장비 수정';
     document.getElementById('equipmentId').value = eq.id;
-    document.getElementById('equipmentType').value = eq.type;
+    document.getElementById('equipmentType').value = eq.equipment_type || eq.type;
     document.getElementById('equipmentModel').value = eq.model || '';
     document.getElementById('equipmentLocation').value = eq.location || '';
     document.getElementById('equipmentFloor').value = eq.floor || '';
+    document.getElementById('equipmentCapacity').value = eq.capacity || '';
+    
+    // installation_date 처리
+    if (eq.installation_date) {
+        try {
+            const date = eq.installation_date.toDate ? eq.installation_date.toDate() : new Date(eq.installation_date);
+            const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD 형식
+            document.getElementById('equipmentInstallDate').value = dateStr;
+        } catch (e) {
+            console.error('설치일자 변환 오류:', e);
+            document.getElementById('equipmentInstallDate').value = '';
+        }
+    } else {
+        document.getElementById('equipmentInstallDate').value = '';
+    }
     
     // 현장 목록 로드 후 선택
     await loadSitesForEquipment();
@@ -373,13 +388,23 @@ async function handleEquipmentSubmit(e) {
     
     const formData = new FormData(e.target);
     const equipmentData = {
-        type: formData.get('type'),
+        equipment_type: formData.get('type'),
         site_id: formData.get('site_id'),
         building_id: formData.get('building_id'),
         model: formData.get('model'),
         location: formData.get('location'),
-        floor: formData.get('floor')
+        floor: formData.get('floor'),
+        capacity: formData.get('capacity')
     };
+    
+    // installation_date 처리
+    const installDate = formData.get('installation_date');
+    if (installDate) {
+        equipmentData.installation_date = window.FirestoreTimestamp.fromDate(new Date(installDate));
+    } else {
+        // 설치일자가 없으면 현재 시간으로 설정
+        equipmentData.installation_date = window.FirestoreTimestamp.now();
+    }
     
     let result;
     if (currentEditId) {
