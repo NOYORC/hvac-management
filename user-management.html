@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사용자 관리 - HVAC 관리</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .user-management-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header-section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-section h1 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .header-section p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .btn-create-user {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .btn-create-user:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .users-grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        .user-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .user-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+
+        .user-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            margin-right: 15px;
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .user-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .user-email {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .user-role-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .role-admin {
+            background: #fee;
+            color: #f44;
+        }
+
+        .role-manager {
+            background: #fef;
+            color: #84f;
+        }
+
+        .role-inspector {
+            background: #eff;
+            color: #4af;
+        }
+
+        .user-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-delete {
+            background: #fee;
+            color: #f44;
+        }
+
+        .btn-delete:hover {
+            background: #f44;
+            color: white;
+        }
+
+        /* 모달 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            font-size: 24px;
+            color: #333;
+        }
+
+        .btn-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #999;
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .error-message {
+            color: #f44;
+            font-size: 14px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .success-message {
+            color: #4a4;
+            font-size: 14px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state i {
+            font-size: 80px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body>
+    <div class="user-management-container">
+        <div class="header-section">
+            <h1><i class="fas fa-users"></i> 사용자 관리</h1>
+            <p>시스템 사용자 계정을 생성하고 관리합니다</p>
+            <button class="btn-create-user" onclick="openCreateUserModal()">
+                <i class="fas fa-user-plus"></i> 새 사용자 추가
+            </button>
+        </div>
+
+        <div class="users-grid" id="usersGrid">
+            <div class="empty-state">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>사용자 목록을 불러오는 중...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 사용자 생성 모달 -->
+    <div class="modal" id="createUserModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>새 사용자 추가</h2>
+                <button class="btn-close" onclick="closeCreateUserModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <form id="createUserForm">
+                <div class="form-group">
+                    <label for="userEmail">이메일 *</label>
+                    <input type="email" id="userEmail" name="email" required placeholder="user@example.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="userName">이름</label>
+                    <input type="text" id="userName" name="name" placeholder="홍길동">
+                </div>
+
+                <div class="form-group">
+                    <label for="userPassword">비밀번호 * (최소 6자)</label>
+                    <input type="password" id="userPassword" name="password" required minlength="6" placeholder="••••••">
+                </div>
+
+                <div class="form-group">
+                    <label for="userRole">역할 *</label>
+                    <select id="userRole" name="role" required>
+                        <option value="inspector">점검자</option>
+                        <option value="manager">관리자</option>
+                        <option value="admin">시스템 관리자</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn-submit" id="submitBtn">
+                    <i class="fas fa-user-plus"></i> 사용자 생성
+                </button>
+
+                <div class="error-message" id="errorMessage"></div>
+                <div class="success-message" id="successMessage"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Firebase -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+        import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyCpTEePTOkEfSLRzyszq0dCCJmQEWJsBic",
+            authDomain: "hvac-management-477fb.firebaseapp.com",
+            projectId: "hvac-management-477fb",
+            storageBucket: "hvac-management-477fb.firebasestorage.app",
+            messagingSenderId: "312239966797",
+            appId: "1:312239966797:web:b454d99fde9823207dea04",
+            measurementId: "G-FT4YE5FDP1"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        window.db = getFirestore(app);
+    </script>
+
+    <script src="js/firebase-config.js"></script>
+    <script src="js/auth-manager.js"></script>
+    <script>
+        let users = [];
+
+        // 페이지 로드
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Auth 초기화
+            await window.AuthManager.initialize();
+
+            // 관리자 권한 확인
+            if (!window.AuthManager.hasRole(window.USER_ROLES.ADMIN)) {
+                alert('관리자 권한이 필요합니다.');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // 사용자 목록 로드
+            await loadUsers();
+
+            // 폼 제출 이벤트
+            document.getElementById('createUserForm').addEventListener('submit', handleCreateUser);
+        });
+
+        // 사용자 목록 로드
+        async function loadUsers() {
+            try {
+                const result = await window.FirestoreHelper.getAllDocuments('users');
+                
+                if (result.success) {
+                    users = result.data;
+                    renderUsers();
+                } else {
+                    document.getElementById('usersGrid').innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <p>사용자 목록을 불러오는데 실패했습니다.</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('사용자 로드 오류:', error);
+            }
+        }
+
+        // 사용자 목록 렌더링
+        function renderUsers() {
+            const grid = document.getElementById('usersGrid');
+            
+            if (users.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-users"></i>
+                        <p>등록된 사용자가 없습니다.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = users.map(user => {
+                const roleClass = `role-${user.role}`;
+                const roleText = window.AuthManager.getRoleText(user.role);
+                const initial = (user.name || user.email)[0].toUpperCase();
+
+                return `
+                    <div class="user-card">
+                        <div class="user-header">
+                            <div style="display: flex; align-items: center;">
+                                <div class="user-avatar">${initial}</div>
+                                <div class="user-info">
+                                    <div class="user-name">${user.name || user.email}</div>
+                                    <div class="user-email">${user.email}</div>
+                                </div>
+                            </div>
+                            <span class="user-role-badge ${roleClass}">${roleText}</span>
+                        </div>
+                        <div class="user-actions">
+                            <button class="btn-action btn-delete" onclick="deleteUser('${user.id}', '${user.email}')">
+                                <i class="fas fa-trash"></i> 삭제
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 사용자 생성 모달 열기
+        function openCreateUserModal() {
+            document.getElementById('createUserModal').classList.add('active');
+            document.getElementById('createUserForm').reset();
+            document.getElementById('errorMessage').classList.remove('show');
+            document.getElementById('successMessage').classList.remove('show');
+        }
+
+        // 사용자 생성 모달 닫기
+        function closeCreateUserModal() {
+            document.getElementById('createUserModal').classList.remove('active');
+        }
+
+        // 사용자 생성 처리
+        async function handleCreateUser(e) {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('submitBtn');
+            const errorMsg = document.getElementById('errorMessage');
+            const successMsg = document.getElementById('successMessage');
+
+            const formData = new FormData(e.target);
+            const email = formData.get('email');
+            const password = formData.get('password');
+            const name = formData.get('name');
+            const role = formData.get('role');
+
+            // 로딩 상태
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 생성 중...';
+            errorMsg.classList.remove('show');
+            successMsg.classList.remove('show');
+
+            // 사용자 생성
+            const result = await window.AuthManager.createUser(email, password, { name, role });
+
+            if (result.success) {
+                successMsg.textContent = '✅ 사용자가 성공적으로 생성되었습니다!';
+                successMsg.classList.add('show');
+                
+                // 폼 초기화
+                e.target.reset();
+                
+                // 사용자 목록 새로고침
+                setTimeout(async () => {
+                    await loadUsers();
+                    closeCreateUserModal();
+                }, 1500);
+            } else {
+                errorMsg.textContent = result.error;
+                errorMsg.classList.add('show');
+                
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-user-plus"></i> 사용자 생성';
+            }
+        }
+
+        // 사용자 삭제
+        async function deleteUser(userId, email) {
+            if (!confirm(`정말로 ${email} 사용자를 삭제하시겠습니까?`)) {
+                return;
+            }
+
+            try {
+                const result = await window.FirestoreHelper.deleteDocument('users', userId);
+                
+                if (result.success) {
+                    alert('사용자가 삭제되었습니다.');
+                    await loadUsers();
+                } else {
+                    alert('사용자 삭제에 실패했습니다: ' + result.error);
+                }
+            } catch (error) {
+                console.error('삭제 오류:', error);
+                alert('사용자 삭제 중 오류가 발생했습니다.');
+            }
+        }
+
+        // 전역 함수로 등록
+        window.openCreateUserModal = openCreateUserModal;
+        window.closeCreateUserModal = closeCreateUserModal;
+        window.deleteUser = deleteUser;
+    </script>
+</body>
+</html>
