@@ -649,7 +649,7 @@ function getFullLocation(equipment) {
     const parts = [];
     if (site) parts.push(site.site_name);
     if (building) parts.push(building.building_name);
-    if (equipment.floor) parts.push(equipment.floor);
+    if (equipment.floor) parts.push(equipment.floor + '층');
     if (equipment.location) parts.push(equipment.location);
     
     return parts.join(' ') || equipment.location || '위치 정보 없음';
