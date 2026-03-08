@@ -64,15 +64,17 @@ function waitForAuth() {
 
 // 모든 데이터 로드
 async function loadAllData() {
+    // 모든 데이터 병렬 로드 (렌더링은 아직 하지 않음)
     await Promise.all([
         loadUsers(),
-        loadEquipment()
+        loadEquipment(),
+        loadSites(),
+        loadBuildings()
     ]);
     
-    // 현장과 건물은 순서대로 로드 후 렌더링
-    await loadSites();
-    await loadBuildings();
+    // 모든 데이터 로드 완료 후 렌더링
     renderSites();
+    renderEquipment();
 }
 
 // ===== 탭 전환 =====
@@ -247,7 +249,6 @@ async function loadEquipment() {
         equipment = result.data;
         console.log('✅ 장비 수:', equipment.length, '개');
         console.log('📊 장비 목록:', equipment);
-        renderEquipment();
     } else {
         console.error('❌ 장비 로드 실패:', result.error);
     }
@@ -420,6 +421,7 @@ async function handleEquipmentSubmit(e) {
         alert(currentEditId ? '장비가 수정되었습니다.' : '새 장비가 추가되었습니다.');
         closeEquipmentModal();
         await loadEquipment();
+        renderEquipment();
     } else {
         alert('실패: ' + result.error);
     }
@@ -432,6 +434,7 @@ async function deleteEquipment(equipmentId) {
     if (result.success) {
         alert('삭제되었습니다.');
         await loadEquipment();
+        renderEquipment();
     } else {
         alert('삭제 실패: ' + result.error);
     }
