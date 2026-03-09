@@ -127,53 +127,70 @@ async function loadEquipmentDirectly(equipmentId) {
     }
 }
 
-// 점검자 목록 로드 (users 컬렉션 사용)
+// 로그인한 사용자 정보 자동 설정
 async function loadInspectors() {
-    console.log('🔍 점검자 목록 로드 시작...');
+    console.log('🔍 로그인한 사용자 정보 로드 시작...');
     try {
-        const data = await window.CachedFirestoreHelper.getAllDocuments('users');
-        console.log('📊 사용자 데이터 응답:', data);
+        // AuthManager에서 현재 로그인한 사용자 가져오기
+        await waitForAuth();
+        const currentUser = window.AuthManager?.getCurrentUser();
         
-        const inspectorSelect = document.getElementById('inspectorName');
-        
-        if (data.success && data.data && data.data.length > 0) {
-            // role이 inspector, manager, admin인 사용자만 필터링
-            const inspectors = data.data.filter(user => 
-                user.role === 'inspector' || 
-                user.role === 'manager' || 
-                user.role === 'admin'
-            );
-            
-            console.log(`✅ 총 사용자 ${data.data.length}명 중 점검자 ${inspectors.length}명 로드 완료`);
-            
-            if (inspectors.length > 0) {
-                inspectors.forEach((inspector, index) => {
-                    console.log(`  ${index + 1}. ${inspector.name} (${inspector.email}) - ${inspector.role}`);
-                    const option = document.createElement('option');
-                    option.value = inspector.name;
-                    option.textContent = `${inspector.name} (${inspector.role === 'admin' ? '시스템관리자' : inspector.role === 'manager' ? '관리자' : '점검자'})`;
-                    inspectorSelect.appendChild(option);
-                });
-                console.log('✅ 점검자명 드롭다운 생성 완료');
-            } else {
-                console.warn('⚠️ 점검 가능한 사용자가 없습니다. admin.html에서 사용자를 추가하세요.');
-            }
-        } else {
-            console.warn('⚠️ 사용자 데이터가 없습니다:', data);
-            console.warn('Firebase Authentication이 활성화되지 않았거나 users 컬렉션이 비어있습니다.');
+        if (!currentUser) {
+            console.error('❌ 로그인되지 않은 사용자입니다.');
+            alert('로그인이 필요합니다.');
+            window.location.href = 'login.html';
+            return;
         }
-    } catch (error) {
-        console.error('❌ 점검자 목록 로드 오류:', error);
-        // 오류 시 수동 입력으로 폴백
+        
+        console.log('✅ 로그인 사용자:', currentUser);
+        
+        // 드롭다운을 읽기 전용 입력 필드로 변경
         const inspectorSelect = document.getElementById('inspectorName');
-        const input = document.createElement('input');
-        input.type = 'text';
-        input.id = 'inspectorName';
-        input.required = true;
-        input.placeholder = '이름을 입력하세요';
-        inspectorSelect.parentNode.replaceChild(input, inspectorSelect);
-        console.log('⚠️ 수동 입력 모드로 전환됨');
+        const formGroup = inspectorSelect.parentElement;
+        
+        // 역할 한글 표시
+        const roleText = currentUser.role === 'admin' ? '시스템관리자' : 
+                        currentUser.role === 'manager' ? '관리자' : '점검자';
+        
+        // 새로운 HTML 구조로 변경 (읽기 전용 + 숨겨진 필드)
+        formGroup.innerHTML = `
+            <label><i class="fas fa-user"></i> 점검자명</label>
+            <div class="inspector-info">
+                <input type="text" value="${currentUser.name} (${roleText})" readonly 
+                       style="background-color: #f0f0f0; cursor: not-allowed;">
+                <input type="hidden" id="inspectorName" name="inspectorName" value="${currentUser.name}">
+                <input type="hidden" id="inspectorEmail" name="inspectorEmail" value="${currentUser.email}">
+                <input type="hidden" id="inspectorRole" name="inspectorRole" value="${currentUser.role}">
+            </div>
+        `;
+        
+        console.log('✅ 점검자 정보 자동 설정 완료:', {
+            name: currentUser.name,
+            email: currentUser.email,
+            role: currentUser.role
+        });
+        
+    } catch (error) {
+        console.error('❌ 사용자 정보 로드 오류:', error);
+        alert('사용자 정보를 불러오는데 실패했습니다. 다시 로그인해주세요.');
+        window.location.href = 'login.html';
     }
+}
+
+// AuthManager 초기화 대기
+function waitForAuth() {
+    return new Promise((resolve) => {
+        if (window.AuthManager) {
+            resolve();
+        } else {
+            const checkInterval = setInterval(() => {
+                if (window.AuthManager) {
+                    clearInterval(checkInterval);
+                    resolve();
+                }
+            }, 100);
+        }
+    });
 }
 
 // Step 1: 현장 목록 로드
