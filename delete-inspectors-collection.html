@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inspectors 컬렉션 삭제 - HVAC 관리</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <style>
+        .delete-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #d32f2f;
+            margin-bottom: 10px;
+        }
+
+        .warning-box {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .warning-box h3 {
+            color: #856404;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .warning-box ul {
+            color: #856404;
+            margin: 10px 0;
+            padding-left: 25px;
+        }
+
+        .danger-box {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .danger-box h3 {
+            color: #721c24;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-box {
+            background: #d1ecf1;
+            border: 2px solid #17a2b8;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .info-box h3 {
+            color: #0c5460;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-box p {
+            color: #0c5460;
+            margin: 5px 0;
+        }
+
+        .collection-status {
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-label {
+            font-weight: 600;
+            color: #666;
+        }
+
+        .status-value {
+            color: #333;
+        }
+
+        .status-value.loading {
+            color: #999;
+            font-style: italic;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
+        }
+
+        .btn-danger:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .progress-container {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .progress-text {
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .log-container {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            background: #f5f5f5;
+            border-radius: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .log-item {
+            padding: 5px 0;
+            font-size: 14px;
+            font-family: monospace;
+        }
+
+        .log-item.success {
+            color: #28a745;
+        }
+
+        .log-item.error {
+            color: #dc3545;
+        }
+
+        .log-item.info {
+            color: #17a2b8;
+        }
+
+        .completion-box {
+            display: none;
+            background: #d4edda;
+            border: 2px solid #28a745;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .completion-box h3 {
+            color: #155724;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .completion-box p {
+            color: #155724;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="delete-container">
+        <div class="header">
+            <h1><i class="fas fa-trash-alt"></i> Inspectors 컬렉션 삭제</h1>
+            <p>레거시 데이터 정리 도구</p>
+        </div>
+
+        <div class="warning-box">
+            <h3><i class="fas fa-exclamation-triangle"></i> 주의사항</h3>
+            <p><strong>이 작업은 다음 컬렉션을 영구적으로 삭제합니다:</strong></p>
+            <ul>
+                <li><code>inspectors</code> - 배포 전 임시 테스트 데이터 (INSP001 ~ INSP012)</li>
+            </ul>
+        </div>
+
+        <div class="danger-box">
+            <h3><i class="fas fa-skull-crossbones"></i> 경고</h3>
+            <p><strong>이 작업은 되돌릴 수 없습니다!</strong></p>
+            <p>삭제 전에 백업이 필요한 경우 Firebase Console에서 Export를 먼저 수행하세요.</p>
+        </div>
+
+        <div class="info-box">
+            <h3><i class="fas fa-info-circle"></i> 삭제 이유</h3>
+            <p><strong>✅ Firebase Authentication 통합 완료</strong></p>
+            <p>• <code>users</code> 컬렉션으로 완전히 대체됨</p>
+            <p>• 역할 기반 접근 제어 (inspector/manager/admin) 구현됨</p>
+            <p>• <code>inspectors</code> 컬렉션은 더 이상 사용되지 않음</p>
+            <br>
+            <p><strong>📌 삭제 후:</strong></p>
+            <p>• admin.html의 "점검자 관리" 탭에서 사용자 추가</p>
+            <p>• 각 사용자는 자신의 이메일로 로그인</p>
+            <p>• 역할별 권한이 자동으로 적용됨</p>
+        </div>
+
+        <div class="collection-status">
+            <h3 style="margin-top: 0; margin-bottom: 15px; color: #333;">
+                <i class="fas fa-database"></i> 컬렉션 현황
+            </h3>
+            <div class="status-item">
+                <span class="status-label">컬렉션 이름:</span>
+                <span class="status-value" id="collectionName">inspectors</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">문서 개수:</span>
+                <span class="status-value loading" id="docCount">확인 중...</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">예상 소요 시간:</span>
+                <span class="status-value" id="estimatedTime">-</span>
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn btn-secondary" onclick="location.href='admin.html'">
+                <i class="fas fa-arrow-left"></i>
+                취소
+            </button>
+            <button class="btn btn-danger" id="deleteBtn" onclick="startDeletion()" disabled>
+                <i class="fas fa-trash-alt"></i>
+                Inspectors 컬렉션 삭제
+            </button>
+        </div>
+
+        <div class="progress-container" id="progressContainer">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%">0%</div>
+            </div>
+            <div class="progress-text" id="progressText">준비 중...</div>
+        </div>
+
+        <div class="log-container" id="logContainer"></div>
+
+        <div class="completion-box" id="completionBox">
+            <h3><i class="fas fa-check-circle"></i> 삭제 완료!</h3>
+            <p><strong>inspectors</strong> 컬렉션이 성공적으로 삭제되었습니다.</p>
+            <p>이제 <strong>users</strong> 컬렉션만 사용하여 사용자를 관리하세요.</p>
+            <button class="btn btn-secondary" onclick="location.href='admin.html'" style="margin-top: 15px;">
+                <i class="fas fa-cog"></i>
+                시스템 관리로 돌아가기
+            </button>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+        import { getFirestore, collection, getDocs, deleteDoc, doc } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+
+        // Firebase 설정
+        const firebaseConfig = {
+            apiKey: "AIzaSyCpTEePTOkEfSLRzyszq0dCCJmQEWJsBic",
+            authDomain: "hvac-management-477fb.firebaseapp.com",
+            projectId: "hvac-management-477fb",
+            storageBucket: "hvac-management-477fb.firebasestorage.app",
+            messagingSenderId: "312239966797",
+            appId: "1:312239966797:web:b454d99fde9823207dea04"
+        };
+
+        // Firebase 초기화
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // 전역 변수
+        let totalDocs = 0;
+        let deletedDocs = 0;
+
+        // 페이지 로드 시 문서 개수 확인
+        window.addEventListener('DOMContentLoaded', async () => {
+            await checkCollectionSize();
+        });
+
+        // 컬렉션 크기 확인
+        async function checkCollectionSize() {
+            try {
+                addLog('컬렉션 확인 중...', 'info');
+                const querySnapshot = await getDocs(collection(db, 'inspectors'));
+                totalDocs = querySnapshot.size;
+                
+                document.getElementById('docCount').textContent = `${totalDocs}개 문서`;
+                document.getElementById('docCount').classList.remove('loading');
+                
+                if (totalDocs === 0) {
+                    document.getElementById('estimatedTime').textContent = '컬렉션이 비어있음';
+                    document.getElementById('deleteBtn').textContent = '삭제할 문서 없음';
+                    addLog('inspectors 컬렉션이 비어있습니다.', 'info');
+                } else {
+                    const estimatedSeconds = Math.ceil(totalDocs * 0.5);
+                    document.getElementById('estimatedTime').textContent = `약 ${estimatedSeconds}초`;
+                    document.getElementById('deleteBtn').disabled = false;
+                    addLog(`${totalDocs}개의 문서를 발견했습니다.`, 'success');
+                }
+            } catch (error) {
+                console.error('컬렉션 확인 오류:', error);
+                document.getElementById('docCount').textContent = '확인 실패';
+                addLog(`오류: ${error.message}`, 'error');
+            }
+        }
+
+        // 삭제 시작
+        window.startDeletion = async function() {
+            if (!confirm(`정말로 inspectors 컬렉션의 ${totalDocs}개 문서를 모두 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다!`)) {
+                return;
+            }
+
+            if (!confirm('최종 확인: 정말로 삭제하시겠습니까?')) {
+                return;
+            }
+
+            document.getElementById('deleteBtn').disabled = true;
+            document.getElementById('progressContainer').style.display = 'block';
+            document.getElementById('logContainer').style.display = 'block';
+
+            try {
+                addLog('삭제 시작...', 'info');
+                const querySnapshot = await getDocs(collection(db, 'inspectors'));
+                
+                for (const document of querySnapshot.docs) {
+                    await deleteDoc(doc(db, 'inspectors', document.id));
+                    deletedDocs++;
+                    
+                    const progress = Math.round((deletedDocs / totalDocs) * 100);
+                    updateProgress(progress, `${deletedDocs}/${totalDocs} 문서 삭제됨`);
+                    addLog(`✓ 삭제: ${document.id}`, 'success');
+                }
+
+                addLog('모든 문서 삭제 완료!', 'success');
+                document.getElementById('completionBox').style.display = 'block';
+                
+            } catch (error) {
+                console.error('삭제 오류:', error);
+                addLog(`❌ 오류 발생: ${error.message}`, 'error');
+                alert('삭제 중 오류가 발생했습니다. 콘솔을 확인하세요.');
+                document.getElementById('deleteBtn').disabled = false;
+            }
+        };
+
+        // 진행률 업데이트
+        function updateProgress(percentage, text) {
+            document.getElementById('progressFill').style.width = `${percentage}%`;
+            document.getElementById('progressFill').textContent = `${percentage}%`;
+            document.getElementById('progressText').textContent = text;
+        }
+
+        // 로그 추가
+        function addLog(message, type = 'info') {
+            const logContainer = document.getElementById('logContainer');
+            const logItem = document.createElement('div');
+            logItem.className = `log-item ${type}`;
+            logItem.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logContainer.appendChild(logItem);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        // 전역으로 노출
+        window.addLog = addLog;
+    </script>
+</body>
+</html>
