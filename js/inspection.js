@@ -156,7 +156,7 @@ async function loadInspectors() {
         formGroup.innerHTML = `
             <label><i class="fas fa-user"></i> 점검자명</label>
             <div class="inspector-info">
-                <input type="text" value="${currentUser.name} (${roleText})" readonly 
+                <input type="text" value="${currentUser.name}" readonly 
                        style="background-color: #f0f0f0; cursor: not-allowed;">
                 <input type="hidden" id="inspectorName" name="inspectorName" value="${currentUser.name}">
                 <input type="hidden" id="inspectorEmail" name="inspectorEmail" value="${currentUser.email}">
