@@ -127,28 +127,40 @@ async function loadEquipmentDirectly(equipmentId) {
     }
 }
 
-// 점검자 목록 로드
+// 점검자 목록 로드 (users 컬렉션 사용)
 async function loadInspectors() {
     console.log('🔍 점검자 목록 로드 시작...');
     try {
-        const data = await window.CachedFirestoreHelper.getAllDocuments('inspectors');
-        console.log('📊 점검자 데이터 응답:', data);
+        const data = await window.CachedFirestoreHelper.getAllDocuments('users');
+        console.log('📊 사용자 데이터 응답:', data);
         
         const inspectorSelect = document.getElementById('inspectorName');
         
         if (data.success && data.data && data.data.length > 0) {
-            console.log(`✅ 점검자 ${data.data.length}명 로드 완료`);
-            data.data.forEach((inspector, index) => {
-                console.log(`  ${index + 1}. ${inspector.inspector_name || inspector.name || JSON.stringify(inspector)}`);
-                const option = document.createElement('option');
-                option.value = inspector.inspector_name || inspector.name;
-                option.textContent = inspector.inspector_name || inspector.name;
-                inspectorSelect.appendChild(option);
-            });
-            console.log('✅ 점검자명 드롭다운 생성 완료');
+            // role이 inspector, manager, admin인 사용자만 필터링
+            const inspectors = data.data.filter(user => 
+                user.role === 'inspector' || 
+                user.role === 'manager' || 
+                user.role === 'admin'
+            );
+            
+            console.log(`✅ 총 사용자 ${data.data.length}명 중 점검자 ${inspectors.length}명 로드 완료`);
+            
+            if (inspectors.length > 0) {
+                inspectors.forEach((inspector, index) => {
+                    console.log(`  ${index + 1}. ${inspector.name} (${inspector.email}) - ${inspector.role}`);
+                    const option = document.createElement('option');
+                    option.value = inspector.name;
+                    option.textContent = `${inspector.name} (${inspector.role === 'admin' ? '시스템관리자' : inspector.role === 'manager' ? '관리자' : '점검자'})`;
+                    inspectorSelect.appendChild(option);
+                });
+                console.log('✅ 점검자명 드롭다운 생성 완료');
+            } else {
+                console.warn('⚠️ 점검 가능한 사용자가 없습니다. admin.html에서 사용자를 추가하세요.');
+            }
         } else {
-            console.warn('⚠️ 점검자 데이터가 없습니다:', data);
-            console.warn('Firebase 컬렉션 "inspectors"를 확인하세요.');
+            console.warn('⚠️ 사용자 데이터가 없습니다:', data);
+            console.warn('Firebase Authentication이 활성화되지 않았거나 users 컬렉션이 비어있습니다.');
         }
     } catch (error) {
         console.error('❌ 점검자 목록 로드 오류:', error);
