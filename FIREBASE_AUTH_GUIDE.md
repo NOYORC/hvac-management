@@ -24,10 +24,12 @@
   - **시스템 관리자 (admin)**: 전체 시스템 관리
 
 ### 3. **사용자 관리**
-- ✅ 사용자 생성 페이지
+- ✅ **기존 admin.html 페이지에 통합됨**
+- ✅ "점검자 관리" 탭에서 사용자 관리
+- ✅ 사용자 생성 (Firebase Auth 연동)
 - ✅ 사용자 목록 조회
 - ✅ 사용자 삭제
-- ✅ 역할별 권한 설정
+- ✅ 역할별 권한 설정 (점검자/관리자/시스템 관리자)
 
 ### 4. **보안 규칙**
 - ✅ Authentication 기반 Firestore 보안 규칙
@@ -40,34 +42,40 @@
 
 ### 신규 파일
 
-1. **`user-management.html`** (16KB)
-   - 사용자 관리 페이지
-   - 계정 생성/삭제 UI
-   - 역할 관리 기능
-
-2. **`firestore.rules.auth`** (2.6KB)
+1. **`firestore.rules.auth`** (2.6KB)
    - Authentication 기반 보안 규칙
    - 역할별 접근 제어
    - 프로덕션 환경용
 
-### 기존 파일 (이미 구현됨)
+### 기존 파일 (Firebase Auth 통합 완료)
 
 1. **`login.html`** ✅
    - Firebase Auth 완전 통합
    - 로그인 UI
    - 자동 리다이렉트
 
-2. **`js/auth-manager.js`** ✅
+2. **`admin.html`** ✅
+   - 사용자 관리 탭 ("점검자 관리")
+   - Firebase Auth 기반 사용자 생성/삭제
+   - 역할 관리 UI (점검자/관리자/시스템 관리자)
+   - 관리자 권한 체크 (line 16-20)
+
+3. **`js/admin.js`** ✅
+   - AuthManager.createUser() 통합 (line 219)
+   - 사용자 생성/수정/삭제 로직
+   - 역할 기반 접근 제어
+
+4. **`js/auth-manager.js`** ✅
    - AuthManager 클래스
    - 로그인/로그아웃 로직
-   - 사용자 생성 함수
+   - 사용자 생성 함수 (createUser)
    - 권한 확인 함수
 
-3. **`js/auth-check.js`** ✅
+5. **`js/auth-check.js`** ✅
    - 페이지 보호 로직
    - 인증 상태 확인
 
-4. **`js/auth-helper.js`** ✅
+6. **`js/auth-helper.js`** ✅
    - 인증 헬퍼 함수
    - 세션 관리
 
@@ -320,24 +328,27 @@ https://noyorc.github.io/hvac-management/login.html
 
 **URL**:
 ```
-https://noyorc.github.io/hvac-management/user-management.html
+https://noyorc.github.io/hvac-management/admin.html
 ```
 
 **절차**:
 1. 관리자 계정으로 로그인
-2. 사용자 관리 페이지 접속
-3. **"새 사용자 추가"** 버튼 클릭
-4. 테스트 계정 생성:
+2. 시스템 관리 페이지 (`admin.html`) 접속
+3. **"점검자 관리"** 탭 클릭 (기본 활성)
+4. **"새 점검자 추가"** 버튼 클릭
+5. 테스트 계정 생성:
    - 이메일: `inspector@hvac.com`
    - 이름: `김점검`
    - 비밀번호: `hvac1234`
-   - 역할: **점검자**
-5. **"사용자 생성"** 버튼 클릭
+   - 역할: **점검자 (inspector)**
+6. **"저장"** 버튼 클릭
 
 **예상 결과**:
-- ✅ "사용자가 성공적으로 생성되었습니다!" 메시지
-- ✅ 사용자 목록에 새 사용자 표시
+- ✅ "새 점검자가 추가되었습니다." 메시지
+- ✅ 점검자 목록에 새 사용자 표시
 - ✅ 역할 배지가 "점검자"로 표시
+- ✅ Firebase Authentication에 계정 생성
+- ✅ Firestore `users` 컬렉션에 문서 생성
 
 ---
 
