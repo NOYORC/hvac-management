@@ -279,6 +279,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         
                 const firebaseConfig = {
             apiKey: "AIzaSyCpTEePTOkEfSLRzyszq0dCCJmQEWJsBic",
@@ -292,13 +293,22 @@
         
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
+        
+        // 전역 변수로 노출
         window.db = db;
+        window.auth = auth;
+        window.firebaseReady = true;
+        
+        console.log('✅ Firebase 초기화 완료');
     </script>
 
     <!-- QR Code Scanner Library -->
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     
+    <!-- Auth 관련 스크립트 -->
     <script src="js/firebase-config.js"></script>
+    <script src="js/auth-manager.js"></script>
     <script src="js/main.js"></script>
     <script>
         let html5QrCode;
@@ -317,7 +327,35 @@
                             resolve();
                         }
                     }, 100);
+                    
+                    // 10초 타임아웃
+                    setTimeout(() => {
+                        clearInterval(checkInterval);
+                        console.error('❌ Firebase 초기화 타임아웃');
+                        resolve();
+                    }, 10000);
                 }
+            });
+        }
+        
+        // AuthManager 초기화 대기
+        async function waitForAuth() {
+            return new Promise((resolve) => {
+                const checkInterval = setInterval(async () => {
+                    if (window.AuthManager) {
+                        clearInterval(checkInterval);
+                        await window.AuthManager.initialize();
+                        console.log('✅ AuthManager 초기화 완료');
+                        resolve();
+                    }
+                }, 100);
+                
+                // 10초 타임아웃
+                setTimeout(() => {
+                    clearInterval(checkInterval);
+                    console.error('❌ AuthManager 초기화 타임아웃');
+                    resolve();
+                }, 10000);
             });
         }
 
@@ -325,6 +363,17 @@
         document.addEventListener('DOMContentLoaded', async function() {
             await waitForFirebase();
             console.log('✅ Firebase 준비 완료');
+            
+            // 로그인 확인
+            await waitForAuth();
+            const currentUser = window.AuthManager?.getCurrentUser();
+            if (!currentUser) {
+                console.error('❌ 로그인되지 않은 사용자');
+                alert('로그인이 필요합니다.');
+                window.location.href = 'login.html';
+                return;
+            }
+            console.log('✅ 로그인 확인:', currentUser.email, '역할:', currentUser.role);
             
             // 환경 확인
             const isHTTPS = window.location.protocol === 'https:';
