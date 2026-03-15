@@ -235,8 +235,15 @@
                 await waitForFirebase();
                 await waitForAuth();
                 
-                // 로그인 확인
-                const currentUser = window.AuthManager?.getCurrentUser();
+                // 로그인 확인 - AuthManager 초기화 후 체크
+                if (!window.AuthManager) {
+                    console.error('❌ AuthManager가 초기화되지 않았습니다.');
+                    alert('시스템 초기화 오류입니다.');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                const currentUser = window.AuthManager.getCurrentUser();
                 if (!currentUser) {
                     console.error('❌ 로그인되지 않은 사용자');
                     alert('로그인이 필요합니다.');
@@ -244,7 +251,7 @@
                     return;
                 }
                 
-                console.log('✅ 로그인 확인:', currentUser.email);
+                console.log('✅ 로그인 확인:', currentUser.email, '역할:', currentUser.role);
                 
                 await waitForQRCode();
                 await loadEquipmentList();
@@ -256,18 +263,23 @@
         });
         
         // AuthManager 초기화 대기
-        function waitForAuth() {
+        async function waitForAuth() {
             return new Promise((resolve) => {
-                if (window.AuthManager) {
+                const checkInterval = setInterval(async () => {
+                    if (window.AuthManager) {
+                        clearInterval(checkInterval);
+                        await window.AuthManager.initialize();
+                        console.log('✅ AuthManager 초기화 완료');
+                        resolve();
+                    }
+                }, 100);
+                
+                // 10초 타임아웃
+                setTimeout(() => {
+                    clearInterval(checkInterval);
+                    console.error('❌ AuthManager 초기화 타임아웃');
                     resolve();
-                } else {
-                    const checkInterval = setInterval(() => {
-                        if (window.AuthManager) {
-                            clearInterval(checkInterval);
-                            resolve();
-                        }
-                    }, 100);
-                }
+                }, 10000);
             });
         }
 
