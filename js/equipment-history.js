@@ -12,11 +12,14 @@ let filteredInspections = [];
 document.addEventListener('DOMContentLoaded', async function() {
     console.log('📋 정비내역 페이지 초기화 시작');
     
-    // URL에서 장비 ID 가져오기
+    // URL에서 장비 ID 가져오기 (equipment_id 또는 equipmentId 모두 지원)
     const urlParams = new URLSearchParams(window.location.search);
-    equipmentId = urlParams.get('equipmentId');
+    equipmentId = urlParams.get('equipment_id') || urlParams.get('equipmentId');
+    
+    console.log('URL 파라미터에서 받은 equipment_id:', equipmentId);
     
     if (!equipmentId) {
+        console.error('❌ 장비 ID가 URL 파라미터에 없습니다.');
         alert('장비 ID가 없습니다.');
         window.location.href = 'equipment-search.html';
         return;
