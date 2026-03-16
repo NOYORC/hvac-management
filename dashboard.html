@@ -119,15 +119,48 @@
 
         <!-- 이상 장비 목록 -->
         <div class="alert-section">
-            <h2><i class="fas fa-exclamation-circle"></i> 주의가 필요한 장비</h2>
-            <div id="alertList" class="alert-grid">
+            <div class="section-header">
+                <h2><i class="fas fa-exclamation-circle"></i> 주의가 필요한 장비</h2>
+                <button id="alertShowMoreBtn" class="btn-show-more" style="display: none;">
+                    <span class="btn-text">더보기</span>
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
+            
+            <!-- 데스크톱: 테이블 -->
+            <div class="table-container">
+                <table id="alertInspections">
+                    <thead>
+                        <tr>
+                            <th>점검일시</th>
+                            <th>점검자</th>
+                            <th>장비</th>
+                            <th>위치</th>
+                            <th>상태</th>
+                            <th>특이사항</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- 동적으로 생성 -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 모바일: 카드 -->
+            <div class="inspection-cards" id="alertCards">
                 <!-- 동적으로 생성 -->
             </div>
         </div>
 
         <!-- 최근 점검 내역 -->
         <div class="recent-section">
-            <h2><i class="fas fa-history"></i> 최근 점검 내역</h2>
+            <div class="section-header">
+                <h2><i class="fas fa-history"></i> 최근 점검 내역</h2>
+                <button id="recentShowMoreBtn" class="btn-show-more" style="display: none;">
+                    <span class="btn-text">더보기</span>
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
             
             <!-- 데스크톱: 테이블 -->
             <div class="table-container">

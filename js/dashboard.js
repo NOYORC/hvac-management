@@ -291,16 +291,34 @@ function updateChartSummary(statusCounts, total) {
 
 // 점검 추이, 장비 유형별, 현장별 차트는 제거되었습니다
 
+// 더보기 기능 상태 관리
+let alertShowAll = false;
+let recentShowAll = false;
+const INITIAL_DISPLAY_COUNT = 5;
+
 // 이상 장비 목록 업데이트
 function updateAlertList(inspections, equipment) {
-    const alertList = document.getElementById('alertList');
+    const tbody = document.querySelector('#alertInspections tbody');
+    const cardsContainer = document.getElementById('alertCards');
+    const showMoreBtn = document.getElementById('alertShowMoreBtn');
     
     const alerts = inspections.filter(insp => 
         insp.status === '주의' || insp.status === '경고' || insp.status === '고장'
     );
+    
+    // 최신순 정렬
+    const sortedAlerts = alerts.sort((a, b) => {
+        const dateA = a.inspection_date && a.inspection_date.toDate ? a.inspection_date.toDate() : new Date(a.inspection_date);
+        const dateB = b.inspection_date && b.inspection_date.toDate ? b.inspection_date.toDate() : new Date(b.inspection_date);
+        return dateB - dateA;
+    });
 
-    if (alerts.length === 0) {
-        alertList.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">이상 장비가 없습니다.</p>';
+    if (sortedAlerts.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">주의가 필요한 장비가 없습니다.</td></tr>';
+        if (cardsContainer) {
+            cardsContainer.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">주의가 필요한 장비가 없습니다.</p>';
+        }
+        if (showMoreBtn) showMoreBtn.style.display = 'none';
         return;
     }
 
@@ -309,47 +327,126 @@ function updateAlertList(inspections, equipment) {
         equipmentMap[eq.id] = eq;
     });
 
-    alertList.innerHTML = alerts.map(insp => {
+    // 더보기 버튼 표시 여부
+    if (showMoreBtn) {
+        showMoreBtn.style.display = sortedAlerts.length > INITIAL_DISPLAY_COUNT ? 'flex' : 'none';
+        
+        // 버튼 클릭 이벤트 (중복 방지)
+        showMoreBtn.onclick = null;
+        showMoreBtn.onclick = function() {
+            alertShowAll = !alertShowAll;
+            this.classList.toggle('expanded', alertShowAll);
+            updateAlertDisplay(sortedAlerts, equipmentMap, tbody, cardsContainer);
+        };
+    }
+
+    // 초기 표시
+    updateAlertDisplay(sortedAlerts, equipmentMap, tbody, cardsContainer);
+}
+
+// 주의 장비 표시 업데이트
+function updateAlertDisplay(sortedAlerts, equipmentMap, tbody, cardsContainer) {
+    const displayCount = alertShowAll ? sortedAlerts.length : INITIAL_DISPLAY_COUNT;
+    const displayAlerts = sortedAlerts.slice(0, displayCount);
+    
+    // 데스크톱 테이블
+    tbody.innerHTML = displayAlerts.map((insp, index) => {
         const eq = equipmentMap[insp.equipment_id] || {};
         const statusColor = getStatusColor(insp.status);
-        
-        // 디버깅: equipment_id 확인
+        const formattedDate = formatDate(insp.inspection_date);
+        const fullLocation = eq.id ? getFullLocation(eq) : '-';
         const equipmentId = insp.equipment_id || '';
-        console.log('Alert item - inspection:', insp.id, 'equipment_id:', equipmentId);
         
         return `
-            <div class="alert-item clickable" style="border-left: 4px solid ${statusColor}" onclick="goToEquipmentHistory('${equipmentId}')" data-equipment-id="${equipmentId}">
-                <div class="alert-header">
-                    <span class="alert-equipment">${eq.equipment_type || '알 수 없음'} (${eq.model || '-'})</span>
-                    <span class="alert-status" style="background-color: ${statusColor}">${insp.status}</span>
-                </div>
-                <div class="alert-info">
-                    <i class="fas fa-map-marker-alt"></i> ${eq.location || '-'} (${eq.floor ? eq.floor + '층' : '-'})
-                </div>
-                <div class="alert-info">
-                    <i class="fas fa-exclamation-circle"></i> ${insp.notes || (insp.inspection_type === '고장정비' ? '정비내용 없음' : '특이사항 없음')}
-                </div>
-                <div class="alert-info">
-                    <i class="fas fa-clock"></i> ${formatDate(insp.inspection_date)}
-                </div>
-                <div class="alert-hint">
-                    <i class="fas fa-hand-pointer"></i> 클릭하여 정비내역 보기
-                </div>
-            </div>
+            <tr class="clickable-row" onclick="goToEquipmentHistory('${equipmentId}')" title="클릭하여 정비내역 보기" data-equipment-id="${equipmentId}">
+                <td>${formattedDate}</td>
+                <td>${insp.inspector_name}</td>
+                <td>${eq.equipment_type || '알 수 없음'}<br><small>${eq.model || '-'}</small></td>
+                <td>${fullLocation}</td>
+                <td><span class="status-badge" style="background-color: ${statusColor}">${insp.status}</span></td>
+                <td>${insp.notes || '-'}</td>
+            </tr>
         `;
     }).join('');
+    
+    // 모바일 카드
+    if (cardsContainer) {
+        cardsContainer.innerHTML = displayAlerts.map(insp => {
+            const eq = equipmentMap[insp.equipment_id] || {};
+            const statusColor = getStatusColor(insp.status);
+            const fullLocation = eq.id ? getFullLocation(eq) : '-';
+            const equipmentId = insp.equipment_id || '';
+            
+            // 날짜와 시간 분리
+            let dateStr = '-', timeStr = '-';
+            if (insp.inspection_date) {
+                let d;
+                if (insp.inspection_date.toDate) {
+                    d = insp.inspection_date.toDate();
+                } else if (typeof insp.inspection_date === 'string') {
+                    d = new Date(insp.inspection_date);
+                } else if (insp.inspection_date instanceof Date) {
+                    d = insp.inspection_date;
+                }
+                
+                if (d && !isNaN(d.getTime())) {
+                    dateStr = d.toLocaleDateString('ko-KR');
+                    timeStr = d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+                }
+            }
+            
+            return `
+                <div class="inspection-card ${equipmentId ? 'clickable' : ''}" onclick="${equipmentId ? `goToEquipmentHistory('${equipmentId}')` : ''}" data-equipment-id="${equipmentId}">
+                    <div class="inspection-card-header">
+                        <div class="inspection-datetime">
+                            <div class="inspection-date"><i class="fas fa-calendar"></i> ${dateStr}</div>
+                            <div class="inspection-time"><i class="fas fa-clock"></i> ${timeStr}</div>
+                        </div>
+                        <span class="status-badge" style="background-color: ${statusColor}">${insp.status}</span>
+                    </div>
+                    <div class="inspection-card-body">
+                        <div class="inspection-row">
+                            <i class="fas fa-user"></i>
+                            <span class="inspection-label">점검자</span>
+                            <span class="inspection-value">${insp.inspector_name}</span>
+                        </div>
+                        <div class="inspection-row">
+                            <i class="fas fa-cog"></i>
+                            <span class="inspection-label">장비</span>
+                            <span class="inspection-value">
+                                <span class="inspection-equipment">${eq.equipment_type || '알 수 없음'}</span>
+                                <span class="inspection-model">${eq.model || '-'}</span>
+                            </span>
+                        </div>
+                        <div class="inspection-row">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span class="inspection-label">위치</span>
+                            <span class="inspection-value">${fullLocation}</span>
+                        </div>
+                        ${insp.notes ? `
+                        <div class="inspection-notes">
+                            <i class="fas fa-comment-dots"></i> ${insp.notes}
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
 }
 
 // 최근 점검 내역 업데이트
 function updateRecentInspections(inspections, equipment) {
     const tbody = document.querySelector('#recentInspections tbody');
     const cardsContainer = document.getElementById('inspectionCards');
+    const showMoreBtn = document.getElementById('recentShowMoreBtn');
     
     if (inspections.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">점검 내역이 없습니다.</td></tr>';
         if (cardsContainer) {
             cardsContainer.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">점검 내역이 없습니다.</p>';
         }
+        if (showMoreBtn) showMoreBtn.style.display = 'none';
         return;
     }
 
@@ -358,17 +455,38 @@ function updateRecentInspections(inspections, equipment) {
         equipmentMap[eq.id] = eq;
     });
 
-    // 최근 10개만 표시
+    // 최신순 정렬
     const recentInspections = inspections
         .sort((a, b) => {
             const dateA = a.inspection_date && a.inspection_date.toDate ? a.inspection_date.toDate() : new Date(a.inspection_date);
             const dateB = b.inspection_date && b.inspection_date.toDate ? b.inspection_date.toDate() : new Date(b.inspection_date);
             return dateB - dateA;
-        })
-        .slice(0, 10);
+        });
+
+    // 더보기 버튼 표시 여부
+    if (showMoreBtn) {
+        showMoreBtn.style.display = recentInspections.length > INITIAL_DISPLAY_COUNT ? 'flex' : 'none';
+        
+        // 버튼 클릭 이벤트 (중복 방지)
+        showMoreBtn.onclick = null;
+        showMoreBtn.onclick = function() {
+            recentShowAll = !recentShowAll;
+            this.classList.toggle('expanded', recentShowAll);
+            updateRecentDisplay(recentInspections, equipmentMap, tbody, cardsContainer);
+        };
+    }
+
+    // 초기 표시
+    updateRecentDisplay(recentInspections, equipmentMap, tbody, cardsContainer);
+}
+
+// 최근 점검 표시 업데이트
+function updateRecentDisplay(recentInspections, equipmentMap, tbody, cardsContainer) {
+    const displayCount = recentShowAll ? recentInspections.length : INITIAL_DISPLAY_COUNT;
+    const displayInspections = recentInspections.slice(0, displayCount);
 
     // 데스크톱 테이블
-    tbody.innerHTML = recentInspections.map(insp => {
+    tbody.innerHTML = displayInspections.map(insp => {
         const eq = equipmentMap[insp.equipment_id] || {};
         const statusColor = getStatusColor(insp.status);
         const formattedDate = formatDate(insp.inspection_date);
@@ -392,7 +510,7 @@ function updateRecentInspections(inspections, equipment) {
     
     // 모바일 카드
     if (cardsContainer) {
-        cardsContainer.innerHTML = recentInspections.map(insp => {
+        cardsContainer.innerHTML = displayInspections.map(insp => {
             const eq = equipmentMap[insp.equipment_id] || {};
             const statusColor = getStatusColor(insp.status);
             const fullLocation = eq.id ? getFullLocation(eq) : '-';
