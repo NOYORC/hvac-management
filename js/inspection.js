@@ -48,10 +48,14 @@ function waitForFirebase() {
 // QR 스캔으로 장비 직접 로드
 async function loadEquipmentDirectly(equipmentId) {
     try {
-        const result = await window.CachedFirestoreHelper.getDocument('equipment', equipmentId);
+        console.log(`🔍 장비 직접 로드 시작: ${equipmentId}`);
+        
+        // FirestoreHelper를 직접 사용 (CachedFirestoreHelper 대신)
+        const result = await window.FirestoreHelper.getDocument('equipment', equipmentId);
         
         if (result.success && result.data) {
             selectedEquipment = result.data;
+            selectedEquipment.id = equipmentId; // ID 추가 (문서 ID가 data에 없을 수 있음)
             console.log('✅ 장비 데이터:', selectedEquipment);
             
             // 장비가 속한 현장과 건물 정보도 로드
@@ -513,7 +517,7 @@ async function submitInspection(e) {
     };
     
     try {
-        const result = await window.CachedFirestoreHelper.addDocument('inspections', inspectionData);
+        const result = await window.FirestoreHelper.addDocument('inspections', inspectionData);
         
         if (result.success) {
             alert('✅ 점검이 성공적으로 완료되었습니다!');
