@@ -251,11 +251,42 @@ function updateStatusChart(inspections) {
             }
         });
         
+        // 차트 요약 통계 업데이트
+        updateChartSummary(statusCounts, inspections.length);
+        
         // console.log('✅ 상태 차트 생성 완료');
     } catch (error) {
         console.error('❌ 상태 차트 업데이트 오류:', error);
         console.error('오류 스택:', error.stack);
     }
+}
+
+// 차트 요약 통계 업데이트
+function updateChartSummary(statusCounts, total) {
+    const summaryContainer = document.getElementById('chartSummary');
+    if (!summaryContainer) return;
+    
+    const colors = {
+        '정상': '#4CAF50',
+        '주의': '#FF9800',
+        '경고': '#F44336',
+        '고장': '#9E9E9E'
+    };
+    
+    const summaryHTML = Object.entries(statusCounts).map(([status, count]) => {
+        const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : '0.0';
+        return `
+            <div class="summary-item">
+                <div class="summary-color" style="background-color: ${colors[status]}"></div>
+                <div class="summary-info">
+                    <div class="summary-label">${status}</div>
+                    <div class="summary-value">${count}<span class="summary-percent">(${percentage}%)</span></div>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    summaryContainer.innerHTML = summaryHTML;
 }
 
 // 점검 추이, 장비 유형별, 현장별 차트는 제거되었습니다
@@ -312,9 +343,13 @@ function updateAlertList(inspections, equipment) {
 // 최근 점검 내역 업데이트
 function updateRecentInspections(inspections, equipment) {
     const tbody = document.querySelector('#recentInspections tbody');
+    const cardsContainer = document.getElementById('inspectionCards');
     
     if (inspections.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 20px;">점검 내역이 없습니다.</td></tr>';
+        if (cardsContainer) {
+            cardsContainer.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">점검 내역이 없습니다.</p>';
+        }
         return;
     }
 
@@ -332,6 +367,7 @@ function updateRecentInspections(inspections, equipment) {
         })
         .slice(0, 10);
 
+    // 데스크톱 테이블
     tbody.innerHTML = recentInspections.map(insp => {
         const eq = equipmentMap[insp.equipment_id] || {};
         const statusColor = getStatusColor(insp.status);
@@ -353,6 +389,71 @@ function updateRecentInspections(inspections, equipment) {
             </tr>
         `;
     }).join('');
+    
+    // 모바일 카드
+    if (cardsContainer) {
+        cardsContainer.innerHTML = recentInspections.map(insp => {
+            const eq = equipmentMap[insp.equipment_id] || {};
+            const statusColor = getStatusColor(insp.status);
+            const fullLocation = eq.id ? getFullLocation(eq) : '-';
+            const equipmentId = insp.equipment_id || '';
+            
+            // 날짜와 시간 분리
+            let dateStr = '-', timeStr = '-';
+            if (insp.inspection_date) {
+                let d;
+                if (insp.inspection_date.toDate) {
+                    d = insp.inspection_date.toDate();
+                } else if (typeof insp.inspection_date === 'string') {
+                    d = new Date(insp.inspection_date);
+                } else if (insp.inspection_date instanceof Date) {
+                    d = insp.inspection_date;
+                }
+                
+                if (d && !isNaN(d.getTime())) {
+                    dateStr = d.toLocaleDateString('ko-KR');
+                    timeStr = d.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+                }
+            }
+            
+            return `
+                <div class="inspection-card ${equipmentId ? 'clickable' : ''}" onclick="${equipmentId ? `goToEquipmentHistory('${equipmentId}')` : ''}" data-equipment-id="${equipmentId}">
+                    <div class="inspection-card-header">
+                        <div class="inspection-datetime">
+                            <div class="inspection-date"><i class="fas fa-calendar"></i> ${dateStr}</div>
+                            <div class="inspection-time"><i class="fas fa-clock"></i> ${timeStr}</div>
+                        </div>
+                        <span class="status-badge" style="background-color: ${statusColor}">${insp.status}</span>
+                    </div>
+                    <div class="inspection-card-body">
+                        <div class="inspection-row">
+                            <i class="fas fa-user"></i>
+                            <span class="inspection-label">점검자</span>
+                            <span class="inspection-value">${insp.inspector_name}</span>
+                        </div>
+                        <div class="inspection-row">
+                            <i class="fas fa-cog"></i>
+                            <span class="inspection-label">장비</span>
+                            <span class="inspection-value">
+                                <span class="inspection-equipment">${eq.equipment_type || '알 수 없음'}</span>
+                                <span class="inspection-model">${eq.model || '-'}</span>
+                            </span>
+                        </div>
+                        <div class="inspection-row">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span class="inspection-label">위치</span>
+                            <span class="inspection-value">${fullLocation}</span>
+                        </div>
+                        ${insp.notes ? `
+                        <div class="inspection-notes">
+                            <i class="fas fa-comment-dots"></i> ${insp.notes}
+                        </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
 }
 
 // 유틸리티 함수

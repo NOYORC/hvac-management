@@ -110,6 +110,10 @@
                 <div class="chart-wrapper">
                     <canvas id="statusChart"></canvas>
                 </div>
+                <!-- 차트 요약 통계 -->
+                <div class="chart-summary" id="chartSummary">
+                    <!-- 동적으로 생성 -->
+                </div>
             </div>
         </div>
 
@@ -124,6 +128,8 @@
         <!-- 최근 점검 내역 -->
         <div class="recent-section">
             <h2><i class="fas fa-history"></i> 최근 점검 내역</h2>
+            
+            <!-- 데스크톱: 테이블 -->
             <div class="table-container">
                 <table id="recentInspections">
                     <thead>
@@ -140,6 +146,11 @@
                         <!-- 동적으로 생성 -->
                     </tbody>
                 </table>
+            </div>
+            
+            <!-- 모바일: 카드 -->
+            <div class="inspection-cards" id="inspectionCards">
+                <!-- 동적으로 생성 -->
             </div>
         </div>
     </div>
