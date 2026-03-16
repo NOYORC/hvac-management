@@ -409,6 +409,9 @@ function updateChartSummary(statusCounts, total) {
 let alertShowAll = false;
 let recentShowAll = false;
 const INITIAL_DISPLAY_COUNT = 5;
+const SHOW_MORE_INCREMENT = 5; // 더보기 클릭 시 추가로 보여줄 개수
+let alertCurrentCount = INITIAL_DISPLAY_COUNT; // 현재 표시 중인 alert 개수
+let recentCurrentCount = INITIAL_DISPLAY_COUNT; // 현재 표시 중인 recent 개수
 
 // 이상 장비 목록 업데이트
 function updateAlertList(inspections, equipment) {
@@ -457,22 +460,40 @@ function updateAlertList(inspections, equipment) {
         // 버튼 클릭 이벤트 (중복 방지)
         showMoreBtn.onclick = null;
         showMoreBtn.onclick = function() {
-            alertShowAll = !alertShowAll;
-            this.classList.toggle('expanded', alertShowAll);
+            if (alertCurrentCount >= sortedAlerts.length) {
+                // 모두 표시 중이면 접기
+                alertCurrentCount = INITIAL_DISPLAY_COUNT;
+                this.classList.remove('expanded');
+            } else {
+                // 5개씩 더 보기
+                alertCurrentCount = Math.min(alertCurrentCount + SHOW_MORE_INCREMENT, sortedAlerts.length);
+                if (alertCurrentCount >= sortedAlerts.length) {
+                    this.classList.add('expanded');
+                }
+            }
             
             // 버튼 텍스트 변경
             const btnText = this.querySelector('.btn-text');
-            if (alertShowAll) {
+            if (alertCurrentCount >= sortedAlerts.length) {
                 btnText.textContent = '접기';
             } else {
-                btnText.textContent = '내역 더보기';
+                const remaining = sortedAlerts.length - alertCurrentCount;
+                btnText.textContent = `내역 더보기 (+${Math.min(remaining, SHOW_MORE_INCREMENT)})`;
             }
             
             updateAlertDisplay(sortedAlerts, equipmentMap, tbody, cardsContainer);
         };
+        
+        // 초기 버튼 텍스트 설정
+        const btnText = showMoreBtn.querySelector('.btn-text');
+        if (sortedAlerts.length > INITIAL_DISPLAY_COUNT) {
+            const remaining = sortedAlerts.length - INITIAL_DISPLAY_COUNT;
+            btnText.textContent = `내역 더보기 (+${Math.min(remaining, SHOW_MORE_INCREMENT)})`;
+        }
     }
 
     // 초기 표시
+    alertCurrentCount = INITIAL_DISPLAY_COUNT; // 초기화
     updateAlertDisplay(sortedAlerts, equipmentMap, tbody, cardsContainer);
 }
 
@@ -500,7 +521,7 @@ function getLatestInspectionsByEquipment(inspections) {
 
 // 주의 장비 표시 업데이트
 function updateAlertDisplay(sortedAlerts, equipmentMap, tbody, cardsContainer) {
-    const displayCount = alertShowAll ? sortedAlerts.length : INITIAL_DISPLAY_COUNT;
+    const displayCount = alertCurrentCount;
     const displayAlerts = sortedAlerts.slice(0, displayCount);
     
     // 데스크톱 테이블
@@ -515,7 +536,7 @@ function updateAlertDisplay(sortedAlerts, equipmentMap, tbody, cardsContainer) {
             <tr class="clickable-row" onclick="goToEquipmentHistory('${equipmentId}')" title="클릭하여 정비내역 보기" data-equipment-id="${equipmentId}">
                 <td>${formattedDate}</td>
                 <td>${insp.inspector_name}</td>
-                <td>${eq.equipment_type || '알 수 없음'}<br><small>${eq.model || '-'}</small></td>
+                <td><strong style="color: #667eea;">${equipmentId || '-'}</strong><br>${eq.equipment_type || '알 수 없음'}<br><small>${eq.model || '-'}</small></td>
                 <td>${fullLocation}</td>
                 <td><span class="status-badge" style="background-color: ${statusColor}">${insp.status}</span></td>
                 <td>${insp.notes || '-'}</td>
@@ -568,6 +589,7 @@ function updateAlertDisplay(sortedAlerts, equipmentMap, tbody, cardsContainer) {
                             <i class="fas fa-cog"></i>
                             <span class="inspection-label">장비</span>
                             <span class="inspection-value">
+                                <strong style="color: #667eea;">${equipmentId || '-'}</strong><br>
                                 <span class="inspection-equipment">${eq.equipment_type || '알 수 없음'}</span>
                                 <span class="inspection-model">${eq.model || '-'}</span>
                             </span>
@@ -629,28 +651,46 @@ function updateRecentInspections(inspections, equipment) {
         // 버튼 클릭 이벤트 (중복 방지)
         showMoreBtn.onclick = null;
         showMoreBtn.onclick = function() {
-            recentShowAll = !recentShowAll;
-            this.classList.toggle('expanded', recentShowAll);
+            if (recentCurrentCount >= recentInspections.length) {
+                // 모두 표시 중이면 접기
+                recentCurrentCount = INITIAL_DISPLAY_COUNT;
+                this.classList.remove('expanded');
+            } else {
+                // 5개씩 더 보기
+                recentCurrentCount = Math.min(recentCurrentCount + SHOW_MORE_INCREMENT, recentInspections.length);
+                if (recentCurrentCount >= recentInspections.length) {
+                    this.classList.add('expanded');
+                }
+            }
             
             // 버튼 텍스트 변경
             const btnText = this.querySelector('.btn-text');
-            if (recentShowAll) {
+            if (recentCurrentCount >= recentInspections.length) {
                 btnText.textContent = '접기';
             } else {
-                btnText.textContent = '내역 더보기';
+                const remaining = recentInspections.length - recentCurrentCount;
+                btnText.textContent = `내역 더보기 (+${Math.min(remaining, SHOW_MORE_INCREMENT)})`;
             }
             
             updateRecentDisplay(recentInspections, equipmentMap, tbody, cardsContainer);
         };
+        
+        // 초기 버튼 텍스트 설정
+        const btnText = showMoreBtn.querySelector('.btn-text');
+        if (recentInspections.length > INITIAL_DISPLAY_COUNT) {
+            const remaining = recentInspections.length - INITIAL_DISPLAY_COUNT;
+            btnText.textContent = `내역 더보기 (+${Math.min(remaining, SHOW_MORE_INCREMENT)})`;
+        }
     }
 
     // 초기 표시
+    recentCurrentCount = INITIAL_DISPLAY_COUNT; // 초기화
     updateRecentDisplay(recentInspections, equipmentMap, tbody, cardsContainer);
 }
 
 // 최근 점검 표시 업데이트
 function updateRecentDisplay(recentInspections, equipmentMap, tbody, cardsContainer) {
-    const displayCount = recentShowAll ? recentInspections.length : INITIAL_DISPLAY_COUNT;
+    const displayCount = recentCurrentCount;
     const displayInspections = recentInspections.slice(0, displayCount);
 
     // 데스크톱 테이블
@@ -668,7 +708,7 @@ function updateRecentDisplay(recentInspections, equipmentMap, tbody, cardsContai
             <tr class="clickable-row" onclick="goToEquipmentHistory('${equipmentId}')" title="클릭하여 정비내역 보기" data-equipment-id="${equipmentId}">
                 <td>${formattedDate}</td>
                 <td>${insp.inspector_name}</td>
-                <td>${eq.equipment_type || '알 수 없음'}<br><small>${eq.model || '-'}</small></td>
+                <td><strong style="color: #667eea;">${equipmentId || '-'}</strong><br>${eq.equipment_type || '알 수 없음'}<br><small>${eq.model || '-'}</small></td>
                 <td>${fullLocation}</td>
                 <td><span class="status-badge" style="background-color: ${statusColor}">${insp.status}</span></td>
                 <td>${insp.notes || '-'}</td>
@@ -721,6 +761,7 @@ function updateRecentDisplay(recentInspections, equipmentMap, tbody, cardsContai
                             <i class="fas fa-cog"></i>
                             <span class="inspection-label">장비</span>
                             <span class="inspection-value">
+                                <strong style="color: #667eea;">${equipmentId || '-'}</strong><br>
                                 <span class="inspection-equipment">${eq.equipment_type || '알 수 없음'}</span>
                                 <span class="inspection-model">${eq.model || '-'}</span>
                             </span>
@@ -822,7 +863,149 @@ function showErrorMessage(message) {
     }, 5000);
 }
 
+// 엑셀 다운로드 확인 다이얼로그
+function showDownloadConfirmation() {
+    return new Promise((resolve) => {
+        // 오버레이 생성
+        const overlay = document.createElement('div');
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s ease;
+        `;
+        
+        // 다이얼로그 생성
+        const dialog = document.createElement('div');
+        dialog.style.cssText = `
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+        `;
+        
+        dialog.innerHTML = `
+            <div style="text-align: center;">
+                <i class="fas fa-download" style="font-size: 48px; color: #4CAF50; margin-bottom: 20px;"></i>
+                <h3 style="margin: 0 0 15px 0; font-size: 20px; color: #333;">엑셀 다운로드</h3>
+                <p style="margin: 0 0 25px 0; color: #666; line-height: 1.6;">
+                    현재 필터링된 점검 데이터를<br>엑셀 파일로 다운로드 하시겠습니까?
+                </p>
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                    <button id="confirmDownload" style="
+                        flex: 1;
+                        background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%);
+                        color: white;
+                        border: none;
+                        padding: 12px 24px;
+                        border-radius: 8px;
+                        font-size: 14px;
+                        font-weight: 500;
+                        cursor: pointer;
+                        transition: all 0.3s;
+                    ">
+                        <i class="fas fa-check"></i> 다운로드
+                    </button>
+                    <button id="cancelDownload" style="
+                        flex: 1;
+                        background: #f5f5f5;
+                        color: #666;
+                        border: none;
+                        padding: 12px 24px;
+                        border-radius: 8px;
+                        font-size: 14px;
+                        font-weight: 500;
+                        cursor: pointer;
+                        transition: all 0.3s;
+                    ">
+                        <i class="fas fa-times"></i> 취소
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        overlay.appendChild(dialog);
+        document.body.appendChild(overlay);
+        
+        // 애니메이션 CSS 추가
+        if (!document.getElementById('dialogAnimations')) {
+            const style = document.createElement('style');
+            style.id = 'dialogAnimations';
+            style.textContent = `
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes fadeOut {
+                    from { opacity: 1; }
+                    to { opacity: 0; }
+                }
+                @keyframes slideUp {
+                    from { transform: translateY(50px); opacity: 0; }
+                    to { transform: translateY(0); opacity: 1; }
+                }
+                #confirmDownload:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+                }
+                #cancelDownload:hover {
+                    background: #e0e0e0;
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        // 버튼 이벤트
+        const confirmBtn = dialog.querySelector('#confirmDownload');
+        const cancelBtn = dialog.querySelector('#cancelDownload');
+        
+        const removeDialog = () => {
+            overlay.style.animation = 'fadeOut 0.2s ease';
+            setTimeout(() => {
+                if (overlay.parentElement) {
+                    overlay.remove();
+                }
+            }, 200);
+        };
+        
+        confirmBtn.onclick = () => {
+            removeDialog();
+            resolve(true);
+        };
+        
+        cancelBtn.onclick = () => {
+            removeDialog();
+            resolve(false);
+        };
+        
+        // 오버레이 클릭 시 취소
+        overlay.onclick = (e) => {
+            if (e.target === overlay) {
+                removeDialog();
+                resolve(false);
+            }
+        };
+    });
+}
+
 async function downloadExcel() {
+    // 확인 다이얼로그 표시
+    const userConfirmed = await showDownloadConfirmation();
+    if (!userConfirmed) {
+        console.log('📥 사용자가 다운로드를 취소했습니다.');
+        return;
+    }
+    
     // 중복 실행 방지
     if (isDownloading) {
         // console.log('⚠️ 이미 다운로드 중입니다...');
