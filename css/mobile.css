@@ -1,0 +1,480 @@
+/* ===== 모바일 최적화 전용 스타일 ===== */
+
+/* ========== 터치 최적화 ========== */
+
+/* 터치 영역 확대 */
+button,
+.btn,
+.menu-card,
+.selection-card,
+.equipment-card,
+.alert-item,
+.clickable-row {
+    min-height: 44px; /* iOS 권장 최소 터치 영역 */
+    min-width: 44px;
+}
+
+/* 터치 피드백 강화 */
+button:active,
+.btn:active,
+.menu-card:active,
+.selection-card:active,
+.equipment-card:active {
+    transform: scale(0.98);
+    opacity: 0.9;
+}
+
+/* 터치 하이라이트 제거 (사용자 정의 효과 사용) */
+* {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+}
+
+/* ========== 텍스트 가독성 개선 ========== */
+
+/* 모바일에서 텍스트 크기 자동 조정 방지 */
+html {
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+/* 작은 화면에서 텍스트 크기 조정 */
+@media (max-width: 768px) {
+    body {
+        font-size: 14px;
+    }
+    
+    h1 {
+        font-size: 24px;
+    }
+    
+    h2 {
+        font-size: 20px;
+    }
+    
+    h3 {
+        font-size: 18px;
+    }
+}
+
+/* ========== 입력 필드 최적화 ========== */
+
+/* 모바일 입력 필드 스타일 */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="tel"],
+input[type="number"],
+input[type="date"],
+select,
+textarea {
+    font-size: 16px !important; /* 16px 이상: iOS 자동 줌 방지 */
+    padding: 12px 15px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+/* 숫자 입력 필드 스피너 제거 (모바일) */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield;
+}
+
+/* ========== 네비게이션 최적화 ========== */
+
+/* 뒤로가기 버튼 터치 영역 확대 */
+@media (max-width: 768px) {
+    .btn-back {
+        width: 48px;
+        height: 48px;
+        font-size: 20px;
+    }
+}
+
+/* ========== 카드 레이아웃 최적화 ========== */
+
+@media (max-width: 768px) {
+    /* 메인 메뉴 카드 */
+    .main-menu {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .menu-card {
+        padding: 20px;
+    }
+    
+    /* 선택 카드 */
+    .selection-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .selection-card {
+        padding: 15px;
+    }
+    
+    /* 장비 카드 */
+    .equipment-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+}
+
+/* ========== 테이블 최적화 ========== */
+
+@media (max-width: 768px) {
+    /* 테이블 스크롤 가능하게 */
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    table {
+        min-width: 600px;
+    }
+    
+    /* 테이블 텍스트 크기 조정 */
+    table th,
+    table td {
+        font-size: 12px;
+        padding: 10px 8px;
+    }
+}
+
+/* ========== 폼 레이아웃 최적화 ========== */
+
+@media (max-width: 768px) {
+    /* 폼 행 레이아웃을 세로로 변경 */
+    .form-row {
+        grid-template-columns: 1fr !important;
+    }
+    
+    /* 폼 액션 버튼 */
+    .form-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .form-actions button {
+        width: 100%;
+    }
+}
+
+/* ========== QR 스캐너 최적화 ========== */
+
+@media (max-width: 768px) {
+    .camera-section {
+        max-width: 100%;
+    }
+    
+    .scanner-box {
+        width: 200px;
+        height: 200px;
+    }
+    
+    #qrVideo {
+        width: 100%;
+        height: auto;
+    }
+}
+
+/* ========== 진행 단계 최적화 ========== */
+
+@media (max-width: 768px) {
+    .progress-steps {
+        padding: 15px 10px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .step-label {
+        font-size: 10px;
+        white-space: nowrap;
+    }
+    
+    .step-number {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+    }
+}
+
+/* ========== 사진 미리보기 최적화 ========== */
+
+@media (max-width: 768px) {
+    .photo-preview {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: 8px;
+    }
+}
+
+/* ========== 모달 최적화 ========== */
+
+@media (max-width: 768px) {
+    .modal-dialog {
+        width: 95%;
+        max-width: none;
+        margin: 20px auto;
+    }
+    
+    .modal-content {
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+}
+
+/* ========== 플로팅 액션 버튼 (FAB) ========== */
+
+.fab {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 1000;
+    display: none; /* 필요시 활성화 */
+    transition: all 0.3s ease;
+}
+
+.fab:active {
+    transform: scale(0.95);
+}
+
+@media (max-width: 768px) {
+    .fab {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+/* ========== 스와이프 제스처 힌트 ========== */
+
+.swipe-hint {
+    display: none;
+    text-align: center;
+    padding: 10px;
+    background: rgba(102, 126, 234, 0.1);
+    color: #667eea;
+    font-size: 12px;
+    border-radius: 8px;
+    margin: 10px 0;
+}
+
+@media (max-width: 768px) {
+    .swipe-hint {
+        display: block;
+    }
+}
+
+/* ========== 로딩 스피너 최적화 ========== */
+
+.loading-spinner {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(102, 126, 234, 0.2);
+    border-top-color: #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ========== 풀 스크린 로딩 오버레이 ========== */
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.loading-overlay.active {
+    display: flex;
+}
+
+.loading-overlay .loading-spinner {
+    width: 60px;
+    height: 60px;
+    border-width: 6px;
+}
+
+.loading-overlay p {
+    color: #333;
+    font-size: 16px;
+}
+
+/* ========== 오프라인 배너 ========== */
+
+.offline-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: #F44336;
+    color: white;
+    padding: 10px;
+    text-align: center;
+    font-size: 14px;
+    z-index: 10000;
+    transform: translateY(-100%);
+    transition: transform 0.3s ease;
+}
+
+.offline-banner.show {
+    transform: translateY(0);
+}
+
+/* ========== 스티키 헤더 ========== */
+
+@media (max-width: 768px) {
+    .header {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 15px 20px;
+        margin-bottom: 20px;
+    }
+}
+
+/* ========== 세이프 에어리어 (노치 대응) ========== */
+
+@supports (padding: max(0px)) {
+    body {
+        padding-left: max(20px, env(safe-area-inset-left));
+        padding-right: max(20px, env(safe-area-inset-right));
+        padding-bottom: max(20px, env(safe-area-inset-bottom));
+    }
+    
+    .header {
+        padding-top: max(15px, env(safe-area-inset-top));
+    }
+}
+
+/* ========== 가로 모드 최적화 ========== */
+
+@media (max-width: 768px) and (orientation: landscape) {
+    .header {
+        padding: 10px 20px;
+    }
+    
+    .header h1 {
+        font-size: 20px;
+    }
+    
+    .progress-steps {
+        padding: 10px;
+    }
+    
+    .step-number {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+    }
+}
+
+/* ========== 접근성 개선 ========== */
+
+/* 포커스 표시 강화 */
+button:focus,
+input:focus,
+select:focus,
+textarea:focus,
+.menu-card:focus,
+.selection-card:focus {
+    outline: 3px solid #667eea;
+    outline-offset: 2px;
+}
+
+/* 스크린 리더 전용 텍스트 */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* ========== 성능 최적화 ========== */
+
+/* GPU 가속 활성화 */
+.menu-card,
+.selection-card,
+.equipment-card,
+.alert-item {
+    transform: translateZ(0);
+    will-change: transform;
+}
+
+/* 스크롤 성능 개선 */
+.table-container,
+.selection-grid,
+.equipment-grid {
+    -webkit-overflow-scrolling: touch;
+}
+
+/* ========== 다크모드 지원 준비 ========== */
+
+@media (prefers-color-scheme: dark) {
+    /* 다크모드 스타일은 추후 구현 */
+}
+
+/* ========== 작은 화면 (소형 스마트폰) ========== */
+
+@media (max-width: 360px) {
+    body {
+        font-size: 13px;
+        padding: 10px;
+    }
+    
+    h1 {
+        font-size: 20px;
+    }
+    
+    h2 {
+        font-size: 18px;
+    }
+    
+    .menu-card,
+    .selection-card {
+        padding: 12px;
+    }
+    
+    button,
+    .btn {
+        padding: 10px 15px;
+        font-size: 14px;
+    }
+}
