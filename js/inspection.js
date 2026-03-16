@@ -52,29 +52,57 @@ async function loadEquipmentDirectly(equipmentId) {
         
         if (result.success && result.data) {
             selectedEquipment = result.data;
+            console.log('✅ 장비 데이터:', selectedEquipment);
             
             // 장비가 속한 현장과 건물 정보도 로드
-            const siteResult = await window.FirestoreHelper.getDocument('sites', selectedEquipment.site_id);
-            const buildingResult = await window.FirestoreHelper.getDocument('buildings', selectedEquipment.building_id);
+            // site_id/building_id가 있으면 사용, 없으면 site_name/building_name으로 조회
+            if (selectedEquipment.site_id) {
+                const siteResult = await window.FirestoreHelper.getDocument('sites', selectedEquipment.site_id);
+                if (siteResult.success) selectedSite = siteResult.data;
+            } else if (selectedEquipment.site_name) {
+                // site_name으로 현장 찾기
+                const sitesResult = await window.FirestoreHelper.getAllDocuments('sites');
+                if (sitesResult.success && sitesResult.data) {
+                    selectedSite = sitesResult.data.find(s => s.site_name === selectedEquipment.site_name);
+                }
+            }
             
-            if (siteResult.success) selectedSite = siteResult.data;
-            if (buildingResult.success) selectedBuilding = buildingResult.data;
+            if (selectedEquipment.building_id) {
+                const buildingResult = await window.FirestoreHelper.getDocument('buildings', selectedEquipment.building_id);
+                if (buildingResult.success) selectedBuilding = buildingResult.data;
+            } else if (selectedEquipment.building_name) {
+                // building_name으로 건물 찾기
+                const buildingsResult = await window.FirestoreHelper.getAllDocuments('buildings');
+                if (buildingsResult.success && buildingsResult.data) {
+                    selectedBuilding = buildingsResult.data.find(b => b.building_name === selectedEquipment.building_name);
+                }
+            }
+            
+            console.log('✅ 현장:', selectedSite);
+            console.log('✅ 건물:', selectedBuilding);
+            
+            console.log('✅ 현장:', selectedSite);
+            console.log('✅ 건물:', selectedBuilding);
             
             // Step 4로 바로 이동 (점검 입력 화면)
-            document.getElementById('selectedSiteName').textContent = selectedSite?.site_name || '알 수 없음';
-            document.getElementById('selectedSiteName2').textContent = selectedSite?.site_name || '알 수 없음';
-            document.getElementById('selectedBuildingName').textContent = selectedBuilding?.building_name || '알 수 없음';
+            const siteName = selectedSite?.site_name || selectedEquipment.site_name || '알 수 없음';
+            const buildingName = selectedBuilding?.building_name || selectedEquipment.building_name || '알 수 없음';
+            
+            document.getElementById('selectedSiteName').textContent = siteName;
+            document.getElementById('selectedSiteName2').textContent = siteName;
+            document.getElementById('selectedBuildingName').textContent = buildingName;
             document.getElementById('selectedEquipmentName').textContent = `${selectedEquipment.equipment_type} (${selectedEquipment.id})`;
             
             // 장비 상세 정보 표시
             const detailDiv = document.getElementById('equipmentDetail');
+            const floorText = selectedEquipment.floor ? `${selectedEquipment.floor}층` : '층수 미등록';
             detailDiv.innerHTML = `
                 <div class="detail-grid">
                     <div class="detail-item">
                         <i class="fas fa-wrench"></i>
                         <div>
                             <div class="detail-label">장비 종류</div>
-                            <div class="detail-value">${selectedEquipment.equipment_type}</div>
+                            <div class="detail-value">${selectedEquipment.equipment_type || '-'}</div>
                         </div>
                     </div>
                     <div class="detail-item">
@@ -88,28 +116,28 @@ async function loadEquipmentDirectly(equipmentId) {
                         <i class="fas fa-layer-group"></i>
                         <div>
                             <div class="detail-label">위치</div>
-                            <div class="detail-value">${selectedEquipment.floor}층 - ${selectedEquipment.location}</div>
+                            <div class="detail-value">${floorText} - ${selectedEquipment.location || '-'}</div>
                         </div>
                     </div>
                     <div class="detail-item">
                         <i class="fas fa-box"></i>
                         <div>
                             <div class="detail-label">모델</div>
-                            <div class="detail-value">${selectedEquipment.model}</div>
+                            <div class="detail-value">${selectedEquipment.model || '-'}</div>
                         </div>
                     </div>
                     <div class="detail-item">
                         <i class="fas fa-tachometer-alt"></i>
                         <div>
                             <div class="detail-label">용량</div>
-                            <div class="detail-value">${selectedEquipment.capacity}</div>
+                            <div class="detail-value">${selectedEquipment.capacity || '-'}</div>
                         </div>
                     </div>
                     <div class="detail-item">
                         <i class="fas fa-calendar"></i>
                         <div>
                             <div class="detail-label">설치일</div>
-                            <div class="detail-value">${selectedEquipment.install_date}</div>
+                            <div class="detail-value">${selectedEquipment.install_date || '-'}</div>
                         </div>
                     </div>
                 </div>
@@ -448,6 +476,9 @@ async function submitInspection(e) {
         return;
     }
     
+    // 로그인한 사용자 정보 가져오기
+    const currentUser = window.AuthManager?.getCurrentUser();
+    
     // 점검 유형에 따라 notes 필드 선택
     let notes = '';
     if (inspectionType === '고장정비') {
@@ -459,8 +490,15 @@ async function submitInspection(e) {
     // 점검 데이터 구성
     const inspectionData = {
         equipment_id: selectedEquipment.id,
+        site_name: selectedSite?.site_name || selectedEquipment.site_name || '알 수 없음',
+        building_name: selectedBuilding?.building_name || selectedEquipment.building_name || '알 수 없음',
+        equipment_type: selectedEquipment.equipment_type || '알 수 없음',
+        location: selectedEquipment.location || '',
+        floor: selectedEquipment.floor || '',
         inspection_type: inspectionType,
         inspector_name: inspectorName,
+        inspector_email: currentUser?.email || '',
+        inspector_role: currentUser?.role || '',
         inspection_date: window.FirestoreTimestamp.now(),
         status: status,
         indoor_temperature: document.getElementById('indoorTemperature').value || '',
