@@ -329,10 +329,10 @@ function updateStatusChart(inspections) {
             return;
         }
         
+        // 주의와 경고를 하나로 통합
         const statusCounts = {
             '정상': inspections.filter(i => i.status === '정상').length,
-            '주의': inspections.filter(i => i.status === '주의').length,
-            '경고': inspections.filter(i => i.status === '경고').length,
+            '주의': inspections.filter(i => i.status === '주의' || i.status === '경고').length,
             '고장': inspections.filter(i => i.status === '고장').length
         };
         
@@ -352,7 +352,7 @@ function updateStatusChart(inspections) {
                 labels: Object.keys(statusCounts),
                 datasets: [{
                     data: Object.values(statusCounts),
-                    backgroundColor: ['#4CAF50', '#FF9800', '#F44336', '#9E9E9E']
+                    backgroundColor: ['#4CAF50', '#FF9800', '#F44336']
                 }]
             },
             options: {
@@ -384,8 +384,7 @@ function updateChartSummary(statusCounts, total) {
     const colors = {
         '정상': '#4CAF50',
         '주의': '#FF9800',
-        '경고': '#F44336',
-        '고장': '#9E9E9E'
+        '고장': '#F44336'
     };
     
     const summaryHTML = Object.entries(statusCounts).map(([status, count]) => {
