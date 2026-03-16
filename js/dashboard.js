@@ -274,7 +274,7 @@ function updateAlertList(inspections, equipment) {
         const statusColor = getStatusColor(insp.status);
         
         return `
-            <div class="alert-item" style="border-left: 4px solid ${statusColor}">
+            <div class="alert-item clickable" style="border-left: 4px solid ${statusColor}" onclick="goToEquipmentHistory('${insp.equipment_id}')">
                 <div class="alert-header">
                     <span class="alert-equipment">${eq.equipment_type || '알 수 없음'} (${eq.model || '-'})</span>
                     <span class="alert-status" style="background-color: ${statusColor}">${insp.status}</span>
@@ -287,6 +287,9 @@ function updateAlertList(inspections, equipment) {
                 </div>
                 <div class="alert-info">
                     <i class="fas fa-clock"></i> ${formatDate(insp.inspection_date)}
+                </div>
+                <div class="alert-hint">
+                    <i class="fas fa-hand-pointer"></i> 클릭하여 정비내역 보기
                 </div>
             </div>
         `;
@@ -323,7 +326,7 @@ function updateRecentInspections(inspections, equipment) {
         const fullLocation = eq.id ? getFullLocation(eq) : '-';
         
         return `
-            <tr>
+            <tr class="clickable-row" onclick="goToEquipmentHistory('${insp.equipment_id}')" title="클릭하여 정비내역 보기">
                 <td>${formattedDate}</td>
                 <td>${insp.inspector_name}</td>
                 <td>${eq.equipment_type || '알 수 없음'}<br><small>${eq.model || '-'}</small></td>
@@ -610,4 +613,15 @@ function getFullLocation(equipment) {
     if (equipment.location) parts.push(equipment.location);
     
     return parts.join(' ') || equipment.location || '위치 정보 없음';
+}
+
+// 정비내역 페이지로 이동
+function goToEquipmentHistory(equipmentId) {
+    if (!equipmentId) {
+        alert('장비 정보를 찾을 수 없습니다.');
+        return;
+    }
+    
+    // equipment-history.html로 이동 (URL 파라미터로 equipment_id 전달)
+    window.location.href = `equipment-history.html?equipment_id=${equipmentId}`;
 }

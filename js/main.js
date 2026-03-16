@@ -103,10 +103,13 @@ function goToInspection() {
 
 // 대시보드로 이동
 function goToDashboard() {
-    if (window.AuthManager.canAccessPage('dashboard.html')) {
+    const user = window.AuthManager.getCurrentUser();
+    
+    // 관리자만 접근 가능
+    if (user && (user.role === window.USER_ROLES.MANAGER || user.role === window.USER_ROLES.ADMIN)) {
         window.location.href = 'dashboard.html';
     } else {
-        alert('관리자 권한이 필요합니다.');
+        alert('관리 대시보드는 관리자(매니저/관리자) 권한이 필요합니다.');
     }
 }
 
