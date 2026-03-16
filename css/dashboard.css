@@ -214,7 +214,7 @@
     margin-right: 8px;
 }
 
-/* ===== 섹션 헤더 (제목 + 더보기 버튼) ===== */
+/* ===== 섹션 헤더 (제목만) ===== */
 .section-header {
     display: flex;
     justify-content: space-between;
@@ -234,13 +234,21 @@
     margin-right: 10px;
 }
 
-/* ===== 더보기 버튼 ===== */
+/* ===== 더보기 버튼 (리스트 하단) ===== */
+.show-more-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e0e0e0;
+}
+
 .btn-show-more {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border: none;
-    padding: 10px 20px;
-    border-radius: 20px;
+    padding: 12px 24px;
+    border-radius: 25px;
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
@@ -249,6 +257,8 @@
     gap: 8px;
     transition: all 0.3s ease;
     box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    min-width: 140px;
+    justify-content: center;
 }
 
 .btn-show-more:hover {
@@ -267,18 +277,6 @@
 
 .btn-show-more.expanded i {
     transform: rotate(180deg);
-}
-
-.btn-show-more.expanded .btn-text::after {
-    content: '접기';
-}
-
-.btn-show-more:not(.expanded) .btn-text::after {
-    content: '더보기';
-}
-
-.btn-show-more .btn-text {
-    font-size: 14px;
 }
 
 /* ===== 이상 장비 섹션 ===== */
@@ -554,19 +552,22 @@ table tbody tr.clickable-row:hover {
     }
     
     .section-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
+        margin-bottom: 15px;
     }
     
     .section-header h2 {
         font-size: 18px;
     }
     
+    .show-more-container {
+        margin-top: 15px;
+        padding-top: 15px;
+    }
+    
     .btn-show-more {
         width: 100%;
-        justify-content: center;
-        padding: 12px 20px;
+        max-width: 100%;
+        padding: 14px 24px;
     }
     
     /* 모바일에서 테이블 숨기고 카드 표시 */

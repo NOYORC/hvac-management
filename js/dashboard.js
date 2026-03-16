@@ -300,9 +300,14 @@ const INITIAL_DISPLAY_COUNT = 5;
 function updateAlertList(inspections, equipment) {
     const tbody = document.querySelector('#alertInspections tbody');
     const cardsContainer = document.getElementById('alertCards');
+    const showMoreContainer = document.getElementById('alertShowMoreContainer');
     const showMoreBtn = document.getElementById('alertShowMoreBtn');
     
-    const alerts = inspections.filter(insp => 
+    // 각 장비의 최신 점검 상태만 가져오기
+    const latestInspectionsByEquipment = getLatestInspectionsByEquipment(inspections);
+    
+    // 주의/경고/고장인 장비만 필터링
+    const alerts = latestInspectionsByEquipment.filter(insp => 
         insp.status === '주의' || insp.status === '경고' || insp.status === '고장'
     );
     
@@ -318,7 +323,7 @@ function updateAlertList(inspections, equipment) {
         if (cardsContainer) {
             cardsContainer.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">주의가 필요한 장비가 없습니다.</p>';
         }
-        if (showMoreBtn) showMoreBtn.style.display = 'none';
+        if (showMoreContainer) showMoreContainer.style.display = 'none';
         return;
     }
 
@@ -327,21 +332,56 @@ function updateAlertList(inspections, equipment) {
         equipmentMap[eq.id] = eq;
     });
 
-    // 더보기 버튼 표시 여부
-    if (showMoreBtn) {
-        showMoreBtn.style.display = sortedAlerts.length > INITIAL_DISPLAY_COUNT ? 'flex' : 'none';
+    // 더보기 컨테이너 및 버튼 표시 여부
+    if (showMoreContainer && showMoreBtn) {
+        if (sortedAlerts.length > INITIAL_DISPLAY_COUNT) {
+            showMoreContainer.style.display = 'flex';
+        } else {
+            showMoreContainer.style.display = 'none';
+        }
         
         // 버튼 클릭 이벤트 (중복 방지)
         showMoreBtn.onclick = null;
         showMoreBtn.onclick = function() {
             alertShowAll = !alertShowAll;
             this.classList.toggle('expanded', alertShowAll);
+            
+            // 버튼 텍스트 변경
+            const btnText = this.querySelector('.btn-text');
+            if (alertShowAll) {
+                btnText.textContent = '접기';
+            } else {
+                btnText.textContent = '내역 더보기';
+            }
+            
             updateAlertDisplay(sortedAlerts, equipmentMap, tbody, cardsContainer);
         };
     }
 
     // 초기 표시
     updateAlertDisplay(sortedAlerts, equipmentMap, tbody, cardsContainer);
+}
+
+// 각 장비의 최신 점검 상태만 가져오기
+function getLatestInspectionsByEquipment(inspections) {
+    const latestMap = {};
+    
+    inspections.forEach(insp => {
+        const equipmentId = insp.equipment_id;
+        if (!equipmentId) return;
+        
+        const inspDate = insp.inspection_date && insp.inspection_date.toDate ? 
+            insp.inspection_date.toDate() : new Date(insp.inspection_date);
+        
+        if (!latestMap[equipmentId] || 
+            inspDate > (latestMap[equipmentId].inspection_date.toDate ? 
+                latestMap[equipmentId].inspection_date.toDate() : 
+                new Date(latestMap[equipmentId].inspection_date))) {
+            latestMap[equipmentId] = insp;
+        }
+    });
+    
+    return Object.values(latestMap);
 }
 
 // 주의 장비 표시 업데이트
@@ -439,6 +479,7 @@ function updateAlertDisplay(sortedAlerts, equipmentMap, tbody, cardsContainer) {
 function updateRecentInspections(inspections, equipment) {
     const tbody = document.querySelector('#recentInspections tbody');
     const cardsContainer = document.getElementById('inspectionCards');
+    const showMoreContainer = document.getElementById('recentShowMoreContainer');
     const showMoreBtn = document.getElementById('recentShowMoreBtn');
     
     if (inspections.length === 0) {
@@ -446,7 +487,7 @@ function updateRecentInspections(inspections, equipment) {
         if (cardsContainer) {
             cardsContainer.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">점검 내역이 없습니다.</p>';
         }
-        if (showMoreBtn) showMoreBtn.style.display = 'none';
+        if (showMoreContainer) showMoreContainer.style.display = 'none';
         return;
     }
 
@@ -463,15 +504,28 @@ function updateRecentInspections(inspections, equipment) {
             return dateB - dateA;
         });
 
-    // 더보기 버튼 표시 여부
-    if (showMoreBtn) {
-        showMoreBtn.style.display = recentInspections.length > INITIAL_DISPLAY_COUNT ? 'flex' : 'none';
+    // 더보기 컨테이너 및 버튼 표시 여부
+    if (showMoreContainer && showMoreBtn) {
+        if (recentInspections.length > INITIAL_DISPLAY_COUNT) {
+            showMoreContainer.style.display = 'flex';
+        } else {
+            showMoreContainer.style.display = 'none';
+        }
         
         // 버튼 클릭 이벤트 (중복 방지)
         showMoreBtn.onclick = null;
         showMoreBtn.onclick = function() {
             recentShowAll = !recentShowAll;
             this.classList.toggle('expanded', recentShowAll);
+            
+            // 버튼 텍스트 변경
+            const btnText = this.querySelector('.btn-text');
+            if (recentShowAll) {
+                btnText.textContent = '접기';
+            } else {
+                btnText.textContent = '내역 더보기';
+            }
+            
             updateRecentDisplay(recentInspections, equipmentMap, tbody, cardsContainer);
         };
     }
