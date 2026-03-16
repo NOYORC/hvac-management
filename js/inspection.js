@@ -240,8 +240,9 @@ async function loadSites() {
             card.onclick = () => selectSite(site);
             card.innerHTML = `
                 <div class="icon"><i class="fas fa-building"></i></div>
-                <h3>${site.site_name}</h3>
-                <p><i class="fas fa-map-marker-alt"></i> ${site.address}</p>
+                ${site.site_group ? `<div class="site-group">${site.site_group}</div>` : ''}
+                <h3 class="site-name">${site.site_name}</h3>
+                <p class="site-address"><i class="fas fa-map-marker-alt"></i> ${site.address}</p>
                 <p><i class="fas fa-user"></i> ${site.contact_name || '담당자 미등록'}</p>
                 <p><i class="fas fa-phone"></i> ${site.contact_phone || '연락처 미등록'}</p>
             `;

@@ -531,6 +531,7 @@ function editSite(siteId) {
     
     document.getElementById('siteModalTitle').textContent = '현장 수정';
     document.getElementById('siteId').value = site.id;
+    document.getElementById('siteGroup').value = site.site_group || '';
     document.getElementById('siteName').value = site.site_name;
     document.getElementById('siteAddress').value = site.address || '';
     document.getElementById('siteContactName').value = site.contact_name || '';
@@ -550,6 +551,7 @@ async function handleSiteSubmit(e) {
     const formData = new FormData(e.target);
     const siteData = {
         site_name: formData.get('site_name'),
+        site_group: formData.get('site_group') || '',
         address: formData.get('address'),
         contact_name: formData.get('contact_name'),
         contact_phone: formData.get('contact_phone')
