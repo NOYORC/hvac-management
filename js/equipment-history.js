@@ -347,77 +347,11 @@ function displayHistory() {
                         <div class="history-info-label">점검자</div>
                         <div class="history-info-value">${inspection.inspector_name}</div>
                     </div>
-                    ${inspection.indoor_temperature ? `
-                        <div class="history-info-item">
-                            <div class="history-info-label">실내온도</div>
-                            <div class="history-info-value">${inspection.indoor_temperature}℃</div>
-                        </div>
-                    ` : ''}
-                    ${inspection.set_temperature ? `
-                        <div class="history-info-item">
-                            <div class="history-info-label">설정온도</div>
-                            <div class="history-info-value">${inspection.set_temperature}℃</div>
-                        </div>
-                    ` : ''}
-                    ${inspection.high_pressure ? `
-                        <div class="history-info-item">
-                            <div class="history-info-label">냉매고압</div>
-                            <div class="history-info-value">${inspection.high_pressure} kgf/cm²</div>
-                        </div>
-                    ` : ''}
-                    ${inspection.low_pressure ? `
-                        <div class="history-info-item">
-                            <div class="history-info-label">냉매저압</div>
-                            <div class="history-info-value">${inspection.low_pressure} kgf/cm²</div>
-                        </div>
-                    ` : ''}
-                    ${inspection.current_r ? `
-                        <div class="history-info-item">
-                            <div class="history-info-label">R상 전류</div>
-                            <div class="history-info-value">${inspection.current_r}A</div>
-                        </div>
-                    ` : ''}
-                    ${inspection.current_s ? `
-                        <div class="history-info-item">
-                            <div class="history-info-label">S상 전류</div>
-                            <div class="history-info-value">${inspection.current_s}A</div>
-                        </div>
-                    ` : ''}
-                    ${inspection.current_t ? `
-                        <div class="history-info-item">
-                            <div class="history-info-label">T상 전류</div>
-                            <div class="history-info-value">${inspection.current_t}A</div>
-                        </div>
-                    ` : ''}
-                    ${inspection.vibration ? `
-                        <div class="history-info-item">
-                            <div class="history-info-label">진동</div>
-                            <div class="history-info-value">${inspection.vibration} mm/s</div>
-                        </div>
-                    ` : ''}
-                    ${inspection.noise ? `
-                        <div class="history-info-item">
-                            <div class="history-info-label">소음</div>
-                            <div class="history-info-value">${inspection.noise} dB</div>
-                        </div>
-                    ` : ''}
-                    ${inspection.clean_status ? `
-                        <div class="history-info-item">
-                            <div class="history-info-label">청결상태</div>
-                            <div class="history-info-value">${inspection.clean_status}</div>
-                        </div>
-                    ` : ''}
-                    ${inspection.filter_status ? `
-                        <div class="history-info-item">
-                            <div class="history-info-label">필터상태</div>
-                            <div class="history-info-value">${inspection.filter_status}</div>
-                        </div>
-                    ` : ''}
                 </div>
                 ${inspection.notes ? `
                     <div class="history-notes">
-                        <i class="fas fa-comment"></i>
-                        ${inspection.notes}
+                        <i class="fas fa-comment-dots"></i>
+                        <strong>특이사항:</strong> ${inspection.notes}
                     </div>
                 ` : ''}
             </div>

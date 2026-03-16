@@ -295,28 +295,34 @@
 
 .equipment-detail .detail-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px 20px;
 }
 
 .equipment-detail .detail-item {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
+    padding: 8px;
+    background: white;
+    border-radius: 8px;
 }
 
 .equipment-detail .detail-item i {
     color: #667eea;
-    font-size: 18px;
+    font-size: 16px;
+    width: 20px;
+    text-align: center;
 }
 
 .equipment-detail .detail-label {
-    font-size: 13px;
-    color: #666;
+    font-size: 11px;
+    color: #999;
+    margin-bottom: 2px;
 }
 
 .equipment-detail .detail-value {
-    font-size: 16px;
+    font-size: 13px;
     font-weight: 600;
     color: #333;
 }
@@ -595,6 +601,11 @@
     
     .form-actions {
         flex-direction: column;
+    }
+    
+    .equipment-detail .detail-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
     }
 }
 
