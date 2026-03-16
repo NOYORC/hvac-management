@@ -17,6 +17,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     // 사용자 정보 표시
     displayUserInfo();
     
+    // 역할별 메뉴 표시
+    showMenuByRole();
+    
     // 관리자 메뉴 표시 (admin 전용)
     showAdminMenu();
 });
@@ -66,6 +69,30 @@ function displayUserInfo() {
         userName.textContent = user.name;
         userRole.textContent = window.AuthManager.getRoleText(user.role);
         userInfo.style.display = 'flex';
+    }
+}
+
+// 역할별 메뉴 표시
+function showMenuByRole() {
+    const user = window.AuthManager.getCurrentUser();
+    if (!user) return;
+    
+    const inspectionCard = document.querySelector('.menu-card[onclick="goToInspection()"]');
+    const dashboardCard = document.querySelector('.menu-card[onclick="goToDashboard()"]');
+    
+    if (user.role === window.USER_ROLES.MANAGER) {
+        // MANAGER: 장비점검 버튼 숨기기
+        if (inspectionCard) {
+            inspectionCard.style.display = 'none';
+        }
+    } else if (user.role === window.USER_ROLES.INSPECTOR) {
+        // INSPECTOR: 모든 메뉴 표시 (장비점검 + 관리대시보드)
+        if (inspectionCard) {
+            inspectionCard.style.display = 'block';
+        }
+        if (dashboardCard) {
+            dashboardCard.style.display = 'block';
+        }
     }
 }
 
