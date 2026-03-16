@@ -1,5 +1,23 @@
 // ===== 정비내역 페이지 JavaScript =====
 
+// 뒤로가기 함수 (이전 페이지로 이동)
+function goBackToPreviousPage() {
+    // 브라우저 히스토리에서 referrer 확인
+    const referrer = document.referrer;
+    
+    console.log('🔙 뒤로가기 - Referrer:', referrer);
+    
+    // 같은 도메인에서 왔고 히스토리가 있으면 뒤로가기
+    if (referrer && referrer.includes(window.location.host) && window.history.length > 1) {
+        console.log('✅ 브라우저 히스토리 뒤로가기 실행');
+        window.history.back();
+    } else {
+        // 직접 접근하거나 히스토리가 없으면 장비검색으로 이동
+        console.log('⚠️ 히스토리 없음 - 장비검색으로 이동');
+        window.location.href = 'equipment-search.html';
+    }
+}
+
 // 전역 변수
 let equipmentId = null;
 let equipment = null;
