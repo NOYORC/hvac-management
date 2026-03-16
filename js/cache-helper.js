@@ -4,8 +4,8 @@
  */
 
 class CacheHelper {
-    // 캐시 유효 시간 (5분)
-    static CACHE_DURATION = 5 * 60 * 1000;
+    // 캐시 유효 시간 (30초 - 빠른 업데이트를 위해 단축)
+    static CACHE_DURATION = 30 * 1000;
     
     /**
      * 캐시 키 생성

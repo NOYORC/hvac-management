@@ -1,6 +1,121 @@
 // 전역 변수
 let allSites = [];
 let allBuildings = [];
+let isRefreshing = false; // 새로고침 중복 방지
+
+// 대시보드 새로고침 (캐시 무시하고 최신 데이터 가져오기)
+async function refreshDashboard() {
+    if (isRefreshing) {
+        console.log('⚠️ 이미 새로고침 중입니다...');
+        return;
+    }
+    
+    isRefreshing = true;
+    const refreshBtn = document.getElementById('refreshBtn');
+    
+    try {
+        // 버튼 상태 변경
+        if (refreshBtn) {
+            refreshBtn.classList.add('refreshing');
+            refreshBtn.disabled = true;
+            refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> 새로고침 중...';
+        }
+        
+        console.log('🔄 대시보드 강제 새로고침 시작...');
+        
+        // 모든 캐시 삭제
+        window.CacheHelper.clearAllCache();
+        console.log('🗑️ 모든 캐시 삭제 완료');
+        
+        // 현장 필터 새로고침
+        await loadSiteFilter();
+        
+        // 대시보드 데이터 새로고침 (forceRefresh = true)
+        await loadDashboardData(true);
+        
+        console.log('✅ 대시보드 새로고침 완료');
+        
+        // 성공 알림 (선택적)
+        showRefreshSuccess();
+        
+    } catch (error) {
+        console.error('❌ 새로고침 오류:', error);
+        alert('데이터 새로고침 중 오류가 발생했습니다.');
+    } finally {
+        isRefreshing = false;
+        
+        // 버튼 상태 복원
+        if (refreshBtn) {
+            refreshBtn.classList.remove('refreshing');
+            refreshBtn.disabled = false;
+            refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> 새로고침';
+        }
+    }
+}
+
+// 새로고침 성공 알림
+function showRefreshSuccess() {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        background: #4CAF50;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        z-index: 10000;
+        font-size: 14px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        animation: slideIn 0.3s ease;
+    `;
+    notification.innerHTML = `
+        <i class="fas fa-check-circle"></i>
+        <span>최신 데이터로 업데이트되었습니다</span>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // 3초 후 자동 제거
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.remove();
+            }
+        }, 300);
+    }, 3000);
+}
+
+// 애니메이션 CSS 추가
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    @keyframes slideOut {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(400px);
+            opacity: 0;
+        }
+    }
+`;
+document.head.appendChild(style);
 
 // 페이지 로드 시 실행
 document.addEventListener('DOMContentLoaded', async function() {
@@ -70,7 +185,7 @@ async function loadSiteFilter() {
 }
 
 // 대시보드 데이터 로드
-async function loadDashboardData() {
+async function loadDashboardData(forceRefresh = false) {
     try {
         // console.log('📊 대시보드 데이터 로드 시작...');
         
@@ -79,14 +194,14 @@ async function loadDashboardData() {
         const siteId = document.getElementById('siteFilterDash').value;
         const status = document.getElementById('statusFilter').value;
 
-        // 점검 데이터 가져오기
-        const inspectionsData = await window.CachedFirestoreHelper.getAllDocuments('inspections');
+        // 점검 데이터 가져오기 (forceRefresh 옵션 전달)
+        const inspectionsData = await window.CachedFirestoreHelper.getAllDocuments('inspections', forceRefresh);
         
-        // 장비 데이터 가져오기
-        const equipmentData = await window.CachedFirestoreHelper.getAllDocuments('equipment');
+        // 장비 데이터 가져오기 (forceRefresh 옵션 전달)
+        const equipmentData = await window.CachedFirestoreHelper.getAllDocuments('equipment', forceRefresh);
         
-        // 건물 데이터 가져오기 (위치 표시용)
-        const buildingsData = await window.CachedFirestoreHelper.getAllDocuments('buildings');
+        // 건물 데이터 가져오기 (위치 표시용, forceRefresh 옵션 전달)
+        const buildingsData = await window.CachedFirestoreHelper.getAllDocuments('buildings', forceRefresh);
         allBuildings = buildingsData.data || [];
 
         let inspections = inspectionsData.data || [];
