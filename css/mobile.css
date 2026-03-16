@@ -46,6 +46,23 @@ html {
         font-size: 14px;
     }
     
+    /* 브레드크럼 모바일 최적화 */
+    .breadcrumb {
+        padding: 10px 15px;
+        font-size: 12px;
+        gap: 6px;
+    }
+    
+    .breadcrumb-item a,
+    .breadcrumb-current {
+        padding: 3px 6px;
+        font-size: 12px;
+    }
+    
+    .breadcrumb-separator {
+        font-size: 10px;
+    }
+    
     h1 {
         font-size: 24px;
     }
@@ -476,5 +493,28 @@ textarea:focus,
     .btn {
         padding: 10px 15px;
         font-size: 14px;
+    }
+}
+
+/* 아주 작은 화면 (480px 이하) */
+@media (max-width: 480px) {
+    /* 브레드크럼 텍스트 숨김 (아이콘만 표시) */
+    .breadcrumb {
+        padding: 8px 12px;
+    }
+    
+    .breadcrumb-item a,
+    .breadcrumb-current {
+        font-size: 0; /* 텍스트 숨김 */
+        padding: 6px;
+    }
+    
+    .breadcrumb-item a i,
+    .breadcrumb-current i {
+        font-size: 14px; /* 아이콘만 표시 */
+    }
+    
+    .breadcrumb-separator {
+        font-size: 9px;
     }
 }

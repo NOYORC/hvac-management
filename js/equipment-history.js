@@ -1,5 +1,47 @@
 // ===== 정비내역 페이지 JavaScript =====
 
+// 브레드크럼 생성 함수
+function generateBreadcrumb() {
+    const breadcrumb = document.getElementById('breadcrumb');
+    if (!breadcrumb) return;
+    
+    // referrer에서 이전 페이지 확인
+    const referrer = document.referrer;
+    let previousPage = { name: '홈', url: 'index.html', icon: 'fa-home' };
+    
+    if (referrer.includes('dashboard.html')) {
+        previousPage = { name: '관리대시보드', url: 'dashboard.html', icon: 'fa-chart-line' };
+    } else if (referrer.includes('equipment-search.html')) {
+        previousPage = { name: '장비검색', url: 'equipment-search.html', icon: 'fa-search' };
+    } else if (referrer.includes('index.html')) {
+        previousPage = { name: '홈', url: 'index.html', icon: 'fa-home' };
+    }
+    
+    // 장비 ID
+    const urlParams = new URLSearchParams(window.location.search);
+    const equipmentId = urlParams.get('equipment_id') || urlParams.get('equipmentId');
+    const currentPageName = equipmentId ? `정비내역 (${equipmentId})` : '정비내역';
+    
+    // 브레드크럼 HTML 생성
+    breadcrumb.innerHTML = `
+        <div class="breadcrumb-item">
+            <a href="${previousPage.url}">
+                <i class="fas ${previousPage.icon}"></i>
+                ${previousPage.name}
+            </a>
+        </div>
+        <span class="breadcrumb-separator">
+            <i class="fas fa-chevron-right"></i>
+        </span>
+        <div class="breadcrumb-item">
+            <span class="breadcrumb-current">
+                <i class="fas fa-history"></i>
+                ${currentPageName}
+            </span>
+        </div>
+    `;
+}
+
 // 뒤로가기 함수 (이전 페이지로 이동)
 function goBackToPreviousPage() {
     // 브라우저 히스토리에서 referrer 확인
@@ -29,6 +71,9 @@ let filteredInspections = [];
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', async function() {
     console.log('📋 정비내역 페이지 초기화 시작');
+    
+    // 브레드크럼 생성
+    generateBreadcrumb();
     
     // URL에서 장비 ID 가져오기 (equipment_id 또는 equipmentId 모두 지원)
     const urlParams = new URLSearchParams(window.location.search);
