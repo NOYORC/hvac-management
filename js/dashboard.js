@@ -92,6 +92,15 @@ async function loadDashboardData() {
         let inspections = inspectionsData.data || [];
         const equipment = equipmentData.data || [];
         
+        // 디버깅: 첫 번째 점검 데이터의 equipment_id 확인
+        if (inspections.length > 0) {
+            console.log('Sample inspection data:', {
+                id: inspections[0].id,
+                equipment_id: inspections[0].equipment_id,
+                keys: Object.keys(inspections[0])
+            });
+        }
+        
         // console.log(`📦 로드된 데이터: 점검 ${inspections.length}개, 장비 ${equipment.length}개`);
 
         // 기간 필터링
@@ -273,8 +282,12 @@ function updateAlertList(inspections, equipment) {
         const eq = equipmentMap[insp.equipment_id] || {};
         const statusColor = getStatusColor(insp.status);
         
+        // 디버깅: equipment_id 확인
+        const equipmentId = insp.equipment_id || '';
+        console.log('Alert item - inspection:', insp.id, 'equipment_id:', equipmentId);
+        
         return `
-            <div class="alert-item clickable" style="border-left: 4px solid ${statusColor}" onclick="goToEquipmentHistory('${insp.equipment_id}')">
+            <div class="alert-item clickable" style="border-left: 4px solid ${statusColor}" onclick="goToEquipmentHistory('${equipmentId}')" data-equipment-id="${equipmentId}">
                 <div class="alert-header">
                     <span class="alert-equipment">${eq.equipment_type || '알 수 없음'} (${eq.model || '-'})</span>
                     <span class="alert-status" style="background-color: ${statusColor}">${insp.status}</span>
@@ -325,8 +338,12 @@ function updateRecentInspections(inspections, equipment) {
         const formattedDate = formatDate(insp.inspection_date);
         const fullLocation = eq.id ? getFullLocation(eq) : '-';
         
+        // 디버깅: equipment_id 확인
+        const equipmentId = insp.equipment_id || '';
+        console.log('Recent inspection - inspection:', insp.id, 'equipment_id:', equipmentId);
+        
         return `
-            <tr class="clickable-row" onclick="goToEquipmentHistory('${insp.equipment_id}')" title="클릭하여 정비내역 보기">
+            <tr class="clickable-row" onclick="goToEquipmentHistory('${equipmentId}')" title="클릭하여 정비내역 보기" data-equipment-id="${equipmentId}">
                 <td>${formattedDate}</td>
                 <td>${insp.inspector_name}</td>
                 <td>${eq.equipment_type || '알 수 없음'}<br><small>${eq.model || '-'}</small></td>
@@ -617,11 +634,15 @@ function getFullLocation(equipment) {
 
 // 정비내역 페이지로 이동
 function goToEquipmentHistory(equipmentId) {
-    if (!equipmentId) {
-        alert('장비 정보를 찾을 수 없습니다.');
+    console.log('goToEquipmentHistory called with equipmentId:', equipmentId);
+    
+    if (!equipmentId || equipmentId === 'undefined' || equipmentId === 'null') {
+        console.error('Invalid equipment_id:', equipmentId);
+        alert('장비 정보를 찾을 수 없습니다.\n장비 ID가 누락되었습니다.');
         return;
     }
     
+    console.log('Navigating to equipment-history.html with equipment_id:', equipmentId);
     // equipment-history.html로 이동 (URL 파라미터로 equipment_id 전달)
-    window.location.href = `equipment-history.html?equipment_id=${equipmentId}`;
+    window.location.href = `equipment-history.html?equipment_id=${encodeURIComponent(equipmentId)}`;
 }
