@@ -91,20 +91,27 @@ class AuthManager {
     // 사용자 역할 가져오기 (Firestore에서)
     async getUserRole(uid) {
         try {
+            console.log('🔍 사용자 역할 조회 시작, UID:', uid);
+            
             if (!window.FirestoreHelper) {
                 console.warn('⚠️ FirestoreHelper 없음, 기본 역할 반환');
                 return USER_ROLES.INSPECTOR;
             }
 
             const result = await window.FirestoreHelper.getDocument('users', uid);
+            console.log('📄 Firestore 조회 결과:', result);
+            
             if (result.success && result.data) {
-                return result.data.role || USER_ROLES.INSPECTOR;
+                const role = result.data.role || USER_ROLES.INSPECTOR;
+                console.log('✅ 사용자 역할:', role);
+                return role;
             }
             
             // 사용자 문서가 없으면 기본 역할
+            console.warn('⚠️ 사용자 문서 없음, 기본 역할 반환');
             return USER_ROLES.INSPECTOR;
         } catch (error) {
-            console.error('역할 조회 오류:', error);
+            console.error('❌ 역할 조회 오류:', error);
             return USER_ROLES.INSPECTOR;
         }
     }
@@ -195,8 +202,11 @@ class AuthManager {
         // 현재 페이지 파일명 가져오기
         const currentPage = window.location.pathname.split('/').pop();
         
+        console.log('🔍 페이지 접근 체크:', currentPage);
+        
         // 로그인 페이지와 메인 페이지는 체크 안 함
         if (currentPage === 'login.html' || currentPage === 'index.html' || currentPage === '') {
+            console.log('✅ 공개 페이지, 접근 허용');
             return true;
         }
 
@@ -208,14 +218,24 @@ class AuthManager {
             return false;
         }
 
+        const user = this.getCurrentUser();
+        const permissions = PAGE_PERMISSIONS[currentPage];
+        
+        console.log('👤 현재 사용자:', user);
+        console.log('📋 페이지 권한 설정:', permissions);
+        
         // 권한 확인
         if (!this.canAccessPage(currentPage)) {
-            console.warn('⚠️ 권한 없음:', currentPage, '현재 역할:', this.getCurrentUser().role);
-            alert('접근 권한이 없습니다.');
+            console.error('❌ 권한 없음!');
+            console.error('  - 페이지:', currentPage);
+            console.error('  - 사용자 역할:', user.role);
+            console.error('  - 필요 권한:', permissions);
+            alert(`접근 권한이 없습니다.\n현재 역할: ${this.getRoleText(user.role)}\n필요 권한: ${permissions?.map(r => this.getRoleText(r)).join(', ') || '없음'}`);
             window.location.href = 'index.html';
             return false;
         }
 
+        console.log('✅ 페이지 접근 허용');
         return true;
     }
 

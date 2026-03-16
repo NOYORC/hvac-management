@@ -195,51 +195,6 @@
             z-index: 1;
         }
 
-        .demo-accounts {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin-top: 20px;
-        }
-
-        .demo-accounts h3 {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-
-        .demo-account {
-            background: white;
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-        }
-
-        .demo-account:hover {
-            border-color: #667eea;
-            transform: translateX(5px);
-        }
-
-        .demo-account:last-child {
-            margin-bottom: 0;
-        }
-
-        .demo-role {
-            font-size: 12px;
-            color: #667eea;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-
-        .demo-email {
-            font-size: 13px;
-            color: #666;
-        }
-
         .loading-spinner {
             display: none;
             margin-left: 10px;
@@ -319,28 +274,7 @@
             <div class="error-message" id="errorMessage"></div>
         </form>
 
-        <div class="divider">
-            <span>테스트 계정</span>
-        </div>
 
-        <div class="demo-accounts">
-            <h3>빠른 로그인 (개발용)</h3>
-            
-            <div class="demo-account" onclick="quickLogin('inspector@hvac.com', 'hvac1234')">
-                <div class="demo-role">👷 점검자</div>
-                <div class="demo-email">inspector@hvac.com / hvac1234</div>
-            </div>
-
-            <div class="demo-account" onclick="quickLogin('manager@hvac.com', 'hvac1234')">
-                <div class="demo-role">👔 관리자</div>
-                <div class="demo-email">manager@hvac.com / hvac1234</div>
-            </div>
-
-            <div class="demo-account" onclick="quickLogin('admin@hvac.com', 'hvac1234')">
-                <div class="demo-role">⚙️ 시스템 관리자</div>
-                <div class="demo-email">admin@hvac.com / hvac1234</div>
-            </div>
-        </div>
     </div>
 
     <!-- Firebase -->
@@ -422,12 +356,6 @@
         });
 
         // 빠른 로그인 (테스트용)
-        async function quickLogin(email, password) {
-            document.getElementById('email').value = email;
-            document.getElementById('password').value = password;
-            document.getElementById('loginForm').dispatchEvent(new Event('submit'));
-        }
-
         // 역할별 리다이렉트 URL
         function getRedirectUrl(role) {
             switch (role) {
