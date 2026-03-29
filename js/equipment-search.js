@@ -238,8 +238,8 @@ function resetFilters() {
 // 점검 버튼 생성 (권한에 따라)
 function getInspectionButton(equipmentId) {
     const user = window.AuthManager?.getCurrentUser();
-    // ADMIN은 점검 버튼 숨김
-    if (user && user.role === window.USER_ROLES?.ADMIN) {
+    // MANAGER는 점검 버튼 숨김 (조회만 가능)
+    if (user && user.role === window.USER_ROLES?.MANAGER) {
         return '';
     }
     
@@ -328,10 +328,10 @@ function displayResults() {
 
 // 점검 시작
 function startInspection(equipmentId) {
-    // 권한 체크 (ADMIN은 점검 불가)
+    // 권한 체크 (MANAGER는 점검 불가, 조회만 가능)
     const user = window.AuthManager?.getCurrentUser();
-    if (user && user.role === window.USER_ROLES?.ADMIN) {
-        alert('관리자는 점검을 수행할 수 없습니다.\n점검자(INSPECTOR) 또는 매니저(MANAGER) 계정을 사용해주세요.');
+    if (user && user.role === window.USER_ROLES?.MANAGER) {
+        alert('매니저는 점검을 수행할 수 없습니다.\n점검은 점검자(INSPECTOR) 또는 관리자(ADMIN)만 가능합니다.');
         return;
     }
     
