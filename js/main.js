@@ -79,19 +79,31 @@ function showMenuByRole() {
     
     const inspectionCard = document.querySelector('.menu-card[onclick="goToInspection()"]');
     const dashboardCard = document.querySelector('.menu-card[onclick="goToDashboard()"]');
+    const qrButton = document.querySelector('.btn-qr');
     
-    if (user.role === window.USER_ROLES.MANAGER) {
+    if (user.role === window.USER_ROLES.ADMIN) {
+        // ADMIN: 장비점검 카드와 QR 스캔 버튼 숨기기 (관리자는 점검 불가)
+        if (inspectionCard) {
+            inspectionCard.style.display = 'none';
+        }
+        if (qrButton) {
+            qrButton.style.display = 'none';
+        }
+    } else if (user.role === window.USER_ROLES.MANAGER) {
         // MANAGER: 장비점검 버튼 숨기기
         if (inspectionCard) {
             inspectionCard.style.display = 'none';
         }
     } else if (user.role === window.USER_ROLES.INSPECTOR) {
-        // INSPECTOR: 모든 메뉴 표시 (장비점검 + 관리대시보드)
+        // INSPECTOR: 모든 메뉴 표시 (장비점검 + 관리대시보드 + QR 스캔)
         if (inspectionCard) {
             inspectionCard.style.display = 'block';
         }
         if (dashboardCard) {
             dashboardCard.style.display = 'block';
+        }
+        if (qrButton) {
+            qrButton.style.display = 'inline-flex';
         }
     }
 }

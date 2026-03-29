@@ -235,6 +235,22 @@ function resetFilters() {
     displayResults();
 }
 
+// 점검 버튼 생성 (권한에 따라)
+function getInspectionButton(equipmentId) {
+    const user = window.AuthManager?.getCurrentUser();
+    // ADMIN은 점검 버튼 숨김
+    if (user && user.role === window.USER_ROLES?.ADMIN) {
+        return '';
+    }
+    
+    return `
+        <button class="btn-inspect" onclick="startInspection('${equipmentId}')">
+            <i class="fas fa-clipboard-check"></i>
+            점검 시작
+        </button>
+    `;
+}
+
 // 결과 표시
 function displayResults() {
     const resultsContainer = document.getElementById('searchResults');
@@ -298,10 +314,7 @@ function displayResults() {
                                 ${equipment.inspection_count}건
                             </span>
                         </button>
-                        <button class="btn-inspect" onclick="startInspection('${equipment.id}')">
-                            <i class="fas fa-clipboard-check"></i>
-                            점검 시작
-                        </button>
+                        ${getInspectionButton(equipment.id)}
                         <button class="btn-view-detail" onclick="viewDetail('${equipment.id}')">
                             <i class="fas fa-info-circle"></i>
                             상세정보
@@ -315,6 +328,13 @@ function displayResults() {
 
 // 점검 시작
 function startInspection(equipmentId) {
+    // 권한 체크 (ADMIN은 점검 불가)
+    const user = window.AuthManager?.getCurrentUser();
+    if (user && user.role === window.USER_ROLES?.ADMIN) {
+        alert('관리자는 점검을 수행할 수 없습니다.\n점검자(INSPECTOR) 또는 매니저(MANAGER) 계정을 사용해주세요.');
+        return;
+    }
+    
     console.log('🔧 점검 시작:', equipmentId);
     window.location.href = `inspection.html?equipmentId=${equipmentId}`;
 }

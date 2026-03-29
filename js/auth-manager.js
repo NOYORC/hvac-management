@@ -27,9 +27,9 @@ const USER_ROLES = {
 
 // 페이지 접근 권한 설정
 const PAGE_PERMISSIONS = {
-    'inspection.html': [USER_ROLES.INSPECTOR, USER_ROLES.MANAGER, USER_ROLES.ADMIN],
-    'qr-scanner.html': [USER_ROLES.INSPECTOR, USER_ROLES.MANAGER, USER_ROLES.ADMIN],
-    'dashboard.html': [USER_ROLES.INSPECTOR, USER_ROLES.MANAGER, USER_ROLES.ADMIN], // INSPECTOR 추가
+    'inspection.html': [USER_ROLES.INSPECTOR, USER_ROLES.MANAGER], // ADMIN 제외 - 관리자는 점검 불가
+    'qr-scanner.html': [USER_ROLES.INSPECTOR, USER_ROLES.MANAGER], // ADMIN 제외 - 관리자는 QR 스캔 불가
+    'dashboard.html': [USER_ROLES.INSPECTOR, USER_ROLES.MANAGER, USER_ROLES.ADMIN],
     'admin.html': [USER_ROLES.ADMIN],
     'equipment-list.html': [USER_ROLES.MANAGER, USER_ROLES.ADMIN],
     'equipment-search.html': [USER_ROLES.INSPECTOR, USER_ROLES.MANAGER, USER_ROLES.ADMIN],
