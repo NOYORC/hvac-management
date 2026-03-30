@@ -441,6 +441,15 @@
             }
             console.log('✅ 로그인 확인:', currentUser.email, '역할:', currentUser.role);
             
+            // MANAGER 역할일 경우 점검 시작 버튼 숨기기 (정비내역 조회는 가능)
+            if (currentUser.role === window.USER_ROLES?.MANAGER) {
+                const inspectionBtn = document.querySelector('.btn-start-inspection');
+                if (inspectionBtn) {
+                    inspectionBtn.style.display = 'none';
+                    console.log('👤 MANAGER 역할: 점검 시작 버튼 숨김 (정비내역 조회만 가능)');
+                }
+            }
+            
             // 환경 확인
             const isHTTPS = window.location.protocol === 'https:';
             console.log(`📍 프로토콜: ${window.location.protocol} (HTTPS: ${isHTTPS})`);
@@ -647,12 +656,33 @@
                     
                     document.getElementById('equipmentPreview').style.display = 'block';
                     document.getElementById('scannerResult').style.display = 'block';
+                    
+                    // 역할에 따라 버튼 표시 제어
+                    updateButtonsForRole();
                 } else {
                     showError(`장비를 찾을 수 없습니다. (ID: ${equipmentId})`);
                 }
             } catch (error) {
                 console.error('장비 정보 조회 오류:', error);
                 showError('장비 정보를 불러오는데 실패했습니다.');
+            }
+        }
+        
+        // 역할에 따라 버튼 표시 제어
+        function updateButtonsForRole() {
+            const user = window.AuthManager?.getCurrentUser();
+            const inspectionBtn = document.querySelector('.btn-start-inspection');
+            
+            if (user && user.role === window.USER_ROLES?.MANAGER) {
+                // MANAGER는 점검 시작 버튼 숨김 (정비내역만 조회 가능)
+                if (inspectionBtn) {
+                    inspectionBtn.style.display = 'none';
+                }
+            } else {
+                // INSPECTOR와 ADMIN은 모든 버튼 표시
+                if (inspectionBtn) {
+                    inspectionBtn.style.display = 'block';
+                }
             }
         }
 

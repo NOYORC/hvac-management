@@ -237,13 +237,34 @@ body {
 .quick-buttons button {
     flex: 1;
     min-width: 150px;
-    padding: 15px 25px;
+    padding: 16px 24px;
     border: none;
-    border-radius: 10px;
+    border-radius: 12px;
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.quick-buttons button i {
+    font-size: 20px;
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.quick-buttons button span {
+    display: inline-block;
+    flex-shrink: 0;
 }
 
 .btn-qr {
@@ -334,10 +355,47 @@ body {
     
     .quick-buttons {
         flex-direction: column;
+        gap: 12px;
     }
     
     .quick-buttons button {
         width: 100%;
+        min-width: unset;
+        padding: 18px 24px;
+        font-size: 17px;
+    }
+    
+    .quick-buttons button i {
+        font-size: 22px;
+        width: 22px;
+        height: 22px;
+    }
+    
+    .quick-buttons button span {
+        font-size: 17px;
+    }
+}
+
+/* 작은 모바일 화면 최적화 */
+@media (max-width: 480px) {
+    .quick-buttons {
+        gap: 10px;
+    }
+    
+    .quick-buttons button {
+        padding: 16px 20px;
+        font-size: 15px;
+        gap: 8px;
+    }
+    
+    .quick-buttons button i {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+    }
+    
+    .quick-buttons button span {
+        font-size: 15px;
     }
 }
 
@@ -617,5 +675,15 @@ body {
         left: 0;
         top: 0;
         transform: none;
+    }
+    
+    .quick-buttons button {
+        min-width: 100%;
+        font-size: 15px;
+        padding: 12px 15px;
+    }
+    
+    .quick-buttons button i {
+        font-size: 16px;
     }
 }

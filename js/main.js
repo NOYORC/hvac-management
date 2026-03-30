@@ -82,12 +82,13 @@ function showMenuByRole() {
     const qrButton = document.querySelector('.btn-qr');
     
     if (user.role === window.USER_ROLES.MANAGER) {
-        // MANAGER: 장비점검 카드와 QR 스캔 버튼 숨기기 (매니저는 조회만 가능)
+        // MANAGER: 장비점검 카드만 숨기기 (QR 스캔은 정비내역 조회용으로 사용 가능)
         if (inspectionCard) {
             inspectionCard.style.display = 'none';
         }
+        // QR 스캔 버튼은 표시 (정비내역 조회용)
         if (qrButton) {
-            qrButton.style.display = 'none';
+            qrButton.style.display = 'inline-flex';
         }
     } else if (user.role === window.USER_ROLES.INSPECTOR) {
         // INSPECTOR: 점검 관련 메뉴 표시 (장비점검 + QR 스캔)
