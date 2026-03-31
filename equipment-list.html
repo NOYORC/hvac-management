@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>장비 관리 - HVAC 관리</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/mobile.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .equipment-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .page-title i {
+            color: #667eea;
+        }
+
+        .btn-back {
+            padding: 10px 20px;
+            background: #e0e0e0;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-back:hover {
+            background: #d0d0d0;
+            transform: translateX(-2px);
+        }
+
+        .content-header {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-add {
+            padding: 12px 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .equipment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .equipment-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .equipment-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .equipment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+
+        .equipment-id {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .equipment-type {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .equipment-details {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .equipment-detail {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .equipment-detail i {
+            width: 20px;
+            color: #667eea;
+        }
+
+        .equipment-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .btn-edit, .btn-delete {
+            flex: 1;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-edit {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background: #2563eb;
+        }
+
+        .btn-delete {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #dc2626;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-dialog {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            margin-bottom: 25px;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        .btn-cancel, .btn-save {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-cancel {
+            background: #e0e0e0;
+            color: #666;
+        }
+
+        .btn-cancel:hover {
+            background: #d0d0d0;
+        }
+
+        .btn-save {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .empty-state {
+            background: white;
+            padding: 60px 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            color: #e0e0e0;
+            margin-bottom: 20px;
+        }
+
+        .empty-state h3 {
+            font-size: 20px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            color: #999;
+        }
+
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .content-header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: stretch;
+            }
+
+            .equipment-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="equipment-container">
+        <!-- 페이지 헤더 -->
+        <div class="page-header">
+            <div class="page-title">
+                <i class="fas fa-toolbox"></i>
+                <span>장비 관리</span>
+            </div>
+            <button class="btn-back" onclick="goBack()">
+                <i class="fas fa-arrow-left"></i>
+                <span>돌아가기</span>
+            </button>
+        </div>
+
+        <!-- 컨텐츠 헤더 -->
+        <div class="content-header">
+            <div>
+                <h3 style="margin: 0; color: #333;">등록된 장비 목록</h3>
+                <p style="margin: 5px 0 0 0; color: #999; font-size: 14px;">장비를 추가하거나 수정, 삭제할 수 있습니다</p>
+            </div>
+            <button class="btn-add" onclick="showAddModal()">
+                <i class="fas fa-plus"></i>
+                <span>장비 추가</span>
+            </button>
+        </div>
+
+        <!-- 장비 목록 -->
+        <div id="equipmentList" class="equipment-grid">
+            <!-- 장비 카드가 동적으로 여기에 추가됩니다 -->
+        </div>
+    </div>
+
+    <!-- 장비 추가/수정 모달 -->
+    <div id="equipmentModal" class="modal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fas fa-toolbox"></i>
+                    <span id="modalTitle">장비 추가</span>
+                </div>
+            </div>
+            
+            <form id="equipmentForm">
+                <input type="hidden" id="equipmentId">
+                
+                <div class="form-group">
+                    <label for="equipmentCode">장비 코드 *</label>
+                    <input type="text" id="equipmentCode" required placeholder="예: EQ-001">
+                </div>
+
+                <div class="form-group">
+                    <label for="equipmentType">장비 유형 *</label>
+                    <select id="equipmentType" required>
+                        <option value="">선택하세요</option>
+                        <option value="냉동기">냉동기</option>
+                        <option value="보일러">보일러</option>
+                        <option value="냉각탑">냉각탑</option>
+                        <option value="펌프">펌프</option>
+                        <option value="AHU">AHU</option>
+                        <option value="FCU">FCU</option>
+                        <option value="기타">기타</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="equipmentModel">모델명</label>
+                    <input type="text" id="equipmentModel" placeholder="예: LG-CH-500">
+                </div>
+
+                <div class="form-group">
+                    <label for="equipmentLocation">위치</label>
+                    <input type="text" id="equipmentLocation" placeholder="예: 지하 1층 기계실">
+                </div>
+
+                <div class="form-group">
+                    <label for="equipmentFloor">층</label>
+                    <input type="text" id="equipmentFloor" placeholder="예: B1F">
+                </div>
+
+                <div class="form-group">
+                    <label for="equipmentCapacity">용량</label>
+                    <input type="text" id="equipmentCapacity" placeholder="예: 500RT">
+                </div>
+
+                <div class="form-group">
+                    <label for="equipmentInstallDate">설치일자</label>
+                    <input type="date" id="equipmentInstallDate">
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="closeModal()">취소</button>
+                    <button type="submit" class="btn-save">저장</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+        import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+
+        // Firebase 설정
+        const firebaseConfig = {
+            apiKey: "AIzaSyCpTEePTOkEfSLRzyszq0dCCJmQEWJsBic",
+            authDomain: "hvac-management-477fb.firebaseapp.com",
+            projectId: "hvac-management-477fb",
+            storageBucket: "hvac-management-477fb.firebasestorage.app",
+            messagingSenderId: "312239966797",
+            appId: "1:312239966797:web:b454d99fde9823207dea04",
+            measurementId: "G-FT4YE5FDP1"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        window.db = db;
+        window.firestoreFunctions = { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp };
+
+        console.log('✅ Firebase 초기화 완료');
+    </script>
+
+    <!-- Auth Manager -->
+    <script src="js/auth-manager.js"></script>
+
+    <script>
+        let currentEditId = null;
+        let equipmentList = [];
+
+        // 페이지 로드 시 권한 확인 및 초기화
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🔄 장비 관리 페이지 초기화 시작');
+
+            // AuthManager 초기화 대기
+            await window.AuthManager.initialize();
+
+            // 로그인 확인
+            const currentUser = window.AuthManager.getCurrentUser();
+            if (!currentUser) {
+                console.error('❌ 로그인 필요');
+                alert('로그인이 필요합니다.');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            console.log('✅ 현재 사용자:', currentUser.email, '역할:', currentUser.role);
+
+            // 권한 확인 (MANAGER 또는 ADMIN만 접근 가능)
+            if (currentUser.role !== window.USER_ROLES.MANAGER && currentUser.role !== window.USER_ROLES.ADMIN) {
+                console.error('❌ 권한 없음:', currentUser.role);
+                alert('장비 관리는 매니저 또는 관리자만 접근할 수 있습니다.');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            console.log('✅ 권한 확인 완료 - 장비 목록 로드');
+            await loadEquipmentList();
+
+            // 폼 제출 이벤트
+            document.getElementById('equipmentForm').addEventListener('submit', handleSubmit);
+        });
+
+        // 장비 목록 로드
+        async function loadEquipmentList() {
+            try {
+                console.log('🔄 장비 목록 로딩 중...');
+                const { collection, getDocs } = window.firestoreFunctions;
+                const querySnapshot = await getDocs(collection(window.db, 'equipment'));
+                
+                equipmentList = [];
+                querySnapshot.forEach((doc) => {
+                    equipmentList.push({ id: doc.id, ...doc.data() });
+                });
+
+                console.log('✅ 장비 로드 완료:', equipmentList.length, '개');
+                renderEquipmentList();
+            } catch (error) {
+                console.error('❌ 장비 목록 로드 오류:', error);
+                alert('장비 목록을 불러오는 중 오류가 발생했습니다.');
+            }
+        }
+
+        // 장비 목록 렌더링
+        function renderEquipmentList() {
+            const container = document.getElementById('equipmentList');
+            
+            if (equipmentList.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state" style="grid-column: 1 / -1;">
+                        <i class="fas fa-toolbox"></i>
+                        <h3>등록된 장비가 없습니다</h3>
+                        <p>장비 추가 버튼을 눌러 첫 장비를 등록하세요</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = equipmentList.map(equipment => `
+                <div class="equipment-card">
+                    <div class="equipment-header">
+                        <div class="equipment-id">${equipment.equipment_id || '코드 없음'}</div>
+                        <div class="equipment-type">${equipment.type || '유형 미지정'}</div>
+                    </div>
+                    <div class="equipment-details">
+                        ${equipment.model ? `
+                            <div class="equipment-detail">
+                                <i class="fas fa-tag"></i>
+                                <span>${equipment.model}</span>
+                            </div>
+                        ` : ''}
+                        ${equipment.location ? `
+                            <div class="equipment-detail">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span>${equipment.location}</span>
+                            </div>
+                        ` : ''}
+                        ${equipment.floor ? `
+                            <div class="equipment-detail">
+                                <i class="fas fa-layer-group"></i>
+                                <span>${equipment.floor}</span>
+                            </div>
+                        ` : ''}
+                        ${equipment.capacity ? `
+                            <div class="equipment-detail">
+                                <i class="fas fa-tachometer-alt"></i>
+                                <span>${equipment.capacity}</span>
+                            </div>
+                        ` : ''}
+                        ${equipment.installation_date ? `
+                            <div class="equipment-detail">
+                                <i class="fas fa-calendar"></i>
+                                <span>설치: ${formatDate(equipment.installation_date)}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="equipment-actions">
+                        <button class="btn-edit" onclick="editEquipment('${equipment.id}')">
+                            <i class="fas fa-edit"></i>
+                            <span>수정</span>
+                        </button>
+                        <button class="btn-delete" onclick="deleteEquipment('${equipment.id}', '${equipment.equipment_id}')">
+                            <i class="fas fa-trash"></i>
+                            <span>삭제</span>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 날짜 포맷
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('ko-KR');
+        }
+
+        // 추가 모달 열기
+        function showAddModal() {
+            currentEditId = null;
+            document.getElementById('modalTitle').textContent = '장비 추가';
+            document.getElementById('equipmentForm').reset();
+            document.getElementById('equipmentId').value = '';
+            document.getElementById('equipmentModal').classList.add('active');
+        }
+
+        // 수정 모달 열기
+        function editEquipment(id) {
+            const equipment = equipmentList.find(e => e.id === id);
+            if (!equipment) return;
+
+            currentEditId = id;
+            document.getElementById('modalTitle').textContent = '장비 수정';
+            document.getElementById('equipmentId').value = id;
+            document.getElementById('equipmentCode').value = equipment.equipment_id || '';
+            document.getElementById('equipmentType').value = equipment.type || '';
+            document.getElementById('equipmentModel').value = equipment.model || '';
+            document.getElementById('equipmentLocation').value = equipment.location || '';
+            document.getElementById('equipmentFloor').value = equipment.floor || '';
+            document.getElementById('equipmentCapacity').value = equipment.capacity || '';
+            document.getElementById('equipmentInstallDate').value = equipment.installation_date || '';
+            
+            document.getElementById('equipmentModal').classList.add('active');
+        }
+
+        // 모달 닫기
+        function closeModal() {
+            document.getElementById('equipmentModal').classList.remove('active');
+            document.getElementById('equipmentForm').reset();
+            currentEditId = null;
+        }
+
+        // 폼 제출 처리
+        async function handleSubmit(e) {
+            e.preventDefault();
+
+            const formData = {
+                equipment_id: document.getElementById('equipmentCode').value.trim(),
+                type: document.getElementById('equipmentType').value,
+                model: document.getElementById('equipmentModel').value.trim(),
+                location: document.getElementById('equipmentLocation').value.trim(),
+                floor: document.getElementById('equipmentFloor').value.trim(),
+                capacity: document.getElementById('equipmentCapacity').value.trim(),
+                installation_date: document.getElementById('equipmentInstallDate').value,
+                updated_at: new Date().toISOString()
+            };
+
+            try {
+                const { collection, addDoc, updateDoc, doc, serverTimestamp } = window.firestoreFunctions;
+
+                if (currentEditId) {
+                    // 수정
+                    console.log('🔄 장비 수정:', currentEditId);
+                    const equipmentRef = doc(window.db, 'equipment', currentEditId);
+                    await updateDoc(equipmentRef, formData);
+                    console.log('✅ 장비 수정 완료');
+                    alert('장비 정보가 수정되었습니다.');
+                } else {
+                    // 추가
+                    console.log('🔄 장비 추가:', formData.equipment_id);
+                    formData.created_at = new Date().toISOString();
+                    await addDoc(collection(window.db, 'equipment'), formData);
+                    console.log('✅ 장비 추가 완료');
+                    alert('새 장비가 추가되었습니다.');
+                }
+
+                closeModal();
+                await loadEquipmentList();
+            } catch (error) {
+                console.error('❌ 장비 저장 오류:', error);
+                alert('장비 저장 중 오류가 발생했습니다: ' + error.message);
+            }
+        }
+
+        // 장비 삭제
+        async function deleteEquipment(id, equipmentId) {
+            if (!confirm(`장비 "${equipmentId}"를 정말 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다.`)) {
+                return;
+            }
+
+            try {
+                console.log('🔄 장비 삭제:', id);
+                const { deleteDoc, doc } = window.firestoreFunctions;
+                await deleteDoc(doc(window.db, 'equipment', id));
+                console.log('✅ 장비 삭제 완료');
+                alert('장비가 삭제되었습니다.');
+                await loadEquipmentList();
+            } catch (error) {
+                console.error('❌ 장비 삭제 오류:', error);
+                alert('장비 삭제 중 오류가 발생했습니다: ' + error.message);
+            }
+        }
+
+        // 뒤로 가기
+        function goBack() {
+            window.location.href = 'index.html';
+        }
+
+        // 전역 함수 등록
+        window.showAddModal = showAddModal;
+        window.editEquipment = editEquipment;
+        window.deleteEquipment = deleteEquipment;
+        window.closeModal = closeModal;
+        window.goBack = goBack;
+    </script>
+</body>
+</html>
