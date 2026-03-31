@@ -117,8 +117,16 @@ class AuthManager {
             console.log('📄 Firestore 조회 결과:', result);
             
             if (result.success && result.data) {
+                // 승인 상태 확인 (status 필드)
+                const status = result.data.status || 'active';
+                if (status === 'pending') {
+                    console.warn('⏳ 승인 대기 중인 사용자');
+                    alert('⏳ 계정 승인 대기 중\n\n관리자 승인 후 로그인이 가능합니다.\n승인 완료 시 이메일로 알림을 받게 됩니다.');
+                    return null; // 승인 대기 중이면 null 반환
+                }
+                
                 const role = result.data.role || USER_ROLES.INSPECTOR;
-                console.log('✅ 사용자 역할:', role);
+                console.log('✅ 사용자 역할:', role, '/ 상태:', status);
                 return role;
             }
             

@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사용자 승인 관리 - HVAC 관리</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 15px;
+            padding: 20px 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header h1 i {
+            color: #667eea;
+        }
+
+        .btn-back {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-back:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            background: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .tab:hover:not(.active) {
+            background: #f0f0f0;
+        }
+
+        .user-list {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .user-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .user-info {
+            display: grid;
+            gap: 8px;
+        }
+
+        .user-email {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .user-details {
+            display: flex;
+            gap: 15px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .user-detail-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .user-detail-item i {
+            color: #667eea;
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-inspector {
+            background: #e3f2fd;
+            color: #0d47a1;
+        }
+
+        .badge-manager {
+            background: #f3e5f5;
+            color: #4a148c;
+        }
+
+        .badge-admin {
+            background: #ffebee;
+            color: #b71c1c;
+        }
+
+        .user-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-approve {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-approve:hover {
+            background: #218838;
+        }
+
+        .btn-reject {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-reject:hover {
+            background: #c82333;
+        }
+
+        .btn-role {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-role:hover {
+            background: #5568d3;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+        }
+
+        .loading i {
+            font-size: 48px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* 역할 변경 모달 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            color: #333;
+            font-size: 20px;
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+        }
+
+        .modal-body select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .btn-cancel {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-cancel:hover {
+            background: #5a6268;
+        }
+
+        @media (max-width: 768px) {
+            .user-card {
+                grid-template-columns: 1fr;
+            }
+
+            .user-actions {
+                justify-content: flex-start;
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                <i class="fas fa-user-check"></i>
+                사용자 승인 관리
+            </h1>
+            <a href="index.html" class="btn-back">
+                <i class="fas fa-arrow-left"></i>
+                메인으로
+            </a>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('pending')">
+                <i class="fas fa-clock"></i> 승인 대기
+            </button>
+            <button class="tab" onclick="switchTab('active')">
+                <i class="fas fa-check-circle"></i> 활성 사용자
+            </button>
+        </div>
+
+        <div class="user-list">
+            <div id="loading" class="loading">
+                <i class="fas fa-spinner"></i>
+                <p>로딩 중...</p>
+            </div>
+            <div id="userList"></div>
+        </div>
+    </div>
+
+    <!-- 역할 변경 모달 -->
+    <div id="roleModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>역할 변경</h3>
+            </div>
+            <div class="modal-body">
+                <select id="roleSelect">
+                    <option value="inspector">점검자 (INSPECTOR)</option>
+                    <option value="manager">매니저 (MANAGER)</option>
+                    <option value="admin">관리자 (ADMIN)</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-cancel" onclick="closeRoleModal()">취소</button>
+                <button class="btn btn-role" onclick="confirmRoleChange()">변경</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+        import { getFirestore, collection, query, where, getDocs, doc, updateDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyCpTEePTOkEfSLRzyszq0dCCJmQEWJsBic",
+            authDomain: "hvac-management-477fb.firebaseapp.com",
+            projectId: "hvac-management-477fb",
+            storageBucket: "hvac-management-477fb.firebasestorage.app",
+            messagingSenderId: "312239966797",
+            appId: "1:312239966797:web:b454d99fde9823207dea04",
+            measurementId: "G-FT4YE5FDP1"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        window.db = getFirestore(app);
+        window.collection = collection;
+        window.query = query;
+        window.where = where;
+        window.getDocs = getDocs;
+        window.doc = doc;
+        window.updateDoc = updateDoc;
+        window.deleteDoc = deleteDoc;
+    </script>
+
+    <!-- Scripts -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/auth-manager.js"></script>
+    <script>
+        let currentTab = 'pending';
+        let currentUserId = null;
+
+        // 페이지 로드 시
+        document.addEventListener('DOMContentLoaded', async () => {
+            // 관리자 권한 확인
+            await window.AuthManager.initialize();
+            const currentUser = window.AuthManager.getCurrentUser();
+            
+            if (!currentUser || currentUser.role !== 'admin') {
+                alert('⚠️ 관리자 권한이 필요합니다.');
+                window.location.href = 'index.html';
+                return;
+            }
+
+            loadUsers('pending');
+        });
+
+        // 탭 전환
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            // 탭 활성화
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.closest('.tab').classList.add('active');
+            
+            loadUsers(tab);
+        }
+
+        // 사용자 목록 로드
+        async function loadUsers(status) {
+            const loading = document.getElementById('loading');
+            const userList = document.getElementById('userList');
+            
+            loading.style.display = 'block';
+            userList.innerHTML = '';
+
+            try {
+                const q = window.query(
+                    window.collection(window.db, 'users'),
+                    window.where('status', '==', status)
+                );
+                
+                const querySnapshot = await window.getDocs(q);
+                
+                if (querySnapshot.empty) {
+                    userList.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <p>${status === 'pending' ? '승인 대기 중인 사용자가 없습니다.' : '활성 사용자가 없습니다.'}</p>
+                        </div>
+                    `;
+                } else {
+                    querySnapshot.forEach((doc) => {
+                        const user = doc.data();
+                        const userId = doc.id;
+                        
+                        const userCard = document.createElement('div');
+                        userCard.className = 'user-card';
+                        userCard.innerHTML = `
+                            <div class="user-info">
+                                <div class="user-email">
+                                    <i class="fas fa-envelope"></i> ${user.email}
+                                </div>
+                                <div class="user-details">
+                                    <div class="user-detail-item">
+                                        <i class="fas fa-user"></i>
+                                        ${user.name}
+                                    </div>
+                                    <div class="user-detail-item">
+                                        <span class="badge badge-${user.role}">${getRoleText(user.role)}</span>
+                                    </div>
+                                    <div class="user-detail-item">
+                                        <span class="badge badge-${status}">${status === 'pending' ? '승인 대기' : '활성'}</span>
+                                    </div>
+                                    <div class="user-detail-item">
+                                        <i class="fas fa-clock"></i>
+                                        ${formatDate(user.created_at)}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="user-actions">
+                                ${status === 'pending' ? `
+                                    <button class="btn btn-approve" onclick="approveUser('${userId}')">
+                                        <i class="fas fa-check"></i> 승인
+                                    </button>
+                                    <button class="btn btn-reject" onclick="rejectUser('${userId}', '${user.email}')">
+                                        <i class="fas fa-times"></i> 거절
+                                    </button>
+                                ` : `
+                                    <button class="btn btn-role" onclick="openRoleModal('${userId}', '${user.role}')">
+                                        <i class="fas fa-user-tag"></i> 역할 변경
+                                    </button>
+                                `}
+                            </div>
+                        `;
+                        
+                        userList.appendChild(userCard);
+                    });
+                }
+            } catch (error) {
+                console.error('사용자 로드 오류:', error);
+                userList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>사용자 목록을 불러오는데 실패했습니다.</p>
+                    </div>
+                `;
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // 사용자 승인
+        async function approveUser(userId) {
+            if (!confirm('이 사용자를 승인하시겠습니까?')) return;
+
+            try {
+                const userRef = window.doc(window.db, 'users', userId);
+                await window.updateDoc(userRef, {
+                    status: 'active',
+                    updated_at: new Date()
+                });
+
+                alert('✅ 사용자가 승인되었습니다.');
+                loadUsers('pending');
+            } catch (error) {
+                console.error('승인 오류:', error);
+                alert('승인에 실패했습니다: ' + error.message);
+            }
+        }
+
+        // 사용자 거절 (삭제)
+        async function rejectUser(userId, email) {
+            if (!confirm(`${email} 사용자의 가입을 거절하시겠습니까?\n\n⚠️ Firestore 사용자 문서만 삭제되며, Firebase Authentication 계정은 수동으로 삭제해야 합니다.`)) return;
+
+            try {
+                const userRef = window.doc(window.db, 'users', userId);
+                await window.deleteDoc(userRef);
+
+                alert('✅ 사용자가 거절되었습니다.\n\n⚠️ Firebase Console > Authentication에서 해당 계정을 수동으로 삭제해주세요.');
+                loadUsers('pending');
+            } catch (error) {
+                console.error('거절 오류:', error);
+                alert('거절에 실패했습니다: ' + error.message);
+            }
+        }
+
+        // 역할 변경 모달 열기
+        function openRoleModal(userId, currentRole) {
+            currentUserId = userId;
+            document.getElementById('roleSelect').value = currentRole;
+            document.getElementById('roleModal').classList.add('active');
+        }
+
+        // 역할 변경 모달 닫기
+        function closeRoleModal() {
+            document.getElementById('roleModal').classList.remove('active');
+            currentUserId = null;
+        }
+
+        // 역할 변경 확인
+        async function confirmRoleChange() {
+            const newRole = document.getElementById('roleSelect').value;
+
+            try {
+                const userRef = window.doc(window.db, 'users', currentUserId);
+                await window.updateDoc(userRef, {
+                    role: newRole,
+                    updated_at: new Date()
+                });
+
+                alert('✅ 역할이 변경되었습니다.');
+                closeRoleModal();
+                loadUsers('active');
+            } catch (error) {
+                console.error('역할 변경 오류:', error);
+                alert('역할 변경에 실패했습니다: ' + error.message);
+            }
+        }
+
+        // 역할 텍스트
+        function getRoleText(role) {
+            const roleMap = {
+                'inspector': '점검자',
+                'manager': '매니저',
+                'admin': '관리자'
+            };
+            return roleMap[role] || role;
+        }
+
+        // 날짜 포맷
+        function formatDate(timestamp) {
+            if (!timestamp) return '-';
+            const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+            return date.toLocaleDateString('ko-KR', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // 전역 함수 노출
+        window.switchTab = switchTab;
+        window.approveUser = approveUser;
+        window.rejectUser = rejectUser;
+        window.openRoleModal = openRoleModal;
+        window.closeRoleModal = closeRoleModal;
+        window.confirmRoleChange = confirmRoleChange;
+    </script>
+</body>
+</html>
