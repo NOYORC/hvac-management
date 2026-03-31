@@ -60,6 +60,21 @@ class AuthManager {
                         if (user) {
                             // 사용자 역할 정보 가져오기
                             const userRole = await this.getUserRole(user.uid);
+                            
+                            // role이 null이면 로그인 차단
+                            if (userRole === null) {
+                                console.error('🚫 역할 정보가 없는 사용자, 로그인 차단');
+                                this.currentUser = null;
+                                sessionStorage.removeItem('auth_user');
+                                
+                                // 로그아웃 처리
+                                const { signOut } = await getAuthFunctions();
+                                await signOut(this.auth);
+                                
+                                resolve();
+                                return;
+                            }
+                            
                             this.currentUser = {
                                 uid: user.uid,
                                 email: user.email,
@@ -107,9 +122,18 @@ class AuthManager {
                 return role;
             }
             
-            // 사용자 문서가 없으면 기본 역할
-            console.warn('⚠️ 사용자 문서 없음, 기본 역할 반환');
-            return USER_ROLES.INSPECTOR;
+            // 사용자 문서가 없으면 경고 표시
+            console.error('🚨 심각한 문제: 사용자 문서가 Firestore에 존재하지 않습니다!');
+            console.error('이는 회원가입 시 Firestore 저장에 실패했거나, users 컬렉션이 삭제된 경우입니다.');
+            console.error('해당 사용자는 역할 정보가 없어 시스템을 정상적으로 사용할 수 없습니다.');
+            
+            // 사용자에게 경고 알림 (한 번만 표시)
+            if (!window._missingUserDocWarningShown) {
+                window._missingUserDocWarningShown = true;
+                alert('⚠️ 계정 설정 오류\n\n사용자 정보가 데이터베이스에 없습니다.\n회원가입이 완료되지 않았거나 데이터가 손실되었을 수 있습니다.\n\n관리자에게 문의하거나 계정을 재생성해주세요.');
+            }
+            
+            return null; // role이 없음을 명시적으로 표시
         } catch (error) {
             console.error('❌ 역할 조회 오류:', error);
             return USER_ROLES.INSPECTOR;
