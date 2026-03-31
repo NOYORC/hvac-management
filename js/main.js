@@ -81,13 +81,11 @@ function showMenuByRole() {
     
     const inspectionCard = document.querySelector('.menu-card[onclick="goToInspection()"]');
     const dashboardCard = document.querySelector('.menu-card[onclick="goToDashboard()"]');
-    const equipmentListCard = document.querySelector('.menu-card.manager-only');
     const adminCard = document.querySelector('.menu-card.admin-only');
     const qrButton = document.querySelector('.btn-qr');
     
     // 모든 카드 초기화 (숨김)
     if (inspectionCard) inspectionCard.style.display = 'none';
-    if (equipmentListCard) equipmentListCard.style.display = 'none';
     if (adminCard) adminCard.style.display = 'none';
     
     if (user.role === window.USER_ROLES.VIEWER) {
@@ -105,10 +103,9 @@ function showMenuByRole() {
         
     } else if (user.role === window.USER_ROLES.MANAGER) {
         // MANAGER: 장비 관리 + 모든 점검
-        console.log('✅ MANAGER 메뉴: 장비점검, 대시보드, 장비관리, QR(점검)');
+        console.log('✅ MANAGER 메뉴: 장비점검, 대시보드, QR(점검)');
         if (inspectionCard) inspectionCard.style.display = 'block';
         if (dashboardCard) dashboardCard.style.display = 'block';
-        if (equipmentListCard) equipmentListCard.style.display = 'block'; // ⭐ 장비 관리 카드 표시
         if (qrButton) qrButton.style.display = 'inline-flex';
         
     } else if (user.role === window.USER_ROLES.ADMIN) {
@@ -116,7 +113,6 @@ function showMenuByRole() {
         console.log('✅ ADMIN 메뉴: 모든 메뉴 + 시스템 관리');
         if (inspectionCard) inspectionCard.style.display = 'block';
         if (dashboardCard) dashboardCard.style.display = 'block';
-        if (equipmentListCard) equipmentListCard.style.display = 'block';
         if (adminCard) adminCard.style.display = 'block'; // ⭐ 시스템 관리 카드 표시
         if (qrButton) qrButton.style.display = 'inline-flex';
     }
@@ -172,15 +168,6 @@ function goToAdmin() {
         window.location.href = 'admin.html';
     } else {
         alert('시스템 관리자 권한이 필요합니다.');
-    }
-}
-
-// 장비 관리로 이동
-function goToEquipmentList() {
-    if (window.AuthManager.canAccessPage('equipment-list.html')) {
-        window.location.href = 'equipment-list.html';
-    } else {
-        alert('장비 관리 권한이 필요합니다.\n관리자(MANAGER) 이상만 접근 가능합니다.');
     }
 }
 
