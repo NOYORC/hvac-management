@@ -490,24 +490,39 @@
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('🔄 장비 관리 페이지 초기화 시작');
 
-            // AuthManager 초기화 대기
-            await window.AuthManager.initialize();
-
-            // 로그인 확인
-            const currentUser = window.AuthManager.getCurrentUser();
-            if (!currentUser) {
-                console.error('❌ 로그인 필요');
+            // sessionStorage에서 사용자 정보 직접 읽기 (더 빠르고 안정적)
+            const storedUser = sessionStorage.getItem('auth_user');
+            if (!storedUser) {
+                console.error('❌ 로그인 필요 (sessionStorage에 사용자 정보 없음)');
                 alert('로그인이 필요합니다.');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            let currentUser;
+            try {
+                currentUser = JSON.parse(storedUser);
+            } catch (e) {
+                console.error('❌ 사용자 정보 파싱 오류:', e);
+                alert('로그인 정보가 손상되었습니다. 다시 로그인해주세요.');
                 window.location.href = 'login.html';
                 return;
             }
 
             console.log('✅ 현재 사용자:', currentUser.email, '역할:', currentUser.role);
 
+            // USER_ROLES 상수 정의 (auth-manager.js와 동일)
+            const USER_ROLES = {
+                VIEWER: 'viewer',
+                INSPECTOR: 'inspector',
+                MANAGER: 'manager',
+                ADMIN: 'admin'
+            };
+
             // 권한 확인 (MANAGER 또는 ADMIN만 접근 가능)
-            if (currentUser.role !== window.USER_ROLES.MANAGER && currentUser.role !== window.USER_ROLES.ADMIN) {
+            if (currentUser.role !== USER_ROLES.MANAGER && currentUser.role !== USER_ROLES.ADMIN) {
                 console.error('❌ 권한 없음:', currentUser.role);
-                alert('장비 관리는 매니저 또는 관리자만 접근할 수 있습니다.');
+                alert('장비 관리는 매니저 또는 관리자만 접근할 수 있습니다.\n\n현재 역할: ' + currentUser.role);
                 window.location.href = 'index.html';
                 return;
             }
