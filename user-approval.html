@@ -367,9 +367,10 @@
             </div>
             <div class="modal-body">
                 <select id="roleSelect">
-                    <option value="inspector">점검자 (INSPECTOR)</option>
-                    <option value="manager">매니저 (MANAGER)</option>
-                    <option value="admin">관리자 (ADMIN)</option>
+                    <option value="viewer">조회자 (VIEWER) - 점검 내역 조회만</option>
+                    <option value="inspector">점검자 (INSPECTOR) - 점검 수행 + 조회</option>
+                    <option value="manager">관리자 (MANAGER) - 장비 관리 + 모든 권한</option>
+                    <option value="admin">시스템 관리자 (ADMIN) - 전체 시스템 관리</option>
                 </select>
             </div>
             <div class="modal-footer">
@@ -593,9 +594,10 @@
         // 역할 텍스트
         function getRoleText(role) {
             const roleMap = {
+                'viewer': '조회자',
                 'inspector': '점검자',
-                'manager': '매니저',
-                'admin': '관리자'
+                'manager': '관리자',
+                'admin': '시스템 관리자'
             };
             return roleMap[role] || role;
         }

@@ -18,22 +18,24 @@ async function getAuthFunctions() {
     return authFunctions;
 }
 
-// 사용자 역할
+// 사용자 역할 (계층 구조: viewer < inspector < manager < admin)
 const USER_ROLES = {
-    INSPECTOR: 'inspector',
-    MANAGER: 'manager', 
-    ADMIN: 'admin'
+    VIEWER: 'viewer',       // 조회자 (기존 manager 역할) - 점검 내역 조회만
+    INSPECTOR: 'inspector', // 점검자 - 점검 수행 + 조회 + 문제 장비 재점검
+    MANAGER: 'manager',     // 관리자 - 장비/사이트 관리 + 모든 조회
+    ADMIN: 'admin'          // 시스템 관리자 - 모든 권한
 };
 
 // 페이지 접근 권한 설정
 const PAGE_PERMISSIONS = {
-    'inspection.html': [USER_ROLES.INSPECTOR, USER_ROLES.ADMIN], // MANAGER 제외 - 매니저는 점검 불가 (조회만 가능)
-    'qr-scanner.html': [USER_ROLES.INSPECTOR, USER_ROLES.MANAGER, USER_ROLES.ADMIN], // MANAGER 추가 - 정비내역 조회용
-    'dashboard.html': [USER_ROLES.INSPECTOR, USER_ROLES.MANAGER, USER_ROLES.ADMIN],
+    'inspection.html': [USER_ROLES.INSPECTOR, USER_ROLES.MANAGER, USER_ROLES.ADMIN], // viewer 제외
+    'qr-scanner.html': [USER_ROLES.VIEWER, USER_ROLES.INSPECTOR, USER_ROLES.MANAGER, USER_ROLES.ADMIN], // viewer는 조회만
+    'dashboard.html': [USER_ROLES.VIEWER, USER_ROLES.INSPECTOR, USER_ROLES.MANAGER, USER_ROLES.ADMIN],
     'admin.html': [USER_ROLES.ADMIN],
     'equipment-list.html': [USER_ROLES.MANAGER, USER_ROLES.ADMIN],
-    'equipment-search.html': [USER_ROLES.INSPECTOR, USER_ROLES.MANAGER, USER_ROLES.ADMIN],
-    'equipment-history.html': [USER_ROLES.INSPECTOR, USER_ROLES.MANAGER, USER_ROLES.ADMIN]
+    'equipment-search.html': [USER_ROLES.VIEWER, USER_ROLES.INSPECTOR, USER_ROLES.MANAGER, USER_ROLES.ADMIN],
+    'equipment-history.html': [USER_ROLES.VIEWER, USER_ROLES.INSPECTOR, USER_ROLES.MANAGER, USER_ROLES.ADMIN],
+    'user-approval.html': [USER_ROLES.ADMIN] // 사용자 승인 관리
 };
 
 class AuthManager {
@@ -274,6 +276,7 @@ class AuthManager {
     // 역할 텍스트 가져오기
     getRoleText(role) {
         const roleTexts = {
+            [USER_ROLES.VIEWER]: '조회자',
             [USER_ROLES.INSPECTOR]: '점검자',
             [USER_ROLES.MANAGER]: '관리자',
             [USER_ROLES.ADMIN]: '시스템 관리자'

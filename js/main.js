@@ -81,17 +81,27 @@ function showMenuByRole() {
     const dashboardCard = document.querySelector('.menu-card[onclick="goToDashboard()"]');
     const qrButton = document.querySelector('.btn-qr');
     
-    if (user.role === window.USER_ROLES.MANAGER) {
-        // MANAGER: 장비점검 카드만 숨기기 (QR 스캔은 정비내역 조회용으로 사용 가능)
+    if (user.role === window.USER_ROLES.VIEWER) {
+        // VIEWER: 조회만 가능 (점검 불가, QR 스캔은 정비내역 조회용)
         if (inspectionCard) {
             inspectionCard.style.display = 'none';
         }
-        // QR 스캔 버튼은 표시 (정비내역 조회용)
         if (qrButton) {
             qrButton.style.display = 'inline-flex';
         }
     } else if (user.role === window.USER_ROLES.INSPECTOR) {
-        // INSPECTOR: 점검 관련 메뉴 표시 (장비점검 + QR 스캔)
+        // INSPECTOR: 점검 수행 + 조회 (장비점검 + QR 스캔)
+        if (inspectionCard) {
+            inspectionCard.style.display = 'block';
+        }
+        if (dashboardCard) {
+            dashboardCard.style.display = 'block';
+        }
+        if (qrButton) {
+            qrButton.style.display = 'inline-flex';
+        }
+    } else if (user.role === window.USER_ROLES.MANAGER) {
+        // MANAGER: 장비 관리 + 모든 점검 (점검 수행 + 장비 관리)
         if (inspectionCard) {
             inspectionCard.style.display = 'block';
         }
@@ -151,8 +161,8 @@ function goToInspection() {
 function goToDashboard() {
     const user = window.AuthManager.getCurrentUser();
     
-    // INSPECTOR, MANAGER, ADMIN 모두 접근 가능
-    if (user && (user.role === window.USER_ROLES.INSPECTOR || user.role === window.USER_ROLES.MANAGER || user.role === window.USER_ROLES.ADMIN)) {
+    // VIEWER, INSPECTOR, MANAGER, ADMIN 모두 접근 가능
+    if (user && (user.role === window.USER_ROLES.VIEWER || user.role === window.USER_ROLES.INSPECTOR || user.role === window.USER_ROLES.MANAGER || user.role === window.USER_ROLES.ADMIN)) {
         window.location.href = 'dashboard.html';
     } else {
         alert('관리 대시보드 접근 권한이 없습니다.');

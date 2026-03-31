@@ -441,12 +441,12 @@
             }
             console.log('✅ 로그인 확인:', currentUser.email, '역할:', currentUser.role);
             
-            // MANAGER 역할일 경우 점검 시작 버튼 숨기기 (정비내역 조회는 가능)
-            if (currentUser.role === window.USER_ROLES?.MANAGER) {
+            // VIEWER 역할일 경우 점검 시작 버튼 숨기기 (정비내역 조회는 가능)
+            if (currentUser.role === window.USER_ROLES?.VIEWER) {
                 const inspectionBtn = document.querySelector('.btn-start-inspection');
                 if (inspectionBtn) {
                     inspectionBtn.style.display = 'none';
-                    console.log('👤 MANAGER 역할: 점검 시작 버튼 숨김 (정비내역 조회만 가능)');
+                    console.log('👤 VIEWER 역할: 점검 시작 버튼 숨김 (정비내역 조회만 가능)');
                 }
             }
             
@@ -719,10 +719,10 @@
         }
 
         function startInspection() {
-            // 권한 체크 (MANAGER는 점검 불가, 조회만 가능)
+            // 권한 체크 (VIEWER는 점검 불가, 조회만 가능)
             const user = window.AuthManager?.getCurrentUser();
-            if (user && user.role === window.USER_ROLES?.MANAGER) {
-                alert('매니저는 점검을 수행할 수 없습니다.\n점검은 점검자(INSPECTOR) 또는 관리자(ADMIN)만 가능합니다.');
+            if (user && user.role === window.USER_ROLES?.VIEWER) {
+                alert('조회자는 점검을 수행할 수 없습니다.\n점검은 점검자(INSPECTOR) 이상만 가능합니다.');
                 return;
             }
             
