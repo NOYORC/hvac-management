@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase 설정 가이드 - HVAC 관리</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 40px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .header i {
+            font-size: 64px;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section h2 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section h2 i {
+            color: #667eea;
+        }
+
+        .step {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .step h3 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .step p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+            font-family: "Courier New", monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            margin: 15px 0;
+        }
+
+        .code-block .comment {
+            color: #90cdf4;
+        }
+
+        .code-block .keyword {
+            color: #fc8181;
+        }
+
+        .code-block .string {
+            color: #9ae6b4;
+        }
+
+        .warning {
+            background: #fff5f5;
+            border: 2px solid #feb2b2;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+
+        .warning i {
+            color: #fc8181;
+            margin-right: 10px;
+        }
+
+        .warning h3 {
+            color: #c53030;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .warning p {
+            color: #742a2a;
+            line-height: 1.6;
+        }
+
+        .success {
+            background: #f0fff4;
+            border: 2px solid #9ae6b4;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+
+        .success i {
+            color: #38a169;
+            margin-right: 10px;
+        }
+
+        .success h3 {
+            color: #276749;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .success p {
+            color: #22543d;
+            line-height: 1.6;
+        }
+
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-back:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .copy-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .copy-button:hover {
+            background: #5568d3;
+        }
+
+        .copy-button:active {
+            transform: scale(0.95);
+        }
+
+        .highlight {
+            background: #fef3c7;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <i class="fas fa-fire"></i>
+            <h1>🔥 Firebase Security Rules 설정 가이드</h1>
+            <p>장비 관리 페이지 권한 오류 해결 방법</p>
+        </div>
+
+        <div class="warning">
+            <h3><i class="fas fa-exclamation-triangle"></i> 현재 문제</h3>
+            <p>
+                <strong>MANAGER</strong> 역할로 로그인 후 "장비 관리" 페이지에서 장비 목록을 불러올 수 없습니다.<br>
+                콘솔 에러: <code>FirebaseError: Missing or insufficient permissions.</code>
+            </p>
+        </div>
+
+        <div class="section">
+            <h2><i class="fas fa-tools"></i> 해결 방법</h2>
+            
+            <div class="step">
+                <h3>1단계: Firebase Console 접속</h3>
+                <p>
+                    🔗 <a href="https://console.firebase.google.com/" target="_blank">https://console.firebase.google.com/</a> 접속<br>
+                    프로젝트 선택: <span class="highlight">hvac-management-477fb</span>
+                </p>
+            </div>
+
+            <div class="step">
+                <h3>2단계: Firestore Database 메뉴 이동</h3>
+                <p>
+                    왼쪽 메뉴에서 <strong>"Firestore Database"</strong> 클릭<br>
+                    상단 탭에서 <strong>"Rules"</strong> (규칙) 클릭
+                </p>
+            </div>
+
+            <div class="step">
+                <h3>3단계: 기존 규칙 확인</h3>
+                <p>
+                    현재 <code>equipment</code> 컬렉션 규칙이 다음과 같이 설정되어 있는지 확인:
+                </p>
+                <div class="code-block">
+<span class="keyword">match</span> /equipment/{equipmentId} {
+  <span class="keyword">allow read</span>: <span class="keyword">if</span> isAuthenticated();
+  <span class="keyword">allow create, update</span>: <span class="keyword">if</span> isManagerOrAbove();
+  <span class="keyword">allow delete</span>: <span class="keyword">if</span> isAdmin();
+}
+                </div>
+            </div>
+
+            <div class="step">
+                <h3>4단계: 전체 규칙 복사 및 적용</h3>
+                <p>아래 규칙을 복사하여 Firebase Console의 Rules 탭에 붙여넣고 <strong>"게시"</strong> 버튼을 클릭하세요:</p>
+                
+                <div class="code-block" id="rulesCode">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    <span class="comment">// 헬퍼 함수: 사용자가 인증되었는지 확인</span>
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    <span class="comment">// 헬퍼 함수: 사용자가 관리자인지 확인</span>
+    function isAdmin() {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    <span class="comment">// 헬퍼 함수: 사용자가 점검자 이상인지 확인</span>
+    function isInspectorOrAbove() {
+      return isAuthenticated() &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['inspector', 'manager', 'admin'];
+    }
+    
+    <span class="comment">// 헬퍼 함수: 사용자가 관리자 이상인지 확인</span>
+    function isManagerOrAbove() {
+      return isAuthenticated() &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['manager', 'admin'];
+    }
+    
+    <span class="comment">// 사이트(현장) 컬렉션</span>
+    match /sites/{siteId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isManagerOrAbove();
+      allow delete: if isAdmin();
+    }
+    
+    <span class="comment">// 건물 컬렉션</span>
+    match /buildings/{buildingId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isManagerOrAbove();
+      allow delete: if isAdmin();
+    }
+    
+    <span class="comment">// 장비 컬렉션 ⭐ 중요</span>
+    match /equipment/{equipmentId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isManagerOrAbove();
+      allow delete: if isAdmin();
+    }
+    
+    <span class="comment">// 점검 기록 컬렉션</span>
+    match /inspections/{inspectionId} {
+      allow read: if isAuthenticated();
+      allow create: if isInspectorOrAbove();
+      allow update: if isInspectorOrAbove() && 
+                       (request.auth.uid == resource.data.inspector_id || 
+                        isManagerOrAbove());
+      allow delete: if isAdmin();
+    }
+    
+    <span class="comment">// 점검자 컬렉션</span>
+    match /inspectors/{inspectorId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isManagerOrAbove();
+    }
+    
+    <span class="comment">// 사용자 컬렉션 ⭐ 회원가입 허용</span>
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if isAuthenticated() && 
+                       (request.auth.uid == userId || isAdmin());
+      allow delete: if isAdmin();
+    }
+  }
+}
+                </div>
+
+                <button class="copy-button" onclick="copyRules()">
+                    <i class="fas fa-copy"></i> 규칙 복사하기
+                </button>
+            </div>
+
+            <div class="step">
+                <h3>5단계: 규칙 게시</h3>
+                <p>
+                    Firebase Console에서 <strong>"게시"</strong> (Publish) 버튼을 클릭하여 규칙을 적용합니다.<br>
+                    ⚠️ 게시하지 않으면 변경사항이 적용되지 않습니다!
+                </p>
+            </div>
+        </div>
+
+        <div class="success">
+            <h3><i class="fas fa-check-circle"></i> 설정 완료 후 확인</h3>
+            <p>
+                1. 브라우저에서 페이지 새로고침 (Ctrl + F5 또는 Cmd + Shift + R)<br>
+                2. MANAGER 계정으로 로그인<br>
+                3. "장비 관리" 페이지 접속<br>
+                4. 장비 목록이 정상적으로 표시되는지 확인
+            </p>
+        </div>
+
+        <div class="section">
+            <h2><i class="fas fa-shield-alt"></i> 보안 정책 요약</h2>
+            
+            <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                <thead>
+                    <tr style="background: #f8f9fa;">
+                        <th style="padding: 12px; text-align: left; border: 1px solid #e0e0e0;">컬렉션</th>
+                        <th style="padding: 12px; text-align: left; border: 1px solid #e0e0e0;">읽기</th>
+                        <th style="padding: 12px; text-align: left; border: 1px solid #e0e0e0;">생성/수정</th>
+                        <th style="padding: 12px; text-align: left; border: 1px solid #e0e0e0;">삭제</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="padding: 12px; border: 1px solid #e0e0e0;"><code>users</code></td>
+                        <td style="padding: 12px; border: 1px solid #e0e0e0;">모든 인증 사용자</td>
+                        <td style="padding: 12px; border: 1px solid #e0e0e0;">본인 또는 ADMIN</td>
+                        <td style="padding: 12px; border: 1px solid #e0e0e0;">ADMIN</td>
+                    </tr>
+                    <tr style="background: #fffaf0;">
+                        <td style="padding: 12px; border: 1px solid #e0e0e0;"><code>equipment</code></td>
+                        <td style="padding: 12px; border: 1px solid #e0e0e0;">모든 인증 사용자</td>
+                        <td style="padding: 12px; border: 1px solid #e0e0e0;"><strong>MANAGER, ADMIN</strong></td>
+                        <td style="padding: 12px; border: 1px solid #e0e0e0;">ADMIN</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px; border: 1px solid #e0e0e0;"><code>inspections</code></td>
+                        <td style="padding: 12px; border: 1px solid #e0e0e0;">모든 인증 사용자</td>
+                        <td style="padding: 12px; border: 1px solid #e0e0e0;">INSPECTOR, MANAGER, ADMIN</td>
+                        <td style="padding: 12px; border: 1px solid #e0e0e0;">ADMIN</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px; border: 1px solid #e0e0e0;"><code>sites</code></td>
+                        <td style="padding: 12px; border: 1px solid #e0e0e0;">모든 인증 사용자</td>
+                        <td style="padding: 12px; border: 1px solid #e0e0e0;">MANAGER, ADMIN</td>
+                        <td style="padding: 12px; border: 1px solid #e0e0e0;">ADMIN</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div style="text-align: center; margin-top: 40px;">
+            <a href="equipment-list.html" class="btn-back">
+                <i class="fas fa-arrow-left"></i>
+                장비 관리 페이지로 돌아가기
+            </a>
+        </div>
+    </div>
+
+    <script>
+        function copyRules() {
+            const rulesText = `rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 헬퍼 함수: 사용자가 인증되었는지 확인
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // 헬퍼 함수: 사용자가 관리자인지 확인
+    function isAdmin() {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // 헬퍼 함수: 사용자가 점검자 이상인지 확인
+    function isInspectorOrAbove() {
+      return isAuthenticated() &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['inspector', 'manager', 'admin'];
+    }
+    
+    // 헬퍼 함수: 사용자가 관리자 이상인지 확인
+    function isManagerOrAbove() {
+      return isAuthenticated() &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['manager', 'admin'];
+    }
+    
+    // 사이트(현장) 컬렉션
+    match /sites/{siteId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isManagerOrAbove();
+      allow delete: if isAdmin();
+    }
+    
+    // 건물 컬렉션
+    match /buildings/{buildingId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isManagerOrAbove();
+      allow delete: if isAdmin();
+    }
+    
+    // 장비 컬렉션 ⭐ 중요
+    match /equipment/{equipmentId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isManagerOrAbove();
+      allow delete: if isAdmin();
+    }
+    
+    // 점검 기록 컬렉션
+    match /inspections/{inspectionId} {
+      allow read: if isAuthenticated();
+      allow create: if isInspectorOrAbove();
+      allow update: if isInspectorOrAbove() && 
+                       (request.auth.uid == resource.data.inspector_id || 
+                        isManagerOrAbove());
+      allow delete: if isAdmin();
+    }
+    
+    // 점검자 컬렉션
+    match /inspectors/{inspectorId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isManagerOrAbove();
+    }
+    
+    // 사용자 컬렉션 ⭐ 회원가입 허용
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow update: if isAuthenticated() && 
+                       (request.auth.uid == userId || isAdmin());
+      allow delete: if isAdmin();
+    }
+  }
+}`;
+
+            // 클립보드에 복사
+            navigator.clipboard.writeText(rulesText).then(() => {
+                const button = event.target.closest('button');
+                const originalText = button.innerHTML;
+                button.innerHTML = '<i class="fas fa-check"></i> 복사 완료!';
+                button.style.background = '#38a169';
+                
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.style.background = '#667eea';
+                }, 2000);
+            }).catch(err => {
+                alert('복사 실패. 수동으로 복사해주세요.');
+                console.error('복사 오류:', err);
+            });
+        }
+    </script>
+</body>
+</html>
