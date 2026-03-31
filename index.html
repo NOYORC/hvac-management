@@ -55,7 +55,7 @@
                 </div>
                 <h2>장비 점검</h2>
                 <p>현장 장비 점검 및 데이터 입력</p>
-                <div class="card-badge">점검자/관리자</div>
+                <div class="card-badge">점검자/관리자/시스템관리자</div>
             </div>
 
             <div class="menu-card" onclick="goToDashboard()">
@@ -64,7 +64,16 @@
                 </div>
                 <h2>관리 대시보드</h2>
                 <p>통계, 차트 및 점검 내역 조회</p>
-                <div class="card-badge">점검자/매니저/관리자</div>
+                <div class="card-badge">조회자/점검자/관리자</div>
+            </div>
+            
+            <div class="menu-card manager-only" onclick="goToEquipmentList()" style="display: none;">
+                <div class="card-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                    <i class="fas fa-toolbox"></i>
+                </div>
+                <h2>장비 관리</h2>
+                <p>장비/사이트/건물 데이터 관리</p>
+                <div class="card-badge">관리자 전용</div>
             </div>
             
             <div class="menu-card admin-only" onclick="goToAdmin()" style="display: none;">
@@ -72,8 +81,8 @@
                     <i class="fas fa-cog"></i>
                 </div>
                 <h2>시스템 관리</h2>
-                <p>점검자 및 장비 관리</p>
-                <div class="card-badge">관리자</div>
+                <p>사용자 승인 및 시스템 설정</p>
+                <div class="card-badge">시스템 관리자</div>
             </div>
         </div>
 

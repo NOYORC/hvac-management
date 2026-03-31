@@ -127,8 +127,14 @@ class AuthManager {
                     return null; // 승인 대기 중이면 null 반환
                 }
                 
-                const role = result.data.role || USER_ROLES.INSPECTOR;
+                const role = result.data.role || USER_ROLES.VIEWER; // 기본값을 VIEWER로 변경
                 console.log('✅ 사용자 역할:', role, '/ 상태:', status);
+                console.log('🎭 역할 상세:', {
+                    viewer: role === USER_ROLES.VIEWER,
+                    inspector: role === USER_ROLES.INSPECTOR,
+                    manager: role === USER_ROLES.MANAGER,
+                    admin: role === USER_ROLES.ADMIN
+                });
                 return role;
             }
             

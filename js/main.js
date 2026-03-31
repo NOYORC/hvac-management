@@ -77,51 +77,48 @@ function showMenuByRole() {
     const user = window.AuthManager.getCurrentUser();
     if (!user) return;
     
+    console.log('🎭 현재 사용자 역할:', user.role);
+    
     const inspectionCard = document.querySelector('.menu-card[onclick="goToInspection()"]');
     const dashboardCard = document.querySelector('.menu-card[onclick="goToDashboard()"]');
+    const equipmentListCard = document.querySelector('.menu-card.manager-only');
+    const adminCard = document.querySelector('.menu-card.admin-only');
     const qrButton = document.querySelector('.btn-qr');
     
+    // 모든 카드 초기화 (숨김)
+    if (inspectionCard) inspectionCard.style.display = 'none';
+    if (equipmentListCard) equipmentListCard.style.display = 'none';
+    if (adminCard) adminCard.style.display = 'none';
+    
     if (user.role === window.USER_ROLES.VIEWER) {
-        // VIEWER: 조회만 가능 (점검 불가, QR 스캔은 정비내역 조회용)
-        if (inspectionCard) {
-            inspectionCard.style.display = 'none';
-        }
-        if (qrButton) {
-            qrButton.style.display = 'inline-flex';
-        }
+        // VIEWER: 조회만 가능
+        console.log('✅ VIEWER 메뉴: 대시보드, QR(조회)');
+        if (dashboardCard) dashboardCard.style.display = 'block';
+        if (qrButton) qrButton.style.display = 'inline-flex';
+        
     } else if (user.role === window.USER_ROLES.INSPECTOR) {
-        // INSPECTOR: 점검 수행 + 조회 (장비점검 + QR 스캔)
-        if (inspectionCard) {
-            inspectionCard.style.display = 'block';
-        }
-        if (dashboardCard) {
-            dashboardCard.style.display = 'block';
-        }
-        if (qrButton) {
-            qrButton.style.display = 'inline-flex';
-        }
+        // INSPECTOR: 점검 수행 + 조회
+        console.log('✅ INSPECTOR 메뉴: 장비점검, 대시보드, QR(점검)');
+        if (inspectionCard) inspectionCard.style.display = 'block';
+        if (dashboardCard) dashboardCard.style.display = 'block';
+        if (qrButton) qrButton.style.display = 'inline-flex';
+        
     } else if (user.role === window.USER_ROLES.MANAGER) {
-        // MANAGER: 장비 관리 + 모든 점검 (점검 수행 + 장비 관리)
-        if (inspectionCard) {
-            inspectionCard.style.display = 'block';
-        }
-        if (dashboardCard) {
-            dashboardCard.style.display = 'block';
-        }
-        if (qrButton) {
-            qrButton.style.display = 'inline-flex';
-        }
+        // MANAGER: 장비 관리 + 모든 점검
+        console.log('✅ MANAGER 메뉴: 장비점검, 대시보드, 장비관리, QR(점검)');
+        if (inspectionCard) inspectionCard.style.display = 'block';
+        if (dashboardCard) dashboardCard.style.display = 'block';
+        if (equipmentListCard) equipmentListCard.style.display = 'block'; // ⭐ 장비 관리 카드 표시
+        if (qrButton) qrButton.style.display = 'inline-flex';
+        
     } else if (user.role === window.USER_ROLES.ADMIN) {
-        // ADMIN: 모든 메뉴 표시 (전체 총괄)
-        if (inspectionCard) {
-            inspectionCard.style.display = 'block';
-        }
-        if (dashboardCard) {
-            dashboardCard.style.display = 'block';
-        }
-        if (qrButton) {
-            qrButton.style.display = 'inline-flex';
-        }
+        // ADMIN: 모든 메뉴 표시
+        console.log('✅ ADMIN 메뉴: 모든 메뉴 + 시스템 관리');
+        if (inspectionCard) inspectionCard.style.display = 'block';
+        if (dashboardCard) dashboardCard.style.display = 'block';
+        if (equipmentListCard) equipmentListCard.style.display = 'block';
+        if (adminCard) adminCard.style.display = 'block'; // ⭐ 시스템 관리 카드 표시
+        if (qrButton) qrButton.style.display = 'inline-flex';
     }
 }
 
@@ -175,6 +172,15 @@ function goToAdmin() {
         window.location.href = 'admin.html';
     } else {
         alert('시스템 관리자 권한이 필요합니다.');
+    }
+}
+
+// 장비 관리로 이동
+function goToEquipmentList() {
+    if (window.AuthManager.canAccessPage('equipment-list.html')) {
+        window.location.href = 'equipment-list.html';
+    } else {
+        alert('장비 관리 권한이 필요합니다.\n관리자(MANAGER) 이상만 접근 가능합니다.');
     }
 }
 
