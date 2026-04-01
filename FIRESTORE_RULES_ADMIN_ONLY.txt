@@ -1,0 +1,90 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ========================================
+    // 헬퍼 함수
+    // ========================================
+    
+    // 사용자가 로그인했는지 확인
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // 사용자 문서가 존재하는지 확인
+    function userExists() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+    
+    // 사용자가 ADMIN인지 확인
+    function isAdmin() {
+      return isAuthenticated() && 
+             userExists() &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // 사용자가 점검자 이상인지 확인 (INSPECTOR, MANAGER, ADMIN)
+    function isInspectorOrAbove() {
+      return isAuthenticated() &&
+             userExists() &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['inspector', 'manager', 'admin'];
+    }
+    
+    // ========================================
+    // 컬렉션별 규칙
+    // ========================================
+    
+    // 사이트(현장) 컬렉션
+    match /sites/{siteId} {
+      allow read: if isAuthenticated();           // 로그인 사용자: 읽기
+      allow create, update: if isAdmin();         // ADMIN만: 생성/수정
+      allow delete: if isAdmin();                 // ADMIN만: 삭제
+    }
+    
+    // 건물 컬렉션
+    match /buildings/{buildingId} {
+      allow read: if isAuthenticated();           // 로그인 사용자: 읽기
+      allow create, update: if isAdmin();         // ADMIN만: 생성/수정
+      allow delete: if isAdmin();                 // ADMIN만: 삭제
+    }
+    
+    // 장비 컬렉션 ⭐ 핵심 (ADMIN만 쓰기 가능)
+    match /equipment/{equipmentId} {
+      allow read: if isAuthenticated();           // 로그인 사용자: 읽기
+      allow create, update: if isAdmin();         // ⭐ ADMIN만: 생성/수정
+      allow delete: if isAdmin();                 // ADMIN만: 삭제
+    }
+    
+    // 점검 기록 컬렉션
+    match /inspections/{inspectionId} {
+      allow read: if isAuthenticated();           // 로그인 사용자: 읽기
+      allow create: if isInspectorOrAbove();      // INSPECTOR/MANAGER/ADMIN: 생성
+      allow update: if isInspectorOrAbove() &&    // 본인 또는 상위자: 수정
+                       (request.auth.uid == resource.data.inspector_id || isAdmin());
+      allow delete: if isAdmin();                 // ADMIN만: 삭제
+    }
+    
+    // 점검자 컬렉션
+    match /inspectors/{inspectorId} {
+      allow read: if isAuthenticated();           // 로그인 사용자: 읽기
+      allow create, update, delete: if isAdmin(); // ADMIN만: 모든 쓰기
+    }
+    
+    // 사용자 컬렉션
+    match /users/{userId} {
+      allow read: if isAuthenticated();           // 로그인 사용자: 읽기
+      
+      // 회원가입: 본인 UID로 문서 생성 허용
+      allow create: if request.auth != null && request.auth.uid == userId;
+      
+      // 수정: 본인(status/role 제외) 또는 ADMIN
+      allow update: if isAuthenticated() && (
+        (request.auth.uid == userId && 
+         (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['status', 'role']))) ||
+        isAdmin()
+      );
+      
+      allow delete: if isAdmin();                 // ADMIN만: 삭제
+    }
+  }
+}
