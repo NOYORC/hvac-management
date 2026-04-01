@@ -27,6 +27,82 @@ function waitForFirebase() {
     });
 }
 
+// 중복 ID 체크 함수
+function checkDuplicateIds(data, type) {
+    // ID 필드 이름 결정
+    const idField = getIdFieldName(type);
+    
+    if (!idField) {
+        console.warn('⚠️ ID 필드를 확인할 수 없습니다. 중복 체크를 건너뜁니다.');
+        return { isValid: true, duplicates: [], details: [] };
+    }
+    
+    // ID별 등장 횟수와 행 번호 추적
+    const idMap = new Map();
+    
+    data.forEach((item, index) => {
+        const id = item[idField] || item.id;
+        
+        if (!id) {
+            console.warn(`⚠️ 행 ${index + 2}에 ID가 없습니다.`);
+            return;
+        }
+        
+        const idStr = String(id).trim();
+        
+        if (idMap.has(idStr)) {
+            const existing = idMap.get(idStr);
+            existing.count++;
+            existing.rows.push(index + 2); // 엑셀 행 번호 (헤더 제외하므로 +2)
+        } else {
+            idMap.set(idStr, {
+                id: idStr,
+                count: 1,
+                rows: [index + 2]
+            });
+        }
+    });
+    
+    // 중복된 ID 찾기
+    const duplicates = [];
+    const details = [];
+    
+    idMap.forEach((value, key) => {
+        if (value.count > 1) {
+            duplicates.push(key);
+            details.push({
+                id: key,
+                count: value.count,
+                rows: value.rows
+            });
+        }
+    });
+    
+    if (duplicates.length > 0) {
+        return {
+            isValid: false,
+            duplicates: duplicates,
+            details: details
+        };
+    }
+    
+    return {
+        isValid: true,
+        duplicates: [],
+        details: []
+    };
+}
+
+// ID 필드 이름 가져오기
+function getIdFieldName(type) {
+    const fieldMap = {
+        'sites': 'id',
+        'buildings': 'id',
+        'equipment': 'id'
+    };
+    return fieldMap[type] || 'id';
+}
+
 // 탭 전환
 function switchTab(tabName) {
     // 모든 탭 비활성화
@@ -107,13 +183,34 @@ function handleFileUpload(type, file) {
                 return;
             }
             
+            // 중복 ID 체크
+            const duplicateCheck = checkDuplicateIds(jsonData, type);
+            if (!duplicateCheck.isValid) {
+                showStatus('error', `❌ 엑셀 파일 내부에 중복된 ID가 발견되었습니다!\n중복된 ID: ${duplicateCheck.duplicates.join(', ')}\n\n각 행의 ID는 고유해야 합니다. 엑셀 파일을 수정한 후 다시 업로드해주세요.`);
+                
+                // 중복 상세 정보 표시
+                console.warn('🚨 중복 ID 발견:', duplicateCheck.details);
+                
+                // 사용자에게 더 자세한 정보 제공
+                if (duplicateCheck.details.length > 0) {
+                    const detailMsg = duplicateCheck.details.map(d => 
+                        `  • ID "${d.id}": ${d.count}번 중복 (행 번호: ${d.rows.join(', ')})`
+                    ).join('\n');
+                    console.warn('중복 상세:\n' + detailMsg);
+                    
+                    // alert로도 표시
+                    alert(`⚠️ 중복된 ID가 발견되었습니다!\n\n${detailMsg}\n\n각 ID는 고유해야 합니다.\n엑셀 파일을 수정한 후 다시 업로드해주세요.`);
+                }
+                return;
+            }
+            
             // 데이터 저장
             currentData[type] = jsonData;
             
             // 미리보기 표시
             showPreview(type, jsonData);
             
-            showStatus('success', `✅ ${jsonData.length}개의 데이터를 불러왔습니다.`);
+            showStatus('success', `✅ ${jsonData.length}개의 데이터를 불러왔습니다. (중복 없음)`);
             
         } catch (error) {
             showStatus('error', `❌ 파일 읽기 오류: ${error.message}`);
@@ -490,6 +587,49 @@ function handleAllFileUpload(file) {
             console.log('📊 Equipment data loaded:', equipmentData.length, 'rows');
             if (equipmentData.length > 0) console.log('Sample equipment:', equipmentData[0]);
             
+            // 각 시트별 중복 ID 체크
+            const sitesCheck = checkDuplicateIds(sitesData, 'sites');
+            const buildingsCheck = checkDuplicateIds(buildingsData, 'buildings');
+            const equipmentCheck = checkDuplicateIds(equipmentData, 'equipment');
+            
+            // 중복이 있는지 확인
+            const hasErrors = !sitesCheck.isValid || !buildingsCheck.isValid || !equipmentCheck.isValid;
+            
+            if (hasErrors) {
+                let errorMsg = '⚠️ 다음 시트에서 중복된 ID가 발견되었습니다:\n\n';
+                
+                if (!sitesCheck.isValid) {
+                    errorMsg += '📍 Sites 시트:\n';
+                    sitesCheck.details.forEach(d => {
+                        errorMsg += `  • ID "${d.id}": ${d.count}번 중복 (행: ${d.rows.join(', ')})\n`;
+                    });
+                    errorMsg += '\n';
+                }
+                
+                if (!buildingsCheck.isValid) {
+                    errorMsg += '🏢 Buildings 시트:\n';
+                    buildingsCheck.details.forEach(d => {
+                        errorMsg += `  • ID "${d.id}": ${d.count}번 중복 (행: ${d.rows.join(', ')})\n`;
+                    });
+                    errorMsg += '\n';
+                }
+                
+                if (!equipmentCheck.isValid) {
+                    errorMsg += '🔧 Equipment 시트:\n';
+                    equipmentCheck.details.forEach(d => {
+                        errorMsg += `  • ID "${d.id}": ${d.count}번 중복 (행: ${d.rows.join(', ')})\n`;
+                    });
+                    errorMsg += '\n';
+                }
+                
+                errorMsg += '각 ID는 고유해야 합니다.\n엑셀 파일을 수정한 후 다시 업로드해주세요.';
+                
+                showStatus('error', '❌ 중복 ID 발견!');
+                alert(errorMsg);
+                console.error('🚨 중복 ID 발견:', { sitesCheck, buildingsCheck, equipmentCheck });
+                return;
+            }
+            
             // 데이터 저장
             currentData.all = {
                 sites: sitesData,
@@ -500,7 +640,7 @@ function handleAllFileUpload(file) {
             // 미리보기 표시
             showAllPreview(sitesData, buildingsData, equipmentData);
             
-            showStatus('success', `✅ 데이터를 불러왔습니다<br>현장: ${sitesData.length}개, 건물: ${buildingsData.length}개, 장비: ${equipmentData.length}개`);
+            showStatus('success', `✅ 데이터를 불러왔습니다 (중복 없음)<br>현장: ${sitesData.length}개, 건물: ${buildingsData.length}개, 장비: ${equipmentData.length}개`);
             
         } catch (error) {
             showStatus('error', `❌ 파일 읽기 오류: ${error.message}`);
