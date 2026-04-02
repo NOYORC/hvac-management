@@ -263,14 +263,38 @@ async function selectSite(site) {
         const data = await window.CachedFirestoreHelper.getAllDocuments('buildings');
         allBuildings = data.data; // 전역 변수에 저장
         
-        // 선택된 현장의 건물만 필터링
-        const buildings = data.data.filter(b => b.site_id === site.id);
+        // 선택된 현장의 건물만 필터링 (building_name이나 id가 있는 건물만)
+        const buildings = data.data.filter(b => {
+            // site_id가 일치하고, building_name 또는 id가 존재하는 건물만 포함
+            return b.site_id === site.id && 
+                   (b.building_name || b.id);
+        });
         
         const buildingList = document.getElementById('buildingList');
         buildingList.innerHTML = '';
         
         if (buildings.length === 0) {
-            buildingList.innerHTML = '<p style="text-align:center; color:#666;">해당 현장에 등록된 건물이 없습니다.</p>';
+            // 등록된 건물이 없을 때 안내 메시지
+            buildingList.innerHTML = `
+                <div class="empty-state" style="text-align: center; padding: 60px 20px; background: white; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+                    <div style="font-size: 64px; color: #ccc; margin-bottom: 20px;">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <h3 style="font-size: 20px; font-weight: 600; color: #666; margin-bottom: 10px;">
+                        등록된 건물이 없습니다
+                    </h3>
+                    <p style="font-size: 14px; color: #999; margin-bottom: 20px;">
+                        먼저 건물 및 장비를 등록하여 주십시오.
+                    </p>
+                    <button onclick="location.href='admin.html'" 
+                            style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+                                   color: white; border: none; padding: 12px 25px; 
+                                   border-radius: 10px; font-size: 15px; font-weight: 600; 
+                                   cursor: pointer; transition: all 0.3s ease;">
+                        <i class="fas fa-cog"></i> 시스템 관리로 이동
+                    </button>
+                </div>
+            `;
         } else {
             buildings.forEach(building => {
                 const card = document.createElement('div');
@@ -278,7 +302,7 @@ async function selectSite(site) {
                 card.onclick = () => selectBuilding(building);
                 card.innerHTML = `
                     <div class="icon"><i class="fas fa-building"></i></div>
-                    <h3>${building.building_name}</h3>
+                    <h3>${building.building_name || 'undefined'}</h3>
                     <p><i class="fas fa-layer-group"></i> ${building.floors ? building.floors + '층' : '층수 미등록'}</p>
                 `;
                 buildingList.appendChild(card);
