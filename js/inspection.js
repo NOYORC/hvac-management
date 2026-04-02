@@ -263,11 +263,23 @@ async function selectSite(site) {
         const data = await window.CachedFirestoreHelper.getAllDocuments('buildings');
         allBuildings = data.data; // 전역 변수에 저장
         
-        // 선택된 현장의 건물만 필터링 (building_name이나 id가 있는 건물만)
+        // 선택된 현장의 건물만 필터링 (building_name이 반드시 있어야 함)
         const buildings = data.data.filter(b => {
-            // site_id가 일치하고, building_name 또는 id가 존재하는 건물만 포함
-            return b.site_id === site.id && 
-                   (b.building_name || b.id);
+            const hasValidName = b.building_name && 
+                                 b.building_name !== 'undefined' && 
+                                 b.building_name.trim() !== '';
+            const matchesSite = b.site_id === site.id;
+            
+            // 디버깅 로그
+            if (matchesSite && !hasValidName) {
+                console.warn('⚠️ 유효하지 않은 건물 이름:', {
+                    id: b.id,
+                    building_name: b.building_name,
+                    site_id: b.site_id
+                });
+            }
+            
+            return matchesSite && hasValidName;
         });
         
         const buildingList = document.getElementById('buildingList');
@@ -297,12 +309,26 @@ async function selectSite(site) {
             `;
         } else {
             buildings.forEach(building => {
+                // 디버깅: 건물 데이터 로깅
+                console.log('🏢 건물 데이터:', {
+                    id: building.id,
+                    building_name: building.building_name,
+                    site_id: building.site_id,
+                    floors: building.floors
+                });
+                
+                // building_name이 없으면 이 건물은 표시하지 않음
+                if (!building.building_name) {
+                    console.warn('⚠️ building_name이 없는 건물 제외:', building.id);
+                    return;
+                }
+                
                 const card = document.createElement('div');
                 card.className = 'selection-card';
                 card.onclick = () => selectBuilding(building);
                 card.innerHTML = `
                     <div class="icon"><i class="fas fa-building"></i></div>
-                    <h3>${building.building_name || 'undefined'}</h3>
+                    <h3>${building.building_name}</h3>
                     <p><i class="fas fa-layer-group"></i> ${building.floors ? building.floors + '층' : '층수 미등록'}</p>
                 `;
                 buildingList.appendChild(card);
