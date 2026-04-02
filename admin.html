@@ -436,10 +436,16 @@
                     <i class="fas fa-toolbox"></i>
                     장비 목록
                 </div>
-                <button class="btn-add" onclick="showAddEquipmentModal()">
-                    <i class="fas fa-plus"></i>
-                    장비 추가
-                </button>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-add" onclick="window.location.href='excel-import.html'" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                        <i class="fas fa-file-excel"></i>
+                        엑셀 데이터 가져오기
+                    </button>
+                    <button class="btn-add" onclick="showAddEquipmentModal()">
+                        <i class="fas fa-plus"></i>
+                        장비 추가
+                    </button>
+                </div>
             </div>
 
             <div id="equipmentList" class="items-grid"></div>
