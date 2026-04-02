@@ -627,6 +627,95 @@
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
     
     <script src="js/firebase-config.js"></script>
+    <script src="js/auth-manager.js"></script>
     <script src="js/excel-import.js"></script>
+    
+    <!-- 로그인 및 권한 검증 -->
+    <script>
+        // 페이지 로드 시 즉시 실행
+        (async function() {
+            console.log('🔐 엑셀 가져오기 페이지 - 권한 검증 시작');
+            
+            // AuthManager 초기화 대기
+            if (window.AuthManager) {
+                await window.AuthManager.initialize();
+            } else {
+                console.error('❌ AuthManager를 찾을 수 없습니다.');
+                alert('인증 시스템을 초기화할 수 없습니다.');
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // 로그인 확인
+            const currentUser = window.AuthManager.getCurrentUser();
+            
+            if (!currentUser) {
+                console.error('❌ 로그인되지 않은 사용자');
+                alert('⚠️ 로그인이 필요합니다.\n\n로그인 페이지로 이동합니다.');
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            console.log('✅ 로그인 확인:', currentUser.email, '역할:', currentUser.role);
+            
+            // ADMIN 권한 확인
+            if (currentUser.role !== 'admin') {
+                console.error('❌ 권한 없음:', currentUser.role);
+                alert(`⚠️ 접근 권한이 없습니다.\n\n이 페이지는 시스템 관리자(ADMIN)만 접근할 수 있습니다.\n\n현재 역할: ${getRoleText(currentUser.role)}`);
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            console.log('✅ ADMIN 권한 확인 완료 - 페이지 사용 가능');
+            
+            // 사용자 정보 표시
+            displayUserInfo(currentUser);
+        })();
+        
+        // 역할 텍스트 변환
+        function getRoleText(role) {
+            const roleMap = {
+                'viewer': '조회자',
+                'inspector': '점검자',
+                'manager': '매니저',
+                'admin': '시스템 관리자'
+            };
+            return roleMap[role] || role;
+        }
+        
+        // 사용자 정보 표시
+        function displayUserInfo(user) {
+            const header = document.querySelector('.import-header');
+            if (!header) return;
+            
+            const userInfo = document.createElement('div');
+            userInfo.style.cssText = 'background: #f0f9ff; padding: 15px; border-radius: 10px; margin-top: 20px; border-left: 4px solid #667eea;';
+            userInfo.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+                    <i class="fas fa-user-shield" style="color: #667eea; font-size: 20px;"></i>
+                    <div>
+                        <strong>${user.email}</strong>
+                        <span style="margin-left: 10px; padding: 4px 12px; background: #667eea; color: white; border-radius: 12px; font-size: 13px;">
+                            ${getRoleText(user.role)}
+                        </span>
+                    </div>
+                    <button onclick="logout()" style="margin-left: auto; padding: 8px 16px; background: #ef4444; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                        <i class="fas fa-sign-out-alt"></i> 로그아웃
+                    </button>
+                </div>
+            `;
+            header.appendChild(userInfo);
+        }
+        
+        // 로그아웃
+        async function logout() {
+            if (confirm('로그아웃하시겠습니까?')) {
+                if (window.AuthManager) {
+                    await window.AuthManager.logout();
+                }
+                window.location.href = 'login.html';
+            }
+        }
+    </script>
 </body>
 </html>
