@@ -405,6 +405,10 @@
                 <i class="fas fa-toolbox"></i>
                 <span>장비 관리</span>
             </button>
+            <button class="admin-tab" onclick="switchTab('inspections')">
+                <i class="fas fa-clipboard-check"></i>
+                <span>점검 내역 관리</span>
+            </button>
             <button class="admin-tab" onclick="switchTab('data')">
                 <i class="fas fa-database"></i>
                 <span>데이터 관리</span>
@@ -475,6 +479,124 @@
             </div>
 
             <div id="sitesList" class="items-grid"></div>
+        </div>
+
+        <!-- 점검 내역 관리 탭 -->
+        <div id="tab-inspections" class="tab-content">
+            <div class="content-header">
+                <div class="content-title">
+                    <i class="fas fa-clipboard-check"></i>
+                    점검 내역 목록
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button class="btn-add" onclick="toggleSelectAll()" id="selectAllBtn" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);">
+                        <i class="fas fa-check-square"></i>
+                        전체 선택
+                    </button>
+                    <button class="btn-add" onclick="deleteSelectedInspections()" id="deleteSelectedBtn" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); display: none;">
+                        <i class="fas fa-trash-alt"></i>
+                        선택 삭제 (<span id="selectedCount">0</span>)
+                    </button>
+                </div>
+            </div>
+
+            <!-- 안내 메시지 -->
+            <div style="background: linear-gradient(135deg, #e0f2fe 0%, #bfdbfe 100%); padding: 15px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #3b82f6;">
+                <div style="display: flex; align-items: start; gap: 10px;">
+                    <i class="fas fa-info-circle" style="color: #3b82f6; font-size: 20px; margin-top: 2px;"></i>
+                    <div style="flex: 1;">
+                        <strong style="color: #1e3a8a; display: block; margin-bottom: 5px;">점검 내역 관리 안내</strong>
+                        <p style="margin: 0; color: #1e40af; font-size: 14px; line-height: 1.6;">
+                            • 삭제된 사용자의 점검 내역은 <span style="background: #fff3cd; padding: 2px 6px; border-radius: 3px;">노란색</span>으로 표시됩니다.<br>
+                            • 체크박스를 이용해 불필요한 점검 내역을 선택 삭제할 수 있습니다.<br>
+                            • 삭제된 데이터는 복구할 수 없으니 신중하게 선택해주세요.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 필터 -->
+            <div style="background: white; padding: 15px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600; font-size: 13px; color: #666;">
+                            <i class="fas fa-calendar"></i> 기간
+                        </label>
+                        <select id="inspectionPeriodFilter" onchange="loadInspections()" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 5px;">
+                            <option value="all">전체</option>
+                            <option value="today">오늘</option>
+                            <option value="week">최근 7일</option>
+                            <option value="month">최근 30일</option>
+                            <option value="3months">최근 3개월</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600; font-size: 13px; color: #666;">
+                            <i class="fas fa-info-circle"></i> 상태
+                        </label>
+                        <select id="inspectionStatusFilter" onchange="loadInspections()" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 5px;">
+                            <option value="all">전체</option>
+                            <option value="정상">정상</option>
+                            <option value="주의">주의</option>
+                            <option value="경고">경고</option>
+                            <option value="고장">고장</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: 600; font-size: 13px; color: #666;">
+                            <i class="fas fa-user"></i> 점검자
+                        </label>
+                        <input type="text" id="inspectionInspectorFilter" onkeyup="loadInspections()" placeholder="점검자명 검색" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 5px;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 점검 내역 테이블 -->
+            <div style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+                <div style="overflow-x: auto;">
+                    <table id="inspectionsTable" style="width: 100%; border-collapse: collapse;">
+                        <thead style="background: #f8f9fa;">
+                            <tr>
+                                <th style="padding: 15px; text-align: center; font-weight: 600; color: #333; border-bottom: 2px solid #e0e0e0; width: 50px;">
+                                    <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()" style="width: 18px; height: 18px; cursor: pointer;">
+                                </th>
+                                <th style="padding: 15px; text-align: left; font-weight: 600; color: #333; border-bottom: 2px solid #e0e0e0;">점검일시</th>
+                                <th style="padding: 15px; text-align: left; font-weight: 600; color: #333; border-bottom: 2px solid #e0e0e0;">점검자</th>
+                                <th style="padding: 15px; text-align: left; font-weight: 600; color: #333; border-bottom: 2px solid #e0e0e0;">장비 ID</th>
+                                <th style="padding: 15px; text-align: left; font-weight: 600; color: #333; border-bottom: 2px solid #e0e0e0;">장비 종류</th>
+                                <th style="padding: 15px; text-align: center; font-weight: 600; color: #333; border-bottom: 2px solid #e0e0e0;">상태</th>
+                                <th style="padding: 15px; text-align: left; font-weight: 600; color: #333; border-bottom: 2px solid #e0e0e0;">점검 유형</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inspectionsTableBody">
+                            <tr>
+                                <td colspan="7" style="padding: 40px; text-align: center; color: #999;">
+                                    <i class="fas fa-spinner fa-spin" style="font-size: 24px; margin-bottom: 10px;"></i>
+                                    <br>점검 내역을 불러오는 중...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <style>
+                #inspectionsTable tbody tr:hover {
+                    background: #f8f9fa;
+                }
+                
+                #inspectionsTable tbody td {
+                    padding: 12px 15px;
+                    border-bottom: 1px solid #f0f0f0;
+                    color: #555;
+                }
+                
+                .inspection-checkbox {
+                    width: 18px;
+                    height: 18px;
+                    cursor: pointer;
+                }
+            </style>
         </div>
 
         <!-- 데이터 관리 탭 -->

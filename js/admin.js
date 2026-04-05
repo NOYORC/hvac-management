@@ -86,6 +86,11 @@ function switchTab(tabName) {
     // 선택된 탭 활성화
     event.target.closest('.admin-tab').classList.add('active');
     document.getElementById(`tab-${tabName}`).classList.add('active');
+    
+    // 점검 내역 탭이 활성화되면 데이터 로드
+    if (tabName === 'inspections') {
+        loadInspections();
+    }
 }
 
 // ===== 점검자 관리 =====
@@ -685,4 +690,330 @@ function formatDate(dateStr) {
     if (!dateStr) return '-';
     const date = new Date(dateStr);
     return date.toLocaleDateString('ko-KR');
+}
+
+// ===== 점검 내역 관리 =====
+let allInspections = [];
+let selectedInspectionIds = new Set();
+
+// 점검 내역 로드
+async function loadInspections() {
+    try {
+        console.log('📋 점검 내역 로드 시작...');
+        
+        // 점검 데이터 가져오기
+        const inspectionsResult = await window.CachedFirestoreHelper.getAllDocuments('inspections');
+        allInspections = inspectionsResult.data || [];
+        
+        console.log(`✅ 점검 내역 ${allInspections.length}개 로드 완료`);
+        
+        // 점검자 이름 보강 (users 컬렉션에서)
+        await enrichInspectorNames(allInspections);
+        
+        // 필터 적용 및 렌더링
+        renderInspections();
+        
+    } catch (error) {
+        console.error('❌ 점검 내역 로드 오류:', error);
+        const tbody = document.getElementById('inspectionsTableBody');
+        if (tbody) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" style="padding: 40px; text-align: center; color: #ef4444;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 24px; margin-bottom: 10px;"></i>
+                        <br>점검 내역을 불러오는데 실패했습니다.
+                    </td>
+                </tr>
+            `;
+        }
+    }
+}
+
+// 점검자 이름 보강 (users 컬렉션에서)
+async function enrichInspectorNames(inspections) {
+    try {
+        console.log('👤 점검자 이름 보강 시작...');
+        const usersResult = await window.CachedFirestoreHelper.getAllDocuments('users');
+        if (!usersResult.success || !usersResult.data) {
+            console.warn('⚠️ users 컬렉션을 불러올 수 없습니다.');
+            return;
+        }
+        
+        const usersMap = {};
+        usersResult.data.forEach(user => {
+            if (user.email) {
+                usersMap[user.email] = user;
+                console.log(`📧 users 맵에 추가: ${user.email} → ${user.name}`);
+            }
+        });
+        
+        console.log(`✅ 총 ${usersResult.data.length}명의 사용자 로드됨`);
+        
+        let updatedCount = 0;
+        let missingCount = 0;
+        
+        inspections.forEach(inspection => {
+            const email = inspection.inspector_email;
+            if (email && usersMap[email]) {
+                // 사용자 정보가 있으면 이름 업데이트
+                inspection.inspector_name = usersMap[email].name || inspection.inspector_name;
+                updatedCount++;
+            } else if (email) {
+                // 이메일은 있지만 users 컬렉션에 없는 경우 (삭제된 사용자)
+                inspection.inspector_name = `${email} (삭제된 사용자)`;
+                inspection._missing_user = true;
+                missingCount++;
+                console.warn(`⚠️ users 컬렉션에서 ${email}을(를) 찾을 수 없음 (점검 ID: ${inspection.id})`);
+            } else {
+                // 이메일도 없는 경우
+                inspection.inspector_name = '알 수 없음';
+                inspection._missing_user = true;
+                missingCount++;
+                console.warn(`⚠️ inspector_email이 없음 (점검 ID: ${inspection.id})`);
+            }
+        });
+        
+        console.log(`✅ 점검자 이름 보강 완료 (${updatedCount}/${inspections.length}개 업데이트, ${missingCount}개 누락)`);
+    } catch (error) {
+        console.error('❌ 점검자 이름 보강 오류:', error);
+    }
+}
+
+// 점검 내역 렌더링
+function renderInspections() {
+    const tbody = document.getElementById('inspectionsTableBody');
+    if (!tbody) return;
+    
+    // 필터 적용
+    const period = document.getElementById('inspectionPeriodFilter')?.value || 'all';
+    const status = document.getElementById('inspectionStatusFilter')?.value || 'all';
+    const inspectorSearch = document.getElementById('inspectionInspectorFilter')?.value.toLowerCase() || '';
+    
+    let filtered = [...allInspections];
+    
+    // 기간 필터
+    if (period !== 'all') {
+        const now = new Date();
+        filtered = filtered.filter(insp => {
+            let inspDate;
+            if (insp.inspection_date && typeof insp.inspection_date.toDate === 'function') {
+                inspDate = insp.inspection_date.toDate();
+            } else if (insp.inspection_date) {
+                inspDate = new Date(insp.inspection_date);
+            } else {
+                return false;
+            }
+            
+            const diffDays = Math.floor((now - inspDate) / (1000 * 60 * 60 * 24));
+            
+            if (period === 'today') return diffDays === 0;
+            if (period === 'week') return diffDays <= 7;
+            if (period === 'month') return diffDays <= 30;
+            if (period === '3months') return diffDays <= 90;
+            return true;
+        });
+    }
+    
+    // 상태 필터
+    if (status !== 'all') {
+        filtered = filtered.filter(insp => insp.status === status);
+    }
+    
+    // 점검자 검색
+    if (inspectorSearch) {
+        filtered = filtered.filter(insp => 
+            (insp.inspector_name || '').toLowerCase().includes(inspectorSearch)
+        );
+    }
+    
+    // 최신순 정렬
+    filtered.sort((a, b) => {
+        const dateA = a.inspection_date?.toDate ? a.inspection_date.toDate() : new Date(a.inspection_date || 0);
+        const dateB = b.inspection_date?.toDate ? b.inspection_date.toDate() : new Date(b.inspection_date || 0);
+        return dateB - dateA;
+    });
+    
+    // 렌더링
+    if (filtered.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" style="padding: 40px; text-align: center; color: #999;">
+                    <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 10px; opacity: 0.3;"></i>
+                    <br>조건에 맞는 점검 내역이 없습니다.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = filtered.map(insp => {
+        const isSelected = selectedInspectionIds.has(insp.id);
+        const formattedDate = formatInspectionDate(insp.inspection_date);
+        const statusColor = getStatusColor(insp.status);
+        const hasMissingUser = insp._missing_user === true;
+        
+        return `
+            <tr ${hasMissingUser ? 'style="background-color: #fff3cd;"' : ''}>
+                <td style="text-align: center;">
+                    <input type="checkbox" class="inspection-checkbox" 
+                           data-id="${insp.id}" 
+                           ${isSelected ? 'checked' : ''}
+                           onchange="toggleInspectionSelection('${insp.id}')">
+                </td>
+                <td>${formattedDate}</td>
+                <td>
+                    ${hasMissingUser ? '<i class="fas fa-exclamation-triangle" style="color: #f59e0b; margin-right: 5px;" title="사용자 정보 없음"></i>' : ''}
+                    <strong>${insp.inspector_name || '알 수 없음'}</strong>
+                    ${insp.inspector_email ? `<br><small style="color: #999;">${insp.inspector_email}</small>` : ''}
+                </td>
+                <td><strong style="color: #667eea;">${insp.equipment_id || '-'}</strong></td>
+                <td>${insp.equipment_type || '-'}</td>
+                <td style="text-align: center;">
+                    <span class="status-badge" style="background-color: ${statusColor}; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; color: white;">
+                        ${insp.status || '-'}
+                    </span>
+                </td>
+                <td>${insp.inspection_type || '일반점검'}</td>
+            </tr>
+        `;
+    }).join('');
+    
+    updateSelectionUI();
+}
+
+// 점검 날짜 포맷
+function formatInspectionDate(date) {
+    if (!date) return '-';
+    
+    let d;
+    if (typeof date.toDate === 'function') {
+        d = date.toDate();
+    } else {
+        d = new Date(date);
+    }
+    
+    if (isNaN(d.getTime())) return '-';
+    
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    
+    return `${year}. ${month}. ${day}. ${hours}:${minutes}`;
+}
+
+// 상태 색상
+function getStatusColor(status) {
+    switch (status) {
+        case '정상': return '#10b981';
+        case '주의': return '#f59e0b';
+        case '경고': return '#ef4444';
+        case '고장': return '#dc2626';
+        default: return '#6b7280';
+    }
+}
+
+// 점검 선택/해제
+function toggleInspectionSelection(id) {
+    if (selectedInspectionIds.has(id)) {
+        selectedInspectionIds.delete(id);
+    } else {
+        selectedInspectionIds.add(id);
+    }
+    updateSelectionUI();
+}
+
+// 전체 선택/해제
+function toggleSelectAll() {
+    const checkboxes = document.querySelectorAll('.inspection-checkbox');
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    
+    if (selectAllCheckbox.checked) {
+        // 전체 선택
+        checkboxes.forEach(cb => {
+            cb.checked = true;
+            selectedInspectionIds.add(cb.dataset.id);
+        });
+    } else {
+        // 전체 해제
+        checkboxes.forEach(cb => {
+            cb.checked = false;
+        });
+        selectedInspectionIds.clear();
+    }
+    
+    updateSelectionUI();
+}
+
+// 선택 UI 업데이트
+function updateSelectionUI() {
+    const count = selectedInspectionIds.size;
+    const countSpan = document.getElementById('selectedCount');
+    const deleteBtn = document.getElementById('deleteSelectedBtn');
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    
+    if (countSpan) countSpan.textContent = count;
+    if (deleteBtn) deleteBtn.style.display = count > 0 ? 'flex' : 'none';
+    
+    // 전체 선택 체크박스 상태 업데이트
+    if (selectAllCheckbox) {
+        const checkboxes = document.querySelectorAll('.inspection-checkbox');
+        selectAllCheckbox.checked = checkboxes.length > 0 && count === checkboxes.length;
+    }
+}
+
+// 선택된 점검 내역 삭제
+async function deleteSelectedInspections() {
+    if (selectedInspectionIds.size === 0) {
+        alert('삭제할 점검 내역을 선택해주세요.');
+        return;
+    }
+    
+    const count = selectedInspectionIds.size;
+    if (!confirm(`선택한 ${count}개의 점검 내역을 삭제하시겠습니까?\n\n⚠️ 이 작업은 되돌릴 수 없습니다.`)) {
+        return;
+    }
+    
+    const deleteBtn = document.getElementById('deleteSelectedBtn');
+    if (deleteBtn) {
+        deleteBtn.disabled = true;
+        deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 삭제 중...';
+    }
+    
+    try {
+        let successCount = 0;
+        let failCount = 0;
+        
+        for (const id of selectedInspectionIds) {
+            const result = await window.FirestoreHelper.deleteDocument('inspections', id);
+            if (result.success) {
+                successCount++;
+            } else {
+                failCount++;
+                console.error(`삭제 실패: ${id}`, result.error);
+            }
+        }
+        
+        selectedInspectionIds.clear();
+        
+        if (failCount === 0) {
+            alert(`${successCount}개의 점검 내역이 삭제되었습니다.`);
+        } else {
+            alert(`${successCount}개 삭제 완료, ${failCount}개 실패\n\n실패한 내역은 콘솔을 확인해주세요.`);
+        }
+        
+        // 캐시 클리어 및 새로고침
+        window.CacheHelper.clearCache('inspections');
+        await loadInspections();
+        
+    } catch (error) {
+        console.error('❌ 삭제 오류:', error);
+        alert('삭제 중 오류가 발생했습니다: ' + error.message);
+    } finally {
+        if (deleteBtn) {
+            deleteBtn.disabled = false;
+            deleteBtn.innerHTML = `<i class="fas fa-trash-alt"></i> 선택 삭제 (<span id="selectedCount">0</span>)`;
+        }
+    }
 }
