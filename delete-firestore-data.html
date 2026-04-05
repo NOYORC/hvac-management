@@ -7,6 +7,31 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
     <style>
+        .user-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .user-details {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .user-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
         .delete-container {
             max-width: 700px;
             margin: 40px auto;
@@ -131,6 +156,24 @@
         </div>
         
         <div class="delete-container">
+            <!-- 사용자 정보 표시 -->
+            <div class="user-info" id="userInfo" style="display: none;">
+                <div class="user-details">
+                    <i class="fas fa-user-shield" style="font-size: 24px;"></i>
+                    <div>
+                        <div style="font-weight: 600; font-size: 16px;" id="userName"></div>
+                        <div style="font-size: 13px; opacity: 0.9;" id="userEmail"></div>
+                    </div>
+                    <span class="user-badge" id="userRole">ADMIN</span>
+                </div>
+                <button onclick="logout()" 
+                        style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.4); 
+                               color: white; padding: 8px 16px; border-radius: 8px; cursor: pointer; 
+                               font-weight: 600; transition: all 0.3s ease;">
+                    <i class="fas fa-sign-out-alt"></i> 로그아웃
+                </button>
+            </div>
+            
             <div class="warning-box">
                 <h3><i class="fas fa-exclamation-triangle"></i> 주의</h3>
                 <p>이 작업은 <strong>되돌릴 수 없습니다</strong>. 삭제된 데이터는 복구할 수 없으므로 신중하게 선택하세요.</p>
@@ -233,6 +276,65 @@
     </script>
     
     <script src="js/firebase-config.js"></script>
+    <script src="js/auth-manager.js"></script>
     <script src="js/delete-firestore-data.js"></script>
+    
+    <script>
+        // ADMIN 권한 확인
+        (async function() {
+            try {
+                // AuthManager 초기화 대기
+                await waitForAuthManager();
+                
+                const currentUser = window.AuthManager.getCurrentUser();
+                
+                if (!currentUser) {
+                    alert('로그인이 필요합니다.');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                
+                if (currentUser.role !== 'admin') {
+                    alert('접근 권한이 없습니다.\n이 페이지는 시스템 관리자만 접근할 수 있습니다.');
+                    window.location.href = 'index.html';
+                    return;
+                }
+                
+                // 사용자 정보 표시
+                document.getElementById('userInfo').style.display = 'flex';
+                document.getElementById('userName').textContent = currentUser.name || '관리자';
+                document.getElementById('userEmail').textContent = currentUser.email || '';
+                
+                console.log('✅ ADMIN 사용자 확인:', currentUser);
+                
+            } catch (error) {
+                console.error('❌ 권한 확인 오류:', error);
+                alert('권한 확인 중 오류가 발생했습니다.');
+                window.location.href = 'login.html';
+            }
+        })();
+        
+        function waitForAuthManager() {
+            return new Promise((resolve) => {
+                if (window.AuthManager) {
+                    resolve();
+                } else {
+                    const checkInterval = setInterval(() => {
+                        if (window.AuthManager) {
+                            clearInterval(checkInterval);
+                            resolve();
+                        }
+                    }, 100);
+                }
+            });
+        }
+        
+        function logout() {
+            if (confirm('로그아웃하시겠습니까?')) {
+                window.AuthManager.logout();
+                window.location.href = 'login.html';
+            }
+        }
+    </script>
 </body>
 </html>

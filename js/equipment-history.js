@@ -111,6 +111,52 @@ function waitForFirebase() {
     });
 }
 
+// 점검자 이름 보강 함수 (users 컬렉션에서 가져오기)
+async function enrichInspectorNames(inspections) {
+    console.log('👤 점검자 이름 보강 시작...');
+    
+    try {
+        // 모든 users 가져오기
+        const usersResult = await window.CachedFirestoreHelper.getAllDocuments('users');
+        
+        if (!usersResult.success || !usersResult.data) {
+            console.warn('⚠️ users 컬렉션을 불러올 수 없습니다.');
+            return;
+        }
+        
+        // email을 키로 하는 맵 생성
+        const usersMap = {};
+        usersResult.data.forEach(user => {
+            if (user.email) {
+                usersMap[user.email] = user;
+            }
+        });
+        
+        console.log(`✅ users 컬렉션에서 ${usersResult.data.length}명의 사용자 로드`);
+        
+        // 각 점검 기록에 사용자 이름 추가
+        inspections.forEach(inspection => {
+            const email = inspection.inspector_email;
+            
+            if (email && usersMap[email]) {
+                // users 컬렉션에서 찾은 이름으로 업데이트
+                inspection.inspector_name = usersMap[email].name || inspection.inspector_name;
+                console.log(`✅ ${email} → ${inspection.inspector_name}`);
+            } else if (!inspection.inspector_name) {
+                // 이름이 없고 email도 맵에 없으면 기본값
+                inspection.inspector_name = inspection.inspector_email || '알 수 없음';
+                console.warn(`⚠️ 점검자 정보 없음: ${email || 'N/A'}`);
+            }
+        });
+        
+        console.log('✅ 점검자 이름 보강 완료');
+        
+    } catch (error) {
+        console.error('❌ 점검자 이름 보강 오류:', error);
+        // 오류가 있어도 기존 데이터는 유지
+    }
+}
+
 // 장비 데이터 로드
 async function loadEquipmentData() {
     try {
@@ -142,6 +188,9 @@ async function loadEquipmentData() {
         ]);
         
         allInspections = inspectionsResult.success ? inspectionsResult.data : [];
+        
+        // 점검자 정보 보강 (users 컬렉션에서 이름 가져오기)
+        await enrichInspectorNames(allInspections);
         
         console.log(`✅ 장비 정보 로드 완료: ${equipment.equipment_type} ${equipment.model}`);
         console.log(`✅ 점검 기록 ${allInspections.length}개 로드 완료`);

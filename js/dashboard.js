@@ -3,6 +3,52 @@ let allSites = [];
 let allBuildings = [];
 let isRefreshing = false; // 새로고침 중복 방지
 
+// 점검자 이름 보강 함수 (users 컬렉션에서 가져오기)
+async function enrichInspectorNames(inspections) {
+    console.log('👤 점검자 이름 보강 시작...');
+    
+    try {
+        // 모든 users 가져오기
+        const usersResult = await window.CachedFirestoreHelper.getAllDocuments('users');
+        
+        if (!usersResult.success || !usersResult.data) {
+            console.warn('⚠️ users 컬렉션을 불러올 수 없습니다.');
+            return;
+        }
+        
+        // email을 키로 하는 맵 생성
+        const usersMap = {};
+        usersResult.data.forEach(user => {
+            if (user.email) {
+                usersMap[user.email] = user;
+            }
+        });
+        
+        console.log(`✅ users 컬렉션에서 ${usersResult.data.length}명의 사용자 로드`);
+        
+        // 각 점검 기록에 사용자 이름 추가
+        let updatedCount = 0;
+        inspections.forEach(inspection => {
+            const email = inspection.inspector_email;
+            
+            if (email && usersMap[email]) {
+                // users 컬렉션에서 찾은 이름으로 업데이트
+                inspection.inspector_name = usersMap[email].name || inspection.inspector_name;
+                updatedCount++;
+            } else if (!inspection.inspector_name) {
+                // 이름이 없고 email도 맵에 없으면 기본값
+                inspection.inspector_name = inspection.inspector_email || '알 수 없음';
+            }
+        });
+        
+        console.log(`✅ 점검자 이름 보강 완료 (${updatedCount}/${inspections.length}개 업데이트)`);
+        
+    } catch (error) {
+        console.error('❌ 점검자 이름 보강 오류:', error);
+        // 오류가 있어도 기존 데이터는 유지
+    }
+}
+
 // 대시보드 새로고침 (캐시 무시하고 최신 데이터 가져오기)
 async function refreshDashboard() {
     if (isRefreshing) {
@@ -207,11 +253,15 @@ async function loadDashboardData(forceRefresh = false) {
         let inspections = inspectionsData.data || [];
         const equipment = equipmentData.data || [];
         
+        // 점검자 이름 보강 (users 컬렉션에서 가져오기)
+        await enrichInspectorNames(inspections);
+        
         // 디버깅: 첫 번째 점검 데이터의 equipment_id 확인
         if (inspections.length > 0) {
             console.log('Sample inspection data:', {
                 id: inspections[0].id,
                 equipment_id: inspections[0].equipment_id,
+                inspector_name: inspections[0].inspector_name,
                 keys: Object.keys(inspections[0])
             });
         }
