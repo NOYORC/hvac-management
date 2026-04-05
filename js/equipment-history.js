@@ -112,11 +112,12 @@ function waitForFirebase() {
 }
 
 // 점검자 이름 보강 함수 (users 컬렉션에서 가져오기)
+// 참고: 점검 기록의 inspector_email을 사용하여 users 컬렉션에서 실제 name을 조회
 async function enrichInspectorNames(inspections) {
-    console.log('👤 점검자 이름 보강 시작...');
+    console.log('👤 점검자 이름 보강 시작... (inspections:', inspections.length, '개)');
     
     try {
-        // 모든 users 가져오기
+        // 모든 users 가져오기 (캐시 사용)
         const usersResult = await window.CachedFirestoreHelper.getAllDocuments('users');
         
         if (!usersResult.success || !usersResult.data) {
@@ -129,27 +130,44 @@ async function enrichInspectorNames(inspections) {
         usersResult.data.forEach(user => {
             if (user.email) {
                 usersMap[user.email] = user;
+                console.log(`📧 users 맵에 추가: ${user.email} → ${user.name}`);
             }
         });
         
         console.log(`✅ users 컬렉션에서 ${usersResult.data.length}명의 사용자 로드`);
+        console.log(`📋 users 맵:`, Object.keys(usersMap));
         
         // 각 점검 기록에 사용자 이름 추가
-        inspections.forEach(inspection => {
+        let updatedCount = 0;
+        inspections.forEach((inspection, index) => {
             const email = inspection.inspector_email;
+            const originalName = inspection.inspector_name;
+            
+            console.log(`[${index}] 점검 ID: ${inspection.id}`);
+            console.log(`  - inspector_email: ${email}`);
+            console.log(`  - 기존 inspector_name: ${originalName}`);
             
             if (email && usersMap[email]) {
                 // users 컬렉션에서 찾은 이름으로 업데이트
-                inspection.inspector_name = usersMap[email].name || inspection.inspector_name;
-                console.log(`✅ ${email} → ${inspection.inspector_name}`);
-            } else if (!inspection.inspector_name) {
-                // 이름이 없고 email도 맵에 없으면 기본값
-                inspection.inspector_name = inspection.inspector_email || '알 수 없음';
-                console.warn(`⚠️ 점검자 정보 없음: ${email || 'N/A'}`);
+                inspection.inspector_name = usersMap[email].name || originalName;
+                console.log(`  ✅ ${email} → ${inspection.inspector_name} (업데이트됨)`);
+                updatedCount++;
+            } else {
+                if (!email) {
+                    console.warn(`  ⚠️ inspector_email이 없음`);
+                } else if (!usersMap[email]) {
+                    console.warn(`  ⚠️ users 컬렉션에서 ${email}을 찾을 수 없음`);
+                }
+                
+                // 기존 이름이 없으면 email 또는 기본값 사용
+                if (!inspection.inspector_name) {
+                    inspection.inspector_name = email || '알 수 없음';
+                    console.log(`  → 기본값 설정: ${inspection.inspector_name}`);
+                }
             }
         });
         
-        console.log('✅ 점검자 이름 보강 완료');
+        console.log(`✅ 점검자 이름 보강 완료 (${updatedCount}/${inspections.length}개 업데이트)`);
         
     } catch (error) {
         console.error('❌ 점검자 이름 보강 오류:', error);
