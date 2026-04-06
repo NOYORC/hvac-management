@@ -6,6 +6,7 @@ let equipment = [];
 let sites = [];
 let buildings = [];
 let currentEditId = null;
+let selectedEquipmentIds = new Set();
 
 // 페이지 로드
 document.addEventListener('DOMContentLoaded', async () => {
@@ -87,9 +88,12 @@ function switchTab(tabName) {
     event.target.closest('.admin-tab').classList.add('active');
     document.getElementById(`tab-${tabName}`).classList.add('active');
     
-    // 점검 내역 탭이 활성화되면 데이터 로드
+    // 탭별 데이터 로드
     if (tabName === 'inspections') {
         loadInspections();
+    } else if (tabName === 'equipment') {
+        renderEquipmentTable();
+        updateEquipmentSiteFilter();
     }
 }
 
@@ -259,61 +263,257 @@ async function loadEquipment() {
     }
 }
 
-function renderEquipment() {
-    const equipmentList = document.getElementById('equipmentList');
+// 장비 테이블 렌더링 (새로운 테이블 형식)
+function renderEquipmentTable() {
+    const tbody = document.getElementById('equipmentTableBody');
+    if (!tbody) return;
     
-    if (equipment.length === 0) {
-        equipmentList.innerHTML = `
-            <div class="empty-state">
-                <div class="empty-icon"><i class="fas fa-toolbox"></i></div>
-                <div class="empty-title">등록된 장비가 없습니다</div>
-                <div class="empty-description">새 장비를 추가하여 시작하세요</div>
-            </div>
+    // 필터 적용
+    const siteFilter = document.getElementById('equipmentSiteFilter')?.value || 'all';
+    const typeFilter = document.getElementById('equipmentTypeFilter')?.value || 'all';
+    const idSearch = document.getElementById('equipmentIdFilter')?.value.toLowerCase() || '';
+    
+    let filtered = [...equipment];
+    
+    // 현장 필터
+    if (siteFilter !== 'all') {
+        filtered = filtered.filter(eq => eq.site_id === siteFilter);
+    }
+    
+    // 장비 종류 필터
+    if (typeFilter !== 'all') {
+        filtered = filtered.filter(eq => (eq.equipment_type || eq.type) === typeFilter);
+    }
+    
+    // ID 검색
+    if (idSearch) {
+        filtered = filtered.filter(eq => 
+            (eq.id || '').toLowerCase().includes(idSearch)
+        );
+    }
+    
+    // 렌더링
+    if (filtered.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="9" style="padding: 40px; text-align: center; color: #999;">
+                    <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 10px; opacity: 0.3;"></i>
+                    <br>조건에 맞는 장비가 없습니다.
+                </td>
+            </tr>
         `;
         return;
     }
     
-    equipmentList.innerHTML = equipment.map(eq => {
+    tbody.innerHTML = filtered.map(eq => {
+        const isSelected = selectedEquipmentIds.has(eq.id);
         const site = sites.find(s => s.id === eq.site_id);
         const building = buildings.find(b => b.id === eq.building_id);
+        const installDate = formatInstallDate(eq.installation_date);
         
         return `
-            <div class="item-card">
-                <div class="item-header">
-                    <div>
-                        <div class="item-title">${eq.equipment_type || eq.type || 'undefined'}</div>
-                        <div class="item-subtitle">${eq.id}</div>
-                    </div>
-                    <div class="item-actions">
-                        <button class="btn-edit" onclick="editEquipment('${eq.id}')" title="수정">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn-delete" onclick="deleteEquipment('${eq.id}')" title="삭제">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
-                <div class="item-details">
-                    <div class="item-detail">
-                        <i class="fas fa-building"></i>
-                        ${site?.site_name || '현장 없음'} > ${building?.building_name || '건물 없음'}
-                    </div>
-                    ${eq.model ? `
-                        <div class="item-detail">
-                            <i class="fas fa-tag"></i>
-                            ${eq.model}
-                        </div>
-                    ` : ''}
-                    ${eq.location ? `
-                        <div class="item-detail">
-                            <i class="fas fa-map-marker-alt"></i>
-                            ${eq.floor ? `${eq.floor}층 ` : ''}${eq.location}
-                        </div>
-                    ` : ''}
-                </div>
-            </div>
+            <tr>
+                <td style="text-align: center;">
+                    <input type="checkbox" class="equipment-checkbox" 
+                           data-id="${eq.id}" 
+                           ${isSelected ? 'checked' : ''}
+                           onchange="toggleEquipmentSelection('${eq.id}')">
+                </td>
+                <td><strong style="color: #667eea;">${eq.id || '-'}</strong></td>
+                <td>${eq.equipment_type || eq.type || '-'}</td>
+                <td>${eq.model || '-'}</td>
+                <td>${site?.site_name || '-'}</td>
+                <td>${building?.building_name || '-'}</td>
+                <td>${eq.floor ? `${eq.floor}층 ` : ''}${eq.location || '-'}</td>
+                <td style="text-align: center;">${installDate}</td>
+                <td style="text-align: center;">
+                    <button class="equipment-action-btn equipment-edit-btn" onclick="editEquipment('${eq.id}')" title="수정">
+                        <i class="fas fa-edit"></i> 수정
+                    </button>
+                    <button class="equipment-action-btn equipment-delete-btn" onclick="deleteEquipmentSingle('${eq.id}')" title="삭제">
+                        <i class="fas fa-trash"></i> 삭제
+                    </button>
+                </td>
+            </tr>
         `;
     }).join('');
+    
+    updateEquipmentSelectionUI();
+}
+
+// 설치일 포맷
+function formatInstallDate(date) {
+    if (!date) return '-';
+    
+    let d;
+    if (typeof date.toDate === 'function') {
+        d = date.toDate();
+    } else {
+        d = new Date(date);
+    }
+    
+    if (isNaN(d.getTime())) return '-';
+    
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    
+    return `${year}.${month}.${day}`;
+}
+
+// 장비 선택/해제
+function toggleEquipmentSelection(id) {
+    if (selectedEquipmentIds.has(id)) {
+        selectedEquipmentIds.delete(id);
+    } else {
+        selectedEquipmentIds.add(id);
+    }
+    updateEquipmentSelectionUI();
+}
+
+// 전체 선택/해제
+function toggleSelectAllEquipment() {
+    const checkboxes = document.querySelectorAll('.equipment-checkbox');
+    const selectAllCheckbox = document.getElementById('selectAllEquipmentCheckbox');
+    
+    if (selectAllCheckbox.checked) {
+        // 전체 선택
+        checkboxes.forEach(cb => {
+            cb.checked = true;
+            selectedEquipmentIds.add(cb.dataset.id);
+        });
+    } else {
+        // 전체 해제
+        checkboxes.forEach(cb => {
+            cb.checked = false;
+        });
+        selectedEquipmentIds.clear();
+    }
+    
+    updateEquipmentSelectionUI();
+}
+
+// 선택 UI 업데이트
+function updateEquipmentSelectionUI() {
+    const count = selectedEquipmentIds.size;
+    const countSpan = document.getElementById('selectedEquipmentCount');
+    const deleteBtn = document.getElementById('deleteSelectedEquipmentBtn');
+    const selectAllCheckbox = document.getElementById('selectAllEquipmentCheckbox');
+    
+    if (countSpan) countSpan.textContent = count;
+    if (deleteBtn) deleteBtn.style.display = count > 0 ? 'flex' : 'none';
+    
+    // 전체 선택 체크박스 상태 업데이트
+    if (selectAllCheckbox) {
+        const checkboxes = document.querySelectorAll('.equipment-checkbox');
+        selectAllCheckbox.checked = checkboxes.length > 0 && count === checkboxes.length;
+    }
+}
+
+// 선택된 장비 일괄 삭제
+async function deleteSelectedEquipment() {
+    if (selectedEquipmentIds.size === 0) {
+        alert('삭제할 장비를 선택해주세요.');
+        return;
+    }
+    
+    const count = selectedEquipmentIds.size;
+    if (!confirm(`선택한 ${count}개의 장비를 삭제하시겠습니까?\n\n⚠️ 장비는 삭제되지만 관련 점검 내역은 유지됩니다.\n이 작업은 되돌릴 수 없습니다.`)) {
+        return;
+    }
+    
+    const deleteBtn = document.getElementById('deleteSelectedEquipmentBtn');
+    if (deleteBtn) {
+        deleteBtn.disabled = true;
+        deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 삭제 중...';
+    }
+    
+    try {
+        let successCount = 0;
+        let failCount = 0;
+        
+        for (const id of selectedEquipmentIds) {
+            const result = await window.FirestoreHelper.deleteDocument('equipment', id);
+            if (result.success) {
+                successCount++;
+            } else {
+                failCount++;
+                console.error(`삭제 실패: ${id}`, result.error);
+            }
+        }
+        
+        selectedEquipmentIds.clear();
+        
+        if (failCount === 0) {
+            alert(`${successCount}개의 장비가 삭제되었습니다.`);
+        } else {
+            alert(`${successCount}개 삭제 완료, ${failCount}개 실패\n\n실패한 내역은 콘솔을 확인해주세요.`);
+        }
+        
+        // 캐시 클리어 및 새로고침
+        window.CacheHelper.clearCache('equipment');
+        await loadEquipment();
+        renderEquipmentTable();
+        
+    } catch (error) {
+        console.error('❌ 삭제 오류:', error);
+        alert('삭제 중 오류가 발생했습니다: ' + error.message);
+    } finally {
+        if (deleteBtn) {
+            deleteBtn.disabled = false;
+            deleteBtn.innerHTML = `<i class="fas fa-trash-alt"></i> 선택 삭제 (<span id="selectedEquipmentCount">0</span>)`;
+        }
+    }
+}
+
+// 개별 장비 삭제
+async function deleteEquipmentSingle(equipmentId) {
+    if (!confirm('이 장비를 삭제하시겠습니까?\n\n⚠️ 장비는 삭제되지만 관련 점검 내역은 유지됩니다.')) {
+        return;
+    }
+    
+    try {
+        const result = await window.FirestoreHelper.deleteDocument('equipment', equipmentId);
+        if (result.success) {
+            alert('장비가 삭제되었습니다.');
+            window.CacheHelper.clearCache('equipment');
+            await loadEquipment();
+            renderEquipmentTable();
+        } else {
+            alert('삭제에 실패했습니다: ' + result.error);
+        }
+    } catch (error) {
+        console.error('❌ 장비 삭제 오류:', error);
+        alert('삭제 중 오류가 발생했습니다: ' + error.message);
+    }
+}
+
+// 현장 필터 옵션 업데이트
+function updateEquipmentSiteFilter() {
+    const siteFilter = document.getElementById('equipmentSiteFilter');
+    if (!siteFilter) return;
+    
+    const currentValue = siteFilter.value;
+    siteFilter.innerHTML = '<option value="all">전체</option>';
+    
+    sites.forEach(site => {
+        const option = document.createElement('option');
+        option.value = site.id;
+        option.textContent = site.site_name || site.id;
+        siteFilter.appendChild(option);
+    });
+    
+    // 이전 선택 값 복원
+    if (currentValue && siteFilter.querySelector(`option[value="${currentValue}"]`)) {
+        siteFilter.value = currentValue;
+    }
+}
+
+// 기존 renderEquipment 함수 (하위 호환성 유지)
+function renderEquipment() {
+    // 새 테이블 형식으로 렌더링
+    renderEquipmentTable();
+    updateEquipmentSiteFilter();
 }
 
 async function showAddEquipmentModal() {
@@ -429,19 +629,6 @@ async function handleEquipmentSubmit(e) {
         renderEquipment();
     } else {
         alert('실패: ' + result.error);
-    }
-}
-
-async function deleteEquipment(equipmentId) {
-    if (!confirm('정말 삭제하시겠습니까?')) return;
-    
-    const result = await window.CachedFirestoreHelper.deleteDocument('equipment', equipmentId);
-    if (result.success) {
-        alert('삭제되었습니다.');
-        await loadEquipment();
-        renderEquipment();
-    } else {
-        alert('삭제 실패: ' + result.error);
     }
 }
 
