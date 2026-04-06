@@ -174,7 +174,27 @@ async function loadInspectors() {
             return;
         }
         
-        console.log('✅ 로그인 사용자:', currentUser);
+        console.log('✅ AuthManager 사용자:', currentUser);
+        
+        // users 컬렉션에서 실제 사용자 정보 가져오기 (name 확실히 가져오기)
+        let userName = currentUser.name;
+        let userEmail = currentUser.email;
+        
+        if (!userName || userName === userEmail) {
+            console.log('⚠️ name이 없거나 email과 동일함. users 컬렉션에서 재조회...');
+            try {
+                const usersResult = await window.FirestoreHelper.getAllDocuments('users');
+                if (usersResult.success && usersResult.data) {
+                    const userDoc = usersResult.data.find(u => u.email === userEmail);
+                    if (userDoc && userDoc.name) {
+                        userName = userDoc.name;
+                        console.log('✅ users 컬렉션에서 name 가져옴:', userName);
+                    }
+                }
+            } catch (error) {
+                console.error('❌ users 컬렉션 조회 오류:', error);
+            }
+        }
         
         // 드롭다운을 읽기 전용 입력 필드로 변경
         const inspectorSelect = document.getElementById('inspectorName');
@@ -188,17 +208,17 @@ async function loadInspectors() {
         formGroup.innerHTML = `
             <label><i class="fas fa-user"></i> 점검자명</label>
             <div class="inspector-info">
-                <input type="text" value="${currentUser.name}" readonly 
+                <input type="text" value="${userName}" readonly 
                        style="background-color: #f0f0f0; cursor: not-allowed;">
-                <input type="hidden" id="inspectorName" name="inspectorName" value="${currentUser.name}">
-                <input type="hidden" id="inspectorEmail" name="inspectorEmail" value="${currentUser.email}">
+                <input type="hidden" id="inspectorName" name="inspectorName" value="${userName}">
+                <input type="hidden" id="inspectorEmail" name="inspectorEmail" value="${userEmail}">
                 <input type="hidden" id="inspectorRole" name="inspectorRole" value="${currentUser.role}">
             </div>
         `;
         
         console.log('✅ 점검자 정보 자동 설정 완료:', {
-            name: currentUser.name,
-            email: currentUser.email,
+            name: userName,
+            email: userEmail,
             role: currentUser.role
         });
         
