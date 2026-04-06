@@ -176,33 +176,56 @@ async function loadInspectors() {
         
         console.log('✅ AuthManager 사용자:', currentUser);
         
-        // users 컬렉션에서 실제 사용자 정보 가져오기 (name 확실히 가져오기)
-        let userName = currentUser.name;
+        let userName = null;
         let userEmail = currentUser.email;
         
-        if (!userName || userName === userEmail) {
-            console.log('⚠️ name이 없거나 email과 동일함. users 컬렉션에서 재조회...');
-            try {
-                const usersResult = await window.FirestoreHelper.getAllDocuments('users');
-                if (usersResult.success && usersResult.data) {
-                    const userDoc = usersResult.data.find(u => u.email === userEmail);
-                    if (userDoc && userDoc.name) {
+        // 항상 users 컬렉션에서 name을 가져오도록 변경
+        console.log('📋 users 컬렉션에서 실제 사용자 이름 조회 중...');
+        try {
+            const usersResult = await window.FirestoreHelper.getAllDocuments('users');
+            console.log('📊 users 컬렉션 조회 결과:', usersResult);
+            
+            if (usersResult.success && usersResult.data) {
+                console.log(`📦 총 ${usersResult.data.length}명의 사용자 발견`);
+                
+                // 현재 로그인한 사용자의 이메일로 검색
+                const userDoc = usersResult.data.find(u => {
+                    console.log(`🔍 비교 중: ${u.email} === ${userEmail}`);
+                    return u.email === userEmail;
+                });
+                
+                if (userDoc) {
+                    console.log('✅ 사용자 문서 발견:', userDoc);
+                    if (userDoc.name) {
                         userName = userDoc.name;
                         console.log('✅ users 컬렉션에서 name 가져옴:', userName);
+                    } else {
+                        console.warn('⚠️ 사용자 문서에 name 필드가 없음');
                     }
+                } else {
+                    console.error('❌ 이메일에 해당하는 사용자를 찾을 수 없음:', userEmail);
                 }
-            } catch (error) {
-                console.error('❌ users 컬렉션 조회 오류:', error);
+            } else {
+                console.error('❌ users 컬렉션 조회 실패:', usersResult.error);
             }
+        } catch (error) {
+            console.error('❌ users 컬렉션 조회 오류:', error);
+        }
+        
+        // userName이 여전히 없으면 AuthManager의 name 사용 (fallback)
+        if (!userName) {
+            userName = currentUser.name || userEmail.split('@')[0];
+            console.warn('⚠️ users 컬렉션에서 name을 가져오지 못함. Fallback 사용:', userName);
         }
         
         // 드롭다운을 읽기 전용 입력 필드로 변경
         const inspectorSelect = document.getElementById('inspectorName');
-        const formGroup = inspectorSelect.parentElement;
+        if (!inspectorSelect) {
+            console.error('❌ inspectorName 요소를 찾을 수 없음');
+            return;
+        }
         
-        // 역할 한글 표시
-        const roleText = currentUser.role === 'admin' ? '시스템관리자' : 
-                        currentUser.role === 'manager' ? '관리자' : '점검자';
+        const formGroup = inspectorSelect.parentElement;
         
         // 새로운 HTML 구조로 변경 (읽기 전용 + 숨겨진 필드)
         formGroup.innerHTML = `
