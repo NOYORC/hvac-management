@@ -79,20 +79,20 @@ function showMenuByRole() {
     
     console.log('🎭 현재 사용자 역할:', user.role);
     
-    const inspectionCard = document.querySelector('.menu-card[onclick="goToInspection()"]');
+    const inspectionCard = document.querySelector('.menu-card.inspector-only');
     const dashboardCard = document.querySelector('.menu-card[onclick="goToDashboard()"]');
     const adminCard = document.querySelector('.menu-card.admin-only');
-    const qrButton = document.querySelector('.btn-qr');
+    const qrButton = document.querySelector('.btn-qr.inspector-only');
     
     // 모든 카드 초기화 (숨김)
     if (inspectionCard) inspectionCard.style.display = 'none';
     if (adminCard) adminCard.style.display = 'none';
+    if (qrButton) qrButton.style.display = 'none';
     
     if (user.role === window.USER_ROLES.VIEWER) {
         // VIEWER: 조회만 가능
-        console.log('✅ VIEWER 메뉴: 대시보드, QR(조회)');
+        console.log('✅ VIEWER 메뉴: 대시보드만');
         if (dashboardCard) dashboardCard.style.display = 'block';
-        if (qrButton) qrButton.style.display = 'inline-flex';
         
     } else if (user.role === window.USER_ROLES.INSPECTOR) {
         // INSPECTOR: 점검 수행 + 조회
@@ -102,11 +102,10 @@ function showMenuByRole() {
         if (qrButton) qrButton.style.display = 'inline-flex';
         
     } else if (user.role === window.USER_ROLES.MANAGER) {
-        // MANAGER: 장비 관리 + 모든 점검
-        console.log('✅ MANAGER 메뉴: 장비점검, 대시보드, QR(점검)');
-        if (inspectionCard) inspectionCard.style.display = 'block';
+        // MANAGER: 점검 불가, 조회 및 장비 관리만
+        console.log('✅ MANAGER 메뉴: 대시보드, 장비 관리 (점검 불가)');
         if (dashboardCard) dashboardCard.style.display = 'block';
-        if (qrButton) qrButton.style.display = 'inline-flex';
+        // 점검 카드와 QR 버튼은 표시하지 않음
         
     } else if (user.role === window.USER_ROLES.ADMIN) {
         // ADMIN: 모든 메뉴 표시

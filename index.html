@@ -49,13 +49,13 @@
         </div>
 
         <div class="main-menu">
-            <div class="menu-card" onclick="goToInspection()">
+            <div class="menu-card inspector-only" onclick="goToInspection()">
                 <div class="card-icon inspector">
                     <i class="fas fa-clipboard-check"></i>
                 </div>
                 <h2>장비 점검</h2>
                 <p>현장 장비 점검 및 데이터 입력</p>
-                <div class="card-badge">점검자/관리자/시스템관리자</div>
+                <div class="card-badge">점검자/시스템관리자</div>
             </div>
 
             <div class="menu-card" onclick="goToDashboard()">
@@ -81,7 +81,7 @@
         <div class="quick-access">
             <h3><i class="fas fa-bolt"></i> 빠른 접근</h3>
             <div class="quick-buttons">
-                <button onclick="openQRScanner()" class="btn-qr">
+                <button onclick="openQRScanner()" class="btn-qr inspector-only">
                     <i class="fas fa-qrcode"></i>
                     <span>QR 스캔</span>
                 </button>

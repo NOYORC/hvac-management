@@ -22,14 +22,14 @@ async function getAuthFunctions() {
 const USER_ROLES = {
     VIEWER: 'viewer',       // 조회자 (기존 manager 역할) - 점검 내역 조회만
     INSPECTOR: 'inspector', // 점검자 - 점검 수행 + 조회 + 문제 장비 재점검
-    MANAGER: 'manager',     // 관리자 - 장비/사이트 관리 + 모든 조회
+    MANAGER: 'manager',     // 관리자 - 점검 불가, 모든 조회 및 장비/사이트 관리
     ADMIN: 'admin'          // 시스템 관리자 - 모든 권한
 };
 
 // 페이지 접근 권한 설정
 const PAGE_PERMISSIONS = {
-    'inspection.html': [USER_ROLES.INSPECTOR, USER_ROLES.MANAGER, USER_ROLES.ADMIN], // viewer 제외
-    'qr-scanner.html': [USER_ROLES.VIEWER, USER_ROLES.INSPECTOR, USER_ROLES.MANAGER, USER_ROLES.ADMIN], // viewer는 조회만
+    'inspection.html': [USER_ROLES.INSPECTOR, USER_ROLES.ADMIN], // Manager 제외 - 점검 불가
+    'qr-scanner.html': [USER_ROLES.INSPECTOR, USER_ROLES.ADMIN], // Manager 제외 - QR 스캔 점검 불가
     'dashboard.html': [USER_ROLES.VIEWER, USER_ROLES.INSPECTOR, USER_ROLES.MANAGER, USER_ROLES.ADMIN],
     'admin.html': [USER_ROLES.ADMIN],
     'equipment-list.html': [USER_ROLES.MANAGER, USER_ROLES.ADMIN],
