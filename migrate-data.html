@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>데이터 마이그레이션 - Google Sheets → Firebase</title>
+    <title>데이터 마이그레이션 - 양방향 동기화</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
             font-family: 'Noto Sans KR', sans-serif;
@@ -22,6 +23,48 @@
             color: #667eea;
             text-align: center;
         }
+        
+        /* 방향 선택 */
+        .direction-selector {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 30px 0;
+            gap: 20px;
+        }
+        .direction-option {
+            flex: 1;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        .direction-option:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        .direction-option.active {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+        }
+        .direction-option i {
+            font-size: 48px;
+            margin-bottom: 10px;
+            display: block;
+        }
+        .direction-option.sheets-to-firebase i {
+            color: #34a853;
+        }
+        .direction-option.firebase-to-sheets i {
+            color: #ff9800;
+        }
+        .direction-arrow {
+            font-size: 36px;
+            color: #667eea;
+        }
+        
         .warning {
             background: #fff3cd;
             border: 1px solid #ffc107;
@@ -47,6 +90,9 @@
         .btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+        }
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
         }
         .status {
             margin: 20px 0;
@@ -118,26 +164,43 @@
 <body>
     <div class="container">
         <h1>🔄 데이터 마이그레이션</h1>
-        <p style="text-align: center;">Google Apps Script → Firebase Firestore</p>
+        <p style="text-align: center;">양방향 데이터 동기화 도구</p>
 
-        <div class="warning">
+        <!-- 방향 선택 -->
+        <div class="direction-selector">
+            <div class="direction-option sheets-to-firebase active" onclick="selectDirection('sheets-to-firebase')">
+                <i class="fab fa-google"></i>
+                <h3>Google Sheets</h3>
+                <p>→ Firebase</p>
+            </div>
+            <div class="direction-arrow">
+                <i class="fas fa-exchange-alt"></i>
+            </div>
+            <div class="direction-option firebase-to-sheets" onclick="selectDirection('firebase-to-sheets')">
+                <i class="fas fa-fire"></i>
+                <h3>Firebase</h3>
+                <p>→ Google Sheets</p>
+            </div>
+        </div>
+
+        <div id="warningBox" class="warning">
             <strong>⚠️ 주의사항:</strong>
-            <ul>
-                <li>이 작업은 <strong>기존 Google Sheets 데이터</strong>를 Firebase로 복사합니다</li>
+            <ul id="warningList">
+                <li>이 작업은 <strong>Google Sheets 데이터</strong>를 Firebase로 복사합니다</li>
                 <li>Firebase에 <strong>이미 있는 데이터는 덮어쓰기</strong> 됩니다</li>
                 <li>마이그레이션 중에는 페이지를 <strong>새로고침하지 마세요</strong></li>
                 <li>완료까지 <strong>1-5분</strong> 정도 소요될 수 있습니다</li>
             </ul>
         </div>
 
-        <button class="btn" onclick="checkData()">1️⃣ 기존 데이터 확인하기</button>
+        <button class="btn" onclick="checkData()">1️⃣ 데이터 확인하기</button>
         
         <div id="dataSummary" class="data-summary" style="display: none;">
-            <h3>📊 기존 데이터 현황</h3>
+            <h3>📊 데이터 현황</h3>
             <div id="summaryContent"></div>
         </div>
 
-        <button class="btn" id="migrateBtn" onclick="startMigration()" disabled style="display: none;">
+        <button class="btn btn-success" id="migrateBtn" onclick="startMigration()" disabled style="display: none;">
             2️⃣ 마이그레이션 시작하기
         </button>
 
@@ -176,6 +239,7 @@
 
     <script>
         const API_BASE = 'https://script.google.com/macros/s/AKfycbzKnOxwx-AY4fg_bT88wHfR6w3BIbAytWnl8wrQ_MdSRj39LSYRYueDgx8Hl-RC1Jybuw/exec';
+        let currentDirection = 'sheets-to-firebase';
         let existingData = {};
 
         // Firebase 초기화 대기
@@ -194,16 +258,59 @@
             });
         }
 
+        // 방향 선택
+        function selectDirection(direction) {
+            currentDirection = direction;
+            
+            // UI 업데이트
+            document.querySelectorAll('.direction-option').forEach(opt => {
+                opt.classList.remove('active');
+            });
+            document.querySelector(`.direction-option.${direction}`).classList.add('active');
+            
+            // 경고 메시지 업데이트
+            const warningList = document.getElementById('warningList');
+            if (direction === 'sheets-to-firebase') {
+                warningList.innerHTML = `
+                    <li>이 작업은 <strong>Google Sheets 데이터</strong>를 Firebase로 복사합니다</li>
+                    <li>Firebase에 <strong>이미 있는 데이터는 덮어쓰기</strong> 됩니다</li>
+                    <li>마이그레이션 중에는 페이지를 <strong>새로고침하지 마세요</strong></li>
+                    <li>완료까지 <strong>1-5분</strong> 정도 소요될 수 있습니다</li>
+                `;
+            } else {
+                warningList.innerHTML = `
+                    <li>이 작업은 <strong>Firebase 데이터</strong>를 Google Sheets로 내보냅니다</li>
+                    <li>Google Sheets에 <strong>이미 있는 데이터는 덮어쓰기</strong> 됩니다</li>
+                    <li>내보내기 중에는 페이지를 <strong>새로고침하지 마세요</strong></li>
+                    <li>완료까지 <strong>1-5분</strong> 정도 소요될 수 있습니다</li>
+                `;
+            }
+            
+            // 요약 숨기기
+            document.getElementById('dataSummary').style.display = 'none';
+            document.getElementById('migrateBtn').style.display = 'none';
+        }
+
         async function checkData() {
             await waitForFirebase();
             
             const statusDiv = document.getElementById('status');
             statusDiv.style.display = 'block';
             statusDiv.className = 'status info';
-            statusDiv.innerHTML = '⏳ Google Sheets 데이터를 확인하는 중...';
+            
+            if (currentDirection === 'sheets-to-firebase') {
+                statusDiv.innerHTML = '⏳ Google Sheets 데이터를 확인하는 중...';
+                await checkSheetsData();
+            } else {
+                statusDiv.innerHTML = '⏳ Firebase 데이터를 확인하는 중...';
+                await checkFirebaseData();
+            }
+        }
 
+        async function checkSheetsData() {
+            const statusDiv = document.getElementById('status');
+            
             try {
-                // 각 테이블 데이터 가져오기
                 const tables = ['sites', 'buildings', 'equipment', 'inspectors', 'inspections'];
                 
                 for (const table of tables) {
@@ -213,39 +320,10 @@
                     existingData[table] = data.data || [];
                 }
 
-                // 데이터 요약 표시
-                const summaryDiv = document.getElementById('dataSummary');
-                const summaryContent = document.getElementById('summaryContent');
+                displayDataSummary();
                 
-                summaryContent.innerHTML = `
-                    <div class="data-item">
-                        <span>📍 현장 (Sites)</span>
-                        <span class="count">${existingData.sites.length}개</span>
-                    </div>
-                    <div class="data-item">
-                        <span>🏢 건물 (Buildings)</span>
-                        <span class="count">${existingData.buildings.length}개</span>
-                    </div>
-                    <div class="data-item">
-                        <span>⚙️ 장비 (Equipment)</span>
-                        <span class="count">${existingData.equipment.length}개</span>
-                    </div>
-                    <div class="data-item">
-                        <span>👷 점검자 (Inspectors)</span>
-                        <span class="count">${existingData.inspectors.length}명</span>
-                    </div>
-                    <div class="data-item">
-                        <span>📋 점검 기록 (Inspections)</span>
-                        <span class="count">${existingData.inspections.length}개</span>
-                    </div>
-                `;
-
-                summaryDiv.style.display = 'block';
-                document.getElementById('migrateBtn').style.display = 'block';
-                document.getElementById('migrateBtn').disabled = false;
-
                 statusDiv.className = 'status success';
-                statusDiv.innerHTML = '✅ 데이터 확인 완료! 아래 버튼을 클릭하여 마이그레이션을 시작하세요.';
+                statusDiv.innerHTML = '✅ Google Sheets 데이터 확인 완료!';
 
             } catch (error) {
                 console.error('Error:', error);
@@ -254,7 +332,96 @@
             }
         }
 
+        async function checkFirebaseData() {
+            const statusDiv = document.getElementById('status');
+            
+            try {
+                const collections = ['sites', 'buildings', 'equipment', 'users', 'inspections'];
+                
+                for (const collection of collections) {
+                    statusDiv.innerHTML += `<br>📥 ${collection} 데이터 로딩 중...`;
+                    const result = await window.FirestoreHelper.getAllDocuments(collection);
+                    existingData[collection] = result.data || [];
+                }
+
+                displayDataSummary();
+                
+                statusDiv.className = 'status success';
+                statusDiv.innerHTML = '✅ Firebase 데이터 확인 완료!';
+
+            } catch (error) {
+                console.error('Error:', error);
+                statusDiv.className = 'status error';
+                statusDiv.innerHTML = `❌ <strong>오류 발생:</strong><br>${error.message}`;
+            }
+        }
+
+        function displayDataSummary() {
+            const summaryDiv = document.getElementById('dataSummary');
+            const summaryContent = document.getElementById('summaryContent');
+            
+            if (currentDirection === 'sheets-to-firebase') {
+                summaryContent.innerHTML = `
+                    <div class="data-item">
+                        <span>📍 현장 (Sites)</span>
+                        <span class="count">${existingData.sites?.length || 0}개</span>
+                    </div>
+                    <div class="data-item">
+                        <span>🏢 건물 (Buildings)</span>
+                        <span class="count">${existingData.buildings?.length || 0}개</span>
+                    </div>
+                    <div class="data-item">
+                        <span>⚙️ 장비 (Equipment)</span>
+                        <span class="count">${existingData.equipment?.length || 0}개</span>
+                    </div>
+                    <div class="data-item">
+                        <span>👷 점검자 (Inspectors)</span>
+                        <span class="count">${existingData.inspectors?.length || 0}명</span>
+                    </div>
+                    <div class="data-item">
+                        <span>📋 점검 기록 (Inspections)</span>
+                        <span class="count">${existingData.inspections?.length || 0}개</span>
+                    </div>
+                `;
+            } else {
+                summaryContent.innerHTML = `
+                    <div class="data-item">
+                        <span>📍 현장 (Sites)</span>
+                        <span class="count">${existingData.sites?.length || 0}개</span>
+                    </div>
+                    <div class="data-item">
+                        <span>🏢 건물 (Buildings)</span>
+                        <span class="count">${existingData.buildings?.length || 0}개</span>
+                    </div>
+                    <div class="data-item">
+                        <span>⚙️ 장비 (Equipment)</span>
+                        <span class="count">${existingData.equipment?.length || 0}개</span>
+                    </div>
+                    <div class="data-item">
+                        <span>👤 사용자 (Users)</span>
+                        <span class="count">${existingData.users?.length || 0}명</span>
+                    </div>
+                    <div class="data-item">
+                        <span>📋 점검 기록 (Inspections)</span>
+                        <span class="count">${existingData.inspections?.length || 0}개</span>
+                    </div>
+                `;
+            }
+
+            summaryDiv.style.display = 'block';
+            document.getElementById('migrateBtn').style.display = 'block';
+            document.getElementById('migrateBtn').disabled = false;
+        }
+
         async function startMigration() {
+            if (currentDirection === 'sheets-to-firebase') {
+                await migrateToFirebase();
+            } else {
+                await migrateToSheets();
+            }
+        }
+
+        async function migrateToFirebase() {
             await waitForFirebase();
             
             const statusDiv = document.getElementById('status');
@@ -263,11 +430,10 @@
             const progressText = document.getElementById('progressText');
             const migrateBtn = document.getElementById('migrateBtn');
 
-            // UI 업데이트
             migrateBtn.disabled = true;
             statusDiv.style.display = 'block';
             statusDiv.className = 'status info';
-            statusDiv.innerHTML = '🚀 마이그레이션을 시작합니다...';
+            statusDiv.innerHTML = '🚀 Google Sheets → Firebase 마이그레이션 시작...';
             progressDiv.style.display = 'block';
 
             try {
@@ -281,36 +447,20 @@
                     progressFill.style.width = progress + '%';
                     progressFill.textContent = progress + '%';
                     
-                    progressText.innerHTML = `📦 ${tableName} 마이그레이션 중... (${currentTable}/${totalTables})`;
+                    progressText.innerHTML = `📦 ${tableName} 처리 중... (${currentTable}/${totalTables})`;
                     statusDiv.innerHTML = `⏳ ${tableName} 테이블 처리 중...`;
 
                     const data = existingData[tableName];
-
-                    // 1. 기존 Firebase 데이터 삭제
-                    statusDiv.innerHTML += `<br>🗑️ 기존 ${tableName} 데이터 확인 중...`;
-                    const existingFirebaseData = await window.FirestoreHelper.getAllDocuments(tableName);
-                    
-                    if (existingFirebaseData.data && existingFirebaseData.data.length > 0) {
-                        statusDiv.innerHTML += ` (${existingFirebaseData.data.length}개 발견)`;
-                        // Firebase Helper로는 삭제가 안되니 일단 덮어쓰기만 함
-                    }
-
-                    // 2. 새 데이터 추가
-                    statusDiv.innerHTML += `<br>📥 새 ${tableName} 데이터 추가 중... (${data.length}개)`;
+                    statusDiv.innerHTML += `<br>📥 ${tableName} 데이터 추가 중... (${data.length}개)`;
                     
                     let successCount = 0;
                     for (const item of data) {
                         try {
-                            // ID가 있으면 setDocument, 없으면 addDocument
                             if (item.id && (tableName !== 'inspections')) {
-                                // inspections는 자동 ID 사용
                                 const result = await window.FirestoreHelper.setDocument(tableName, item.id, item);
                                 if (result.success) successCount++;
                             } else {
-                                // inspections 또는 ID가 없는 경우
                                 const itemData = { ...item };
-                                
-                                // inspection_date를 ISO 문자열로 유지 (Firestore에서 자동 변환됨)
                                 const result = await window.FirestoreHelper.addDocument(tableName, itemData);
                                 if (result.success) successCount++;
                             }
@@ -319,10 +469,9 @@
                         }
                     }
 
-                    statusDiv.innerHTML += `<br>✅ ${tableName} 완료! (${successCount}/${data.length}개 추가됨)`;
+                    statusDiv.innerHTML += `<br>✅ ${tableName} 완료! (${successCount}/${data.length}개)`;
                 }
 
-                // 완료
                 progressFill.style.width = '100%';
                 progressFill.textContent = '100%';
                 progressText.innerHTML = '✅ 마이그레이션 완료!';
@@ -330,27 +479,94 @@
                 statusDiv.className = 'status success';
                 statusDiv.innerHTML = `
                     🎉 <strong>마이그레이션 완료!</strong><br><br>
-                    📍 현장: ${existingData.sites.length}개<br>
-                    🏢 건물: ${existingData.buildings.length}개<br>
-                    ⚙️ 장비: ${existingData.equipment.length}개<br>
-                    👷 점검자: ${existingData.inspectors.length}명<br>
-                    📋 점검 기록: ${existingData.inspections.length}개<br><br>
-                    <strong>모든 데이터가 Firebase로 이전되었습니다!</strong><br><br>
-                    <a href="index.html" style="color: #667eea; font-weight: bold;">🏠 메인 페이지로 이동</a> |
-                    <a href="dashboard.html" style="color: #667eea; font-weight: bold;">📊 대시보드 확인</a>
+                    Google Sheets → Firebase 완료<br><br>
+                    <a href="index.html" style="color: #667eea; font-weight: bold;">🏠 메인 페이지로 이동</a>
                 `;
 
             } catch (error) {
                 console.error('Migration Error:', error);
                 statusDiv.className = 'status error';
+                statusDiv.innerHTML = `❌ <strong>오류 발생:</strong><br>${error.message}`;
+                progressDiv.style.display = 'none';
+            }
+        }
+
+        async function migrateToSheets() {
+            await waitForFirebase();
+            
+            const statusDiv = document.getElementById('status');
+            const progressDiv = document.getElementById('progress');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            const migrateBtn = document.getElementById('migrateBtn');
+
+            migrateBtn.disabled = true;
+            statusDiv.style.display = 'block';
+            statusDiv.className = 'status info';
+            statusDiv.innerHTML = '🚀 Firebase → Google Sheets 내보내기 시작...';
+            progressDiv.style.display = 'block';
+
+            try {
+                const collections = ['sites', 'buildings', 'equipment', 'users', 'inspections'];
+                const totalCollections = collections.length;
+                let currentCollection = 0;
+
+                for (const collectionName of collections) {
+                    currentCollection++;
+                    const progress = Math.round((currentCollection / totalCollections) * 100);
+                    progressFill.style.width = progress + '%';
+                    progressFill.textContent = progress + '%';
+                    
+                    progressText.innerHTML = `📤 ${collectionName} 내보내기 중... (${currentCollection}/${totalCollections})`;
+                    statusDiv.innerHTML = `⏳ ${collectionName} 처리 중...`;
+
+                    const data = existingData[collectionName];
+                    
+                    // Google Sheets API로 데이터 전송 (배치 처리)
+                    const tableName = collectionName === 'users' ? 'inspectors' : collectionName;
+                    
+                    statusDiv.innerHTML += `<br>📤 ${collectionName} 데이터 전송 중... (${data.length}개)`;
+                    
+                    try {
+                        // 기존 데이터 삭제
+                        const deleteResponse = await fetch(`${API_BASE}?action=deleteAll&table=${tableName}`, {
+                            method: 'POST'
+                        });
+                        
+                        // 새 데이터 일괄 추가
+                        const addResponse = await fetch(`${API_BASE}?action=batchAdd&table=${tableName}`, {
+                            method: 'POST',
+                            body: JSON.stringify({ data: data })
+                        });
+                        
+                        const result = await addResponse.json();
+                        
+                        if (result.success) {
+                            statusDiv.innerHTML += `<br>✅ ${collectionName} 완료! (${data.length}개)`;
+                        } else {
+                            statusDiv.innerHTML += `<br>⚠️ ${collectionName} 일부 실패`;
+                        }
+                    } catch (error) {
+                        console.error(`Error exporting ${collectionName}:`, error);
+                        statusDiv.innerHTML += `<br>❌ ${collectionName} 실패: ${error.message}`;
+                    }
+                }
+
+                progressFill.style.width = '100%';
+                progressFill.textContent = '100%';
+                progressText.innerHTML = '✅ 내보내기 완료!';
+                
+                statusDiv.className = 'status success';
                 statusDiv.innerHTML = `
-                    ❌ <strong>마이그레이션 중 오류 발생:</strong><br>
-                    ${error.message}<br><br>
-                    <strong>상세 오류:</strong><br>
-                    <pre style="background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto;">${error.stack || 'No stack trace'}</pre><br>
-                    일부 데이터만 이전되었을 수 있습니다.<br>
-                    페이지를 새로고침하고 다시 시도해주세요.
+                    🎉 <strong>내보내기 완료!</strong><br><br>
+                    Firebase → Google Sheets 완료<br><br>
+                    <a href="index.html" style="color: #667eea; font-weight: bold;">🏠 메인 페이지로 이동</a>
                 `;
+
+            } catch (error) {
+                console.error('Export Error:', error);
+                statusDiv.className = 'status error';
+                statusDiv.innerHTML = `❌ <strong>오류 발생:</strong><br>${error.message}`;
                 progressDiv.style.display = 'none';
             }
         }
