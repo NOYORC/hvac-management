@@ -2,49 +2,77 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // 임시 규칙 - Firebase Authentication 구현 전까지 사용
-    // 경고: 프로덕션 환경에서는 사용하지 마세요!
+    // ===== 개발/테스트용 규칙 =====
+    // 모든 읽기/쓰기 허용 (임시)
+    // ⚠️ 주의: Firebase Console에서도 동일하게 설정 필요
     match /{document=**} {
       allow read, write: if true;
     }
     
-    // TODO: Firebase Authentication 구현 후 아래 규칙으로 교체
-    /*
-    // 사이트(현장) 컬렉션
-    match /sites/{siteId} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
-    
-    // 건물 컬렉션
-    match /buildings/{buildingId} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
-    
-    // 장비 컬렉션
-    match /equipment/{equipmentId} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
-    
-    // 점검 기록 컬렉션
-    match /inspections/{inspectionId} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
-    
-    // 점검자 컬렉션
-    match /inspectors/{inspectorId} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
-    
-    // 사용자 컬렉션
-    match /users/{userId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null;
-    }
-    */
   }
 }
+
+// ===== 프로덕션 환경용 규칙 (나중에 적용) =====
+/*
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 헬퍼 함수: 인증된 사용자 확인
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // 헬퍼 함수: 사용자 역할 확인
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && getUserRole() == 'admin';
+    }
+    
+    function isManager() {
+      return isAuthenticated() && (getUserRole() == 'manager' || getUserRole() == 'admin');
+    }
+    
+    function isInspector() {
+      return isAuthenticated() && (getUserRole() == 'inspector' || getUserRole() == 'manager' || getUserRole() == 'admin');
+    }
+    
+    // 현장(Sites) 컬렉션
+    match /sites/{siteId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isManager();
+    }
+    
+    // 건물(Buildings) 컬렉션
+    match /buildings/{buildingId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isManager();
+    }
+    
+    // 장비(Equipment) 컬렉션
+    match /equipment/{equipmentId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isManager();
+    }
+    
+    // 점검 기록(Inspections) 컬렉션
+    match /inspections/{inspectionId} {
+      allow read: if isAuthenticated();
+      allow create: if isInspector();
+      allow update, delete: if isManager();
+    }
+    
+    // 사용자(Users) 컬렉션
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if true; // 회원가입 허용
+      allow update: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      allow delete: if isAdmin();
+    }
+    
+  }
+}
+*/
