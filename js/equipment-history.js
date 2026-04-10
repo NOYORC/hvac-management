@@ -320,6 +320,9 @@ function applyFilters() {
     const status = document.getElementById('statusFilter').value;
     const type = document.getElementById('typeFilter').value;
     
+    console.log('🔍 필터 적용:', { period, status, type });
+    console.log('📊 전체 점검 데이터:', allInspections.length, '건');
+    
     // 기간 필터 계산
     let startDate = null;
     const now = new Date();
@@ -356,9 +359,19 @@ function applyFilters() {
         if (status && inspection.status !== status) return false;
         
         // 점검 유형 필터
-        if (type && inspection.inspection_type !== type) return false;
+        if (type && inspection.inspection_type !== type) {
+            console.log(`❌ 필터링 제외: ${inspection.inspection_type} !== ${type}`);
+            return false;
+        }
         
         return true;
+    });
+    
+    console.log('✅ 필터링 결과:', filteredInspections.length, '건');
+    console.log('📋 유형별 통계:', {
+        일반점검: allInspections.filter(i => i.inspection_type === '일반점검').length,
+        고장정비: allInspections.filter(i => i.inspection_type === '고장정비').length,
+        기타: allInspections.filter(i => !i.inspection_type || (i.inspection_type !== '일반점검' && i.inspection_type !== '고장정비')).length
     });
     
     // 최신순 정렬
