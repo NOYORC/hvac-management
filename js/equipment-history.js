@@ -359,9 +359,12 @@ function applyFilters() {
         if (status && inspection.status !== status) return false;
         
         // 점검 유형 필터
-        if (type && inspection.inspection_type !== type) {
-            console.log(`❌ 필터링 제외: ${inspection.inspection_type} !== ${type}`);
-            return false;
+        if (type) {
+            const inspectionType = (inspection.inspection_type || '').trim();
+            if (inspectionType !== type) {
+                console.log(`❌ 필터링 제외: "${inspectionType}" !== "${type}"`);
+                return false;
+            }
         }
         
         return true;
