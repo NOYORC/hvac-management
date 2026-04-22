@@ -219,6 +219,27 @@
         </div>
     </div>
 
+    <!-- 점검 상세 모달 -->
+    <div id="inspectionDetailModal" class="modal">
+        <div class="modal-dialog" style="max-width: 700px;">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fas fa-clipboard-check"></i>
+                    <span>점검 상세 정보</span>
+                </div>
+                <button class="btn-close" onclick="closeInspectionDetailModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="inspectionDetailContent">
+                <!-- 동적으로 생성 -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeInspectionDetailModal()">닫기</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";

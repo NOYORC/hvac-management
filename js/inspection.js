@@ -559,6 +559,10 @@ async function submitInspection(e) {
         current_r: document.getElementById('currentR').value || '',
         current_s: document.getElementById('currentS').value || '',
         current_t: document.getElementById('currentT').value || '',
+        vibration: document.getElementById('vibration').value || '',
+        noise: document.getElementById('noise').value || '',
+        clean_status: document.getElementById('cleanStatus').value || '',
+        filter_status: document.getElementById('filterStatus').value || '',
         notes: notes,
         photo_url: '' // 사진 기능은 추후 구현
     };

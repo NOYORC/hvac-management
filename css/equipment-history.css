@@ -439,3 +439,88 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* 점검 기록 세부사항 패널 */
+.inspection-detail-panel {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 10px;
+    border-left: 3px solid #6366f1;
+}
+
+.inspection-detail-panel .detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+}
+
+.inspection-detail-panel .detail-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: white;
+    border-radius: 6px;
+}
+
+.inspection-detail-panel .detail-item i {
+    color: #6366f1;
+    font-size: 16px;
+    width: 20px;
+    text-align: center;
+}
+
+.inspection-detail-panel .detail-label {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin-bottom: 2px;
+}
+
+.inspection-detail-panel .detail-value {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.btn-toggle-detail {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 12px;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-toggle-detail:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.btn-toggle-detail i {
+    transition: transform 0.3s ease;
+}
+
+.history-header-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* 모바일 반응형 */
+@media (max-width: 768px) {
+    .inspection-detail-panel .detail-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .history-header-right {
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 5px;
+    }
+}

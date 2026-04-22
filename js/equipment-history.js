@@ -404,10 +404,12 @@ function displayHistory() {
     historyTimeline.style.display = 'flex';
     noHistory.style.display = 'none';
     
-    historyTimeline.innerHTML = filteredInspections.map(inspection => {
+    historyTimeline.innerHTML = filteredInspections.map((inspection, index) => {
         const inspectionDate = inspection.inspection_date?.toDate ? 
             inspection.inspection_date.toDate() : 
             new Date(inspection.inspection_date);
+        
+        const detailId = `inspection-detail-${index}`;
         
         return `
             <div class="history-item">
@@ -416,9 +418,15 @@ function displayHistory() {
                         <i class="fas fa-calendar-alt"></i>
                         ${formatDateTime(inspectionDate)}
                     </div>
-                    <div class="history-status-badge status-${inspection.status}">
-                        <i class="fas fa-circle"></i>
-                        ${inspection.status}
+                    <div class="history-header-right">
+                        <div class="history-status-badge status-${inspection.status}">
+                            <i class="fas fa-circle"></i>
+                            ${inspection.status}
+                        </div>
+                        <button class="btn-toggle-detail" onclick="toggleInspectionDetail('${detailId}', this)">
+                            <i class="fas fa-chevron-down"></i>
+                            세부사항
+                        </button>
                     </div>
                 </div>
                 <div class="history-item-info">
@@ -431,6 +439,111 @@ function displayHistory() {
                         <div class="history-info-value">${inspection.inspector_name}</div>
                     </div>
                 </div>
+                
+                <!-- 세부사항 패널 (기본 숨김) -->
+                <div id="${detailId}" class="inspection-detail-panel" style="display: none;">
+                    <div class="detail-grid">
+                        ${inspection.indoor_temperature ? `
+                        <div class="detail-item">
+                            <i class="fas fa-thermometer-half"></i>
+                            <div>
+                                <div class="detail-label">실내온도</div>
+                                <div class="detail-value">${inspection.indoor_temperature}℃</div>
+                            </div>
+                        </div>` : ''}
+                        
+                        ${inspection.set_temperature ? `
+                        <div class="detail-item">
+                            <i class="fas fa-thermometer-three-quarters"></i>
+                            <div>
+                                <div class="detail-label">설정온도</div>
+                                <div class="detail-value">${inspection.set_temperature}℃</div>
+                            </div>
+                        </div>` : ''}
+                        
+                        ${inspection.high_pressure ? `
+                        <div class="detail-item">
+                            <i class="fas fa-arrow-up"></i>
+                            <div>
+                                <div class="detail-label">냉매고압</div>
+                                <div class="detail-value">${inspection.high_pressure} kgf/cm²</div>
+                            </div>
+                        </div>` : ''}
+                        
+                        ${inspection.low_pressure ? `
+                        <div class="detail-item">
+                            <i class="fas fa-arrow-down"></i>
+                            <div>
+                                <div class="detail-label">냉매저압</div>
+                                <div class="detail-value">${inspection.low_pressure} kgf/cm²</div>
+                            </div>
+                        </div>` : ''}
+                        
+                        ${inspection.current_r ? `
+                        <div class="detail-item">
+                            <i class="fas fa-bolt"></i>
+                            <div>
+                                <div class="detail-label">R상 전류</div>
+                                <div class="detail-value">${inspection.current_r} A</div>
+                            </div>
+                        </div>` : ''}
+                        
+                        ${inspection.current_s ? `
+                        <div class="detail-item">
+                            <i class="fas fa-bolt"></i>
+                            <div>
+                                <div class="detail-label">S상 전류</div>
+                                <div class="detail-value">${inspection.current_s} A</div>
+                            </div>
+                        </div>` : ''}
+                        
+                        ${inspection.current_t ? `
+                        <div class="detail-item">
+                            <i class="fas fa-bolt"></i>
+                            <div>
+                                <div class="detail-label">T상 전류</div>
+                                <div class="detail-value">${inspection.current_t} A</div>
+                            </div>
+                        </div>` : ''}
+                        
+                        ${inspection.vibration ? `
+                        <div class="detail-item">
+                            <i class="fas fa-wave-square"></i>
+                            <div>
+                                <div class="detail-label">진동</div>
+                                <div class="detail-value">${inspection.vibration} mm/s</div>
+                            </div>
+                        </div>` : ''}
+                        
+                        ${inspection.noise ? `
+                        <div class="detail-item">
+                            <i class="fas fa-volume-up"></i>
+                            <div>
+                                <div class="detail-label">소음</div>
+                                <div class="detail-value">${inspection.noise} dB</div>
+                            </div>
+                        </div>` : ''}
+                        
+                        ${inspection.clean_status ? `
+                        <div class="detail-item">
+                            <i class="fas fa-broom"></i>
+                            <div>
+                                <div class="detail-label">청결상태</div>
+                                <div class="detail-value">${inspection.clean_status}</div>
+                            </div>
+                        </div>` : ''}
+                        
+                        ${inspection.filter_status ? `
+                        <div class="detail-item">
+                            <i class="fas fa-filter"></i>
+                            <div>
+                                <div class="detail-label">필터상태</div>
+                                <div class="detail-value">${inspection.filter_status}</div>
+                            </div>
+                        </div>` : ''}
+                    </div>
+                </div>
+                
                 ${inspection.notes ? `
                     <div class="history-notes">
                         <i class="fas fa-comment-dots"></i>
@@ -564,3 +677,22 @@ function showLoading(show) {
         historySection.style.display = 'block';
     }
 }
+
+// 점검 기록 세부사항 토글
+function toggleInspectionDetail(detailId, button) {
+    const detailPanel = document.getElementById(detailId);
+    const icon = button.querySelector('i');
+    
+    if (detailPanel.style.display === 'none') {
+        detailPanel.style.display = 'block';
+        icon.classList.remove('fa-chevron-down');
+        icon.classList.add('fa-chevron-up');
+    } else {
+        detailPanel.style.display = 'none';
+        icon.classList.remove('fa-chevron-up');
+        icon.classList.add('fa-chevron-down');
+    }
+}
+
+// 전역 함수로 노출
+window.toggleInspectionDetail = toggleInspectionDetail;
