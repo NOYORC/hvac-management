@@ -425,7 +425,7 @@ function displayHistory() {
                         </div>
                         <button class="btn-toggle-detail" onclick="toggleInspectionDetail('${detailId}', this)">
                             <i class="fas fa-chevron-down"></i>
-                            세부사항
+                            점검사항
                         </button>
                     </div>
                 </div>
@@ -440,7 +440,7 @@ function displayHistory() {
                     </div>
                 </div>
                 
-                <!-- 세부사항 패널 (기본 숨김) -->
+                <!-- 점검사항 패널 (기본 숨김) -->
                 <div id="${detailId}" class="inspection-detail-panel" style="display: none;">
                     <div class="detail-grid">
                         ${inspection.indoor_temperature ? `
@@ -678,7 +678,7 @@ function showLoading(show) {
     }
 }
 
-// 점검 기록 세부사항 토글
+// 점검 기록 점검사항 토글
 function toggleInspectionDetail(detailId, button) {
     const detailPanel = document.getElementById(detailId);
     const icon = button.querySelector('i');
