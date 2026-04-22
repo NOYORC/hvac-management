@@ -285,12 +285,73 @@
 }
 
 
+/* ===== 장비 상세 정보 토글 ===== */
+.equipment-detail-header {
+    margin-bottom: 15px;
+}
+
+.btn-toggle-detail {
+    width: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.3s;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.btn-toggle-detail:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+.btn-toggle-detail:active {
+    transform: translateY(0);
+}
+
+.btn-toggle-detail i:first-child {
+    margin-right: 8px;
+}
+
+.btn-toggle-detail #toggleIcon {
+    transition: transform 0.3s;
+}
+
+.btn-toggle-detail.active #toggleIcon {
+    transform: rotate(180deg);
+}
+
 /* ===== 장비 상세 정보 ===== */
 .equipment-detail {
     background: #f5f7fa;
     border-radius: 12px;
     padding: 20px;
     margin-bottom: 20px;
+    animation: slideDown 0.3s ease-out;
+    overflow: hidden;
+    transition: all 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        max-height: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+    }
+    to {
+        opacity: 1;
+        max-height: 1000px;
+        padding-top: 20px;
+        padding-bottom: 20px;
+    }
 }
 
 .equipment-detail .detail-grid {
@@ -306,6 +367,23 @@
     padding: 8px;
     background: white;
     border-radius: 8px;
+}
+
+.equipment-detail .detail-item.custom-field {
+    background: #fff9e6;
+    border-left: 3px solid #ffa726;
+}
+
+.custom-field-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #ffa726 0%, #ff9800 100%);
+    color: white;
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 4px;
+    font-weight: 700;
+    vertical-align: middle;
 }
 
 .equipment-detail .detail-item i {

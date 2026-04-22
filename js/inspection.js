@@ -97,55 +97,8 @@ async function loadEquipmentDirectly(equipmentId) {
             document.getElementById('selectedBuildingName').textContent = buildingName;
             document.getElementById('selectedEquipmentName').textContent = `${selectedEquipment.equipment_type} (${selectedEquipment.id})`;
             
-            // 장비 상세 정보 표시
-            const detailDiv = document.getElementById('equipmentDetail');
-            const floorText = selectedEquipment.floor ? `${selectedEquipment.floor}층` : '층수 미등록';
-            detailDiv.innerHTML = `
-                <div class="detail-grid">
-                    <div class="detail-item">
-                        <i class="fas fa-wrench"></i>
-                        <div>
-                            <div class="detail-label">장비 종류</div>
-                            <div class="detail-value">${selectedEquipment.equipment_type || '-'}</div>
-                        </div>
-                    </div>
-                    <div class="detail-item">
-                        <i class="fas fa-tag"></i>
-                        <div>
-                            <div class="detail-label">장비 ID</div>
-                            <div class="detail-value">${selectedEquipment.id}</div>
-                        </div>
-                    </div>
-                    <div class="detail-item">
-                        <i class="fas fa-layer-group"></i>
-                        <div>
-                            <div class="detail-label">위치</div>
-                            <div class="detail-value">${floorText} - ${selectedEquipment.location || '-'}</div>
-                        </div>
-                    </div>
-                    <div class="detail-item">
-                        <i class="fas fa-box"></i>
-                        <div>
-                            <div class="detail-label">모델</div>
-                            <div class="detail-value">${selectedEquipment.model || '-'}</div>
-                        </div>
-                    </div>
-                    <div class="detail-item">
-                        <i class="fas fa-tachometer-alt"></i>
-                        <div>
-                            <div class="detail-label">용량</div>
-                            <div class="detail-value">${selectedEquipment.capacity || '-'}</div>
-                        </div>
-                    </div>
-                    <div class="detail-item">
-                        <i class="fas fa-calendar"></i>
-                        <div>
-                            <div class="detail-label">설치일</div>
-                            <div class="detail-value">${selectedEquipment.install_date || '-'}</div>
-                        </div>
-                    </div>
-                </div>
-            `;
+            // 장비 상세 정보 표시 (동적 필드 포함)
+            renderEquipmentDetail(selectedEquipment);
             
             changeStep(4);
         } else {
@@ -818,5 +771,95 @@ function getFullLocation(equipment) {
     if (equipment.location) parts.push(equipment.location);
     
     return parts.join(' ') || equipment.location || '위치 정보 없음';
+}
+
+// ===== 장비 상세 정보 토글 =====
+function toggleEquipmentDetail() {
+    const detailDiv = document.getElementById('equipmentDetail');
+    const toggleBtn = document.getElementById('toggleDetailBtn');
+    const toggleIcon = document.getElementById('toggleIcon');
+    
+    if (detailDiv.style.display === 'none') {
+        detailDiv.style.display = 'block';
+        toggleBtn.classList.add('active');
+        console.log('✅ 장비 세부사항 표시');
+    } else {
+        detailDiv.style.display = 'none';
+        toggleBtn.classList.remove('active');
+        console.log('🔽 장비 세부사항 숨김');
+    }
+}
+
+// ===== 동적 필드를 포함한 장비 상세 정보 렌더링 =====
+function renderEquipmentDetail(equipment) {
+    const detailDiv = document.getElementById('equipmentDetail');
+    
+    // 기본 필드 정의
+    const defaultFields = [
+        { key: 'equipment_type', label: '장비 종류', icon: 'fas fa-wrench' },
+        { key: 'id', label: '장비 ID', icon: 'fas fa-tag' },
+        { key: 'model', label: '모델', icon: 'fas fa-box' },
+        { key: 'capacity', label: '용량', icon: 'fas fa-tachometer-alt' },
+        { key: 'floor', label: '층수', icon: 'fas fa-layer-group', formatter: (v) => v ? `${v}층` : '-' },
+        { key: 'location', label: '위치', icon: 'fas fa-map-marker-alt' },
+        { key: 'installation_date', label: '설치일', icon: 'fas fa-calendar' }
+    ];
+    
+    // 기본 필드와 커스텀 필드 합치기
+    const allFields = [...defaultFields];
+    
+    // equipment 객체에서 기본 필드가 아닌 필드들을 커스텀 필드로 추가
+    const reservedKeys = ['id', 'equipment_type', 'model', 'capacity', 'floor', 'location', 
+                         'installation_date', 'site_id', 'building_id', 'created_at', 'updated_at'];
+    
+    Object.keys(equipment).forEach(key => {
+        if (!reservedKeys.includes(key) && equipment[key] && key !== 'custom_fields') {
+            allFields.push({
+                key: key,
+                label: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+                icon: 'fas fa-info-circle',
+                isCustom: true
+            });
+        }
+    });
+    
+    // custom_fields가 있다면 추가
+    if (equipment.custom_fields && typeof equipment.custom_fields === 'object') {
+        Object.entries(equipment.custom_fields).forEach(([key, value]) => {
+            allFields.push({
+                key: key,
+                label: key,
+                icon: 'fas fa-star',
+                value: value,
+                isCustom: true
+            });
+        });
+    }
+    
+    // HTML 생성
+    const detailItems = allFields.map(field => {
+        const value = field.value !== undefined ? field.value : 
+                     (field.formatter ? field.formatter(equipment[field.key]) : equipment[field.key] || '-');
+        
+        const customBadge = field.isCustom ? '<span class="custom-field-badge">커스텀</span>' : '';
+        
+        return `
+            <div class="detail-item ${field.isCustom ? 'custom-field' : ''}">
+                <i class="${field.icon}"></i>
+                <div>
+                    <div class="detail-label">${field.label} ${customBadge}</div>
+                    <div class="detail-value">${value}</div>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    detailDiv.innerHTML = `<div class="detail-grid">${detailItems}</div>`;
+    
+    console.log('📋 장비 상세 정보 렌더링 완료:', {
+        총필드수: allFields.length,
+        기본필드: defaultFields.length,
+        커스텀필드: allFields.length - defaultFields.length
+    });
 }
 
