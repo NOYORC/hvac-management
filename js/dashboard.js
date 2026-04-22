@@ -194,16 +194,48 @@ document.addEventListener('DOMContentLoaded', async function() {
     await loadDashboardData();
     
     // 필터 변경 이벤트 리스너 등록
-    document.getElementById('periodFilter').addEventListener('change', () => {
-        // console.log('🔄 기간 필터 변경');
-        loadDashboardData();
+    document.getElementById('periodFilter').addEventListener('change', (e) => {
+        const customDateRange = document.getElementById('customDateRange');
+        if (e.target.value === 'custom') {
+            customDateRange.style.display = 'flex';
+            // 기본값 설정: 지난 30일
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - 30);
+            
+            document.getElementById('endDate').valueAsDate = endDate;
+            document.getElementById('startDate').valueAsDate = startDate;
+        } else {
+            customDateRange.style.display = 'none';
+            loadDashboardData();
+        }
     });
+    
     document.getElementById('siteFilterDash').addEventListener('change', () => {
         // console.log('🔄 현장 필터 변경');
         loadDashboardData();
     });
     document.getElementById('statusFilter').addEventListener('change', () => {
         // console.log('🔄 상태 필터 변경');
+        loadDashboardData();
+    });
+    
+    // 날짜 범위 적용 버튼
+    document.getElementById('applyDateRange').addEventListener('click', () => {
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        
+        if (!startDate || !endDate) {
+            alert('시작일과 종료일을 모두 선택해주세요.');
+            return;
+        }
+        
+        if (new Date(startDate) > new Date(endDate)) {
+            alert('시작일은 종료일보다 이전이어야 합니다.');
+            return;
+        }
+        
+        console.log(`📅 사용자 지정 기간: ${startDate} ~ ${endDate}`);
         loadDashboardData();
     });
     
@@ -1211,7 +1243,29 @@ async function getFilteredInspections() {
         const periodFilter = document.getElementById('periodFilter').value;
         const now = new Date();
         
-        if (periodFilter !== 'all') {
+        if (periodFilter === 'custom') {
+            // 사용자 지정 날짜 범위
+            const startDateValue = document.getElementById('startDate').value;
+            const endDateValue = document.getElementById('endDate').value;
+            
+            if (startDateValue && endDateValue) {
+                const startDate = new Date(startDateValue);
+                startDate.setHours(0, 0, 0, 0);
+                
+                const endDate = new Date(endDateValue);
+                endDate.setHours(23, 59, 59, 999);
+                
+                filtered = filtered.filter(insp => {
+                    const inspDate = insp.inspection_date && insp.inspection_date.toDate ? 
+                        insp.inspection_date.toDate() : new Date(insp.inspection_date);
+                    
+                    return inspDate >= startDate && inspDate <= endDate;
+                });
+                
+                console.log(`📅 사용자 지정 필터 적용: ${startDate.toLocaleDateString()} ~ ${endDate.toLocaleDateString()}`);
+                console.log(`📊 필터링된 점검 수: ${filtered.length}`);
+            }
+        } else if (periodFilter !== 'all') {
             filtered = filtered.filter(insp => {
                 const inspDate = insp.inspection_date && insp.inspection_date.toDate ? 
                     insp.inspection_date.toDate() : new Date(insp.inspection_date);
