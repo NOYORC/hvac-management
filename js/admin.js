@@ -524,6 +524,10 @@ async function showAddEquipmentModal() {
     // 현장 목록 로드
     await loadSitesForEquipment();
     
+    // 커스텀 필드 초기화
+    document.getElementById('customFieldsContainer').innerHTML = '';
+    customFieldsCount = 0;
+    
     document.getElementById('equipmentModal').classList.add('active');
     currentEditId = null;
 }
@@ -561,6 +565,9 @@ async function editEquipment(equipmentId) {
     // 건물 목록 로드 후 선택
     await loadBuildingsForEquipment(eq.site_id);
     document.getElementById('equipmentBuilding').value = eq.building_id;
+    
+    // 커스텀 필드 로드
+    loadCustomFields(eq);
     
     document.getElementById('equipmentModal').classList.add('active');
     currentEditId = equipmentId;
@@ -613,6 +620,12 @@ async function handleEquipmentSubmit(e) {
     } else {
         // 설치일자가 없으면 현재 시간으로 설정
         equipmentData.installation_date = window.FirestoreTimestamp.now();
+    }
+    
+    // 커스텀 필드 추가
+    const customFields = getCustomFieldsData();
+    if (customFields) {
+        equipmentData.custom_fields = customFields;
     }
     
     let result;
@@ -1204,3 +1217,88 @@ async function deleteSelectedInspections() {
         }
     }
 }
+
+// ===== 커스텀 필드 관리 =====
+let customFieldsCount = 0;
+
+function addCustomFieldInput() {
+    const container = document.getElementById('customFieldsContainer');
+    const fieldId = 'custom_field_' + (++customFieldsCount);
+    
+    const fieldItem = document.createElement('div');
+    fieldItem.className = 'custom-field-item';
+    fieldItem.id = fieldId;
+    fieldItem.innerHTML = `
+        <input type="text" placeholder="필드명 (예: 제조사, 시리얼넘버)" class="custom-field-key">
+        <input type="text" placeholder="값 (예: Samsung, ABC-12345)" class="custom-field-value">
+        <button type="button" class="btn-remove-custom-field" onclick="removeCustomFieldInput('${fieldId}')">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    container.appendChild(fieldItem);
+    console.log('✅ 커스텀 필드 입력 추가:', fieldId);
+}
+
+function removeCustomFieldInput(fieldId) {
+    const fieldItem = document.getElementById(fieldId);
+    if (fieldItem) {
+        fieldItem.style.animation = 'fadeOut 0.3s ease-out';
+        setTimeout(() => {
+            fieldItem.remove();
+            console.log('🗑️ 커스텀 필드 제거:', fieldId);
+        }, 300);
+    }
+}
+
+function loadCustomFields(equipment) {
+    const container = document.getElementById('customFieldsContainer');
+    container.innerHTML = '';
+    customFieldsCount = 0;
+    
+    if (equipment.custom_fields && typeof equipment.custom_fields === 'object') {
+        Object.entries(equipment.custom_fields).forEach(([key, value]) => {
+            const fieldId = 'custom_field_' + (++customFieldsCount);
+            const fieldItem = document.createElement('div');
+            fieldItem.className = 'custom-field-item';
+            fieldItem.id = fieldId;
+            fieldItem.innerHTML = `
+                <input type="text" value="${key}" placeholder="필드명" class="custom-field-key">
+                <input type="text" value="${value}" placeholder="값" class="custom-field-value">
+                <button type="button" class="btn-remove-custom-field" onclick="removeCustomFieldInput('${fieldId}')">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            container.appendChild(fieldItem);
+        });
+        console.log(`📋 ${Object.keys(equipment.custom_fields).length}개 커스텀 필드 로드됨`);
+    }
+}
+
+function getCustomFieldsData() {
+    const container = document.getElementById('customFieldsContainer');
+    const fieldItems = container.querySelectorAll('.custom-field-item');
+    const customFields = {};
+    
+    fieldItems.forEach(item => {
+        const key = item.querySelector('.custom-field-key').value.trim();
+        const value = item.querySelector('.custom-field-value').value.trim();
+        
+        if (key && value) {
+            customFields[key] = value;
+        }
+    });
+    
+    console.log('📦 커스텀 필드 데이터:', customFields);
+    return Object.keys(customFields).length > 0 ? customFields : null;
+}
+
+// fadeOut 애니메이션 추가
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes fadeOut {
+        from { opacity: 1; transform: translateX(0); }
+        to { opacity: 0; transform: translateX(-20px); }
+    }
+`;
+document.head.appendChild(style);

@@ -974,6 +974,24 @@
                     <input type="date" id="equipmentInstallDate" name="installation_date">
                 </div>
 
+                <!-- 커스텀 필드 섹션 -->
+                <div class="custom-fields-section">
+                    <div class="custom-fields-header">
+                        <label style="font-weight: 600; color: #333; margin: 0;">
+                            <i class="fas fa-star" style="color: #ffa726;"></i> 커스텀 필드
+                        </label>
+                        <button type="button" class="btn-add-custom-field" onclick="addCustomFieldInput()">
+                            <i class="fas fa-plus"></i> 필드 추가
+                        </button>
+                    </div>
+                    <div id="customFieldsContainer">
+                        <!-- 동적으로 생성 -->
+                    </div>
+                    <small style="color: #999; font-size: 11px; display: block; margin-top: 8px;">
+                        💡 추가한 커스텀 필드는 점검 페이지에 자동으로 표시됩니다
+                    </small>
+                </div>
+
                 <div class="modal-footer">
                     <button type="button" class="btn-cancel" onclick="closeEquipmentModal()">취소</button>
                     <button type="submit" class="btn-save">저장</button>
