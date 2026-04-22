@@ -266,7 +266,7 @@ async function loadEquipment() {
     }
 }
 
-// 장비 종류 datalist 업데이트 (기존 장비에서 사용된 종류 추가)
+// 장비 종류 datalist 업데이트 (기존 장비에서 사용된 종류만 추가)
 function updateEquipmentTypeDatalist() {
     const datalist = document.getElementById('equipmentTypeList');
     if (!datalist) return;
@@ -279,27 +279,12 @@ function updateEquipmentTypeDatalist() {
         }
     });
     
-    // 기본 옵션 (항상 표시)
-    const defaultTypes = [
-        'AHU(공조기)',
-        'FCU(팬코일유닛)',
-        '냉동기',
-        '냉각탑',
-        '보일러',
-        '펌프',
-        '송풍기',
-        '배기팬'
-    ];
-    
-    // 모든 장비 종류 합치기 (중복 제거)
-    const allTypes = new Set([...defaultTypes, ...existingTypes]);
-    
-    // datalist 업데이트
-    datalist.innerHTML = Array.from(allTypes).sort().map(type => 
+    // datalist 업데이트 (기존 장비 종류만)
+    datalist.innerHTML = Array.from(existingTypes).sort().map(type => 
         `<option value="${type}">`
     ).join('');
     
-    console.log('📋 장비 종류 datalist 업데이트:', allTypes.size, '개');
+    console.log('📋 장비 종류 datalist 업데이트:', existingTypes.size, '개');
 }
 
 // 장비 테이블 렌더링 (새로운 테이블 형식)

@@ -802,7 +802,34 @@ function renderEquipmentDetail(equipment) {
         { key: 'capacity', label: '용량', icon: 'fas fa-tachometer-alt' },
         { key: 'floor', label: '층수', icon: 'fas fa-layer-group', formatter: (v) => v ? `${v}층` : '-' },
         { key: 'location', label: '위치', icon: 'fas fa-map-marker-alt' },
-        { key: 'installation_date', label: '설치일', icon: 'fas fa-calendar' }
+        { 
+            key: 'installation_date', 
+            label: '설치일', 
+            icon: 'fas fa-calendar',
+            formatter: (v) => {
+                if (!v) return '-';
+                try {
+                    // Firestore Timestamp 처리
+                    if (v.toDate && typeof v.toDate === 'function') {
+                        const date = v.toDate();
+                        return date.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+                    }
+                    // Date 객체 처리
+                    if (v instanceof Date) {
+                        return v.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+                    }
+                    // 문자열 처리
+                    if (typeof v === 'string') {
+                        const date = new Date(v);
+                        return date.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+                    }
+                    return '-';
+                } catch (e) {
+                    console.error('설치일 포맷 오류:', e, v);
+                    return '-';
+                }
+            }
+        }
     ];
     
     // 기본 필드와 커스텀 필드 합치기

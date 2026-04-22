@@ -923,21 +923,14 @@
                 <div class="form-group">
                     <label for="equipmentType">장비 종류 *</label>
                     <input type="text" id="equipmentType" name="type" required 
-                           placeholder="장비 종류 입력 (예: AHU(공조기), 냉동기)" 
+                           placeholder="장비 종류 입력 (예: COOLING TOWER, AHU)" 
                            list="equipmentTypeList"
                            autocomplete="off">
                     <datalist id="equipmentTypeList">
-                        <option value="AHU(공조기)">
-                        <option value="FCU(팬코일유닛)">
-                        <option value="냉동기">
-                        <option value="냉각탑">
-                        <option value="보일러">
-                        <option value="펌프">
-                        <option value="송풍기">
-                        <option value="배기팬">
+                        <!-- 기존 장비에서 사용된 종류가 자동으로 추가됩니다 -->
                     </datalist>
                     <small style="color: #999; font-size: 11px;">
-                        💡 기본 옵션 선택 또는 직접 입력 가능
+                        💡 기존 장비 종류 자동완성 또는 직접 입력 가능
                     </small>
                 </div>
 
