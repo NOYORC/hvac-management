@@ -627,10 +627,19 @@ async function handleEquipmentSubmit(e) {
     e.preventDefault();
     
     const formData = new FormData(e.target);
+    const siteId = formData.get('site_id');
+    const buildingId = formData.get('building_id');
+    
+    // 현장 및 건물 이름 자동 조회
+    const selectedSite = sites.find(s => s.id === siteId);
+    const selectedBuilding = buildings.find(b => b.id === buildingId);
+    
     const equipmentData = {
         equipment_type: formData.get('type'),
-        site_id: formData.get('site_id'),
-        building_id: formData.get('building_id'),
+        site_id: siteId,
+        site_name: selectedSite?.site_name || '',  // ✅ 가독성을 위한 중복 저장
+        building_id: buildingId,
+        building_name: selectedBuilding?.building_name || '',  // ✅ 가독성을 위한 중복 저장
         model: formData.get('model'),
         location: formData.get('location'),
         floor: formData.get('floor'),
@@ -651,6 +660,8 @@ async function handleEquipmentSubmit(e) {
     if (customFields) {
         equipmentData.custom_fields = customFields;
     }
+    
+    console.log('💾 장비 저장 데이터:', equipmentData);
     
     let result;
     if (currentEditId) {
@@ -871,11 +882,19 @@ async function handleBuildingSubmit(e) {
     e.preventDefault();
     
     const formData = new FormData(e.target);
+    const siteId = formData.get('site_id');
+    
+    // 현장 이름 자동 조회
+    const selectedSite = sites.find(s => s.id === siteId);
+    
     const buildingData = {
-        site_id: formData.get('site_id'),
+        site_id: siteId,
+        site_name: selectedSite?.site_name || '',  // ✅ 가독성을 위한 중복 저장
         building_name: formData.get('building_name'),
         floors: formData.get('floors') ? parseInt(formData.get('floors')) : null
     };
+    
+    console.log('💾 건물 저장 데이터:', buildingData);
     
     let result;
     if (currentEditId) {

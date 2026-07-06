@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>데이터 이름 필드 업데이트</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .info {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin: 10px 0;
+            transition: all 0.3s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+        .status.info {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        .status.success {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+        .status.error {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+        .log {
+            max-height: 400px;
+            overflow-y: auto;
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 13px;
+            margin: 20px 0;
+            display: none;
+        }
+        .log-entry {
+            padding: 5px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-sync-alt"></i> 데이터 이름 필드 업데이트</h1>
+        <p class="subtitle">기존 데이터에 가독성을 위한 이름 필드를 추가합니다</p>
+        
+        <div class="info">
+            <strong><i class="fas fa-info-circle"></i> 업데이트 내용:</strong>
+            <ul>
+                <li><strong>Buildings:</strong> site_id → site_name 추가</li>
+                <li><strong>Equipment:</strong> site_id, building_id → site_name, building_name 추가</li>
+            </ul>
+            <p style="margin-top: 10px; margin-bottom: 0;">
+                <strong>목적:</strong> ID만으로는 알기 어려운 정보를 이름으로 즉시 확인 가능하게 합니다.
+            </p>
+        </div>
+        
+        <div class="warning">
+            <strong><i class="fas fa-exclamation-triangle"></i> 주의사항:</strong>
+            <ul>
+                <li>이 작업은 기존 데이터를 <strong>수정</strong>합니다</li>
+                <li>이미 이름 필드가 있는 경우 <strong>최신 정보로 업데이트</strong>됩니다</li>
+                <li>작업 중에는 페이지를 <strong>새로고침하지 마세요</strong></li>
+                <li>완료까지 <strong>1-3분</strong> 정도 소요될 수 있습니다</li>
+            </ul>
+        </div>
+        
+        <button class="btn" id="updateBtn" onclick="updateData()">
+            <i class="fas fa-play"></i> 업데이트 시작하기
+        </button>
+        
+        <div id="status" class="status"></div>
+        <div id="log" class="log"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    
+    <script src="js/firebase-config.js"></script>
+    
+    <script>
+        function addLog(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            logDiv.style.display = 'block';
+            
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            
+            const icon = type === 'success' ? '✅' : 
+                        type === 'error' ? '❌' : 
+                        type === 'warning' ? '⚠️' : 'ℹ️';
+            
+            entry.innerHTML = `${icon} ${message}`;
+            logDiv.appendChild(entry);
+            
+            // 자동 스크롤
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        async function updateData() {
+            const updateBtn = document.getElementById('updateBtn');
+            const statusDiv = document.getElementById('status');
+            const logDiv = document.getElementById('log');
+            
+            updateBtn.disabled = true;
+            statusDiv.style.display = 'block';
+            statusDiv.className = 'status info';
+            statusDiv.innerHTML = '🚀 업데이트 시작...';
+            logDiv.innerHTML = '';
+            logDiv.style.display = 'block';
+            
+            try {
+                const db = firebase.firestore();
+                
+                // 1. Sites 로드
+                addLog('📥 Sites 데이터 로딩...');
+                const sitesSnapshot = await db.collection('sites').get();
+                const sitesMap = {};
+                sitesSnapshot.forEach(doc => {
+                    sitesMap[doc.id] = doc.data();
+                });
+                addLog(`✅ Sites 로드 완료 (${sitesSnapshot.size}개)`, 'success');
+                
+                // 2. Buildings 로드 및 업데이트
+                addLog('📥 Buildings 데이터 로딩...');
+                const buildingsSnapshot = await db.collection('buildings').get();
+                const buildingsMap = {};
+                
+                let buildingUpdateCount = 0;
+                for (const doc of buildingsSnapshot.docs) {
+                    const building = doc.data();
+                    buildingsMap[doc.id] = building;
+                    
+                    if (building.site_id && sitesMap[building.site_id]) {
+                        const site = sitesMap[building.site_id];
+                        
+                        // site_name 추가/업데이트
+                        await db.collection('buildings').doc(doc.id).update({
+                            site_name: site.site_name
+                        });
+                        
+                        buildingUpdateCount++;
+                        addLog(`✏️ Building ${doc.id}: site_name = "${site.site_name}"`);
+                    }
+                }
+                addLog(`✅ Buildings 업데이트 완료 (${buildingUpdateCount}/${buildingsSnapshot.size}개)`, 'success');
+                
+                // 3. Equipment 로드 및 업데이트
+                addLog('📥 Equipment 데이터 로딩...');
+                const equipmentSnapshot = await db.collection('equipment').get();
+                
+                let equipmentUpdateCount = 0;
+                for (const doc of equipmentSnapshot.docs) {
+                    const equipment = doc.data();
+                    const updateData = {};
+                    
+                    // site_name 추가
+                    if (equipment.site_id && sitesMap[equipment.site_id]) {
+                        updateData.site_name = sitesMap[equipment.site_id].site_name;
+                    }
+                    
+                    // building_name 추가
+                    if (equipment.building_id && buildingsMap[equipment.building_id]) {
+                        updateData.building_name = buildingsMap[equipment.building_id].building_name;
+                    }
+                    
+                    // 업데이트할 필드가 있으면 저장
+                    if (Object.keys(updateData).length > 0) {
+                        await db.collection('equipment').doc(doc.id).update(updateData);
+                        equipmentUpdateCount++;
+                        
+                        const fields = Object.entries(updateData)
+                            .map(([k, v]) => `${k}="${v}"`)
+                            .join(', ');
+                        addLog(`✏️ Equipment ${doc.id}: ${fields}`);
+                    }
+                }
+                addLog(`✅ Equipment 업데이트 완료 (${equipmentUpdateCount}/${equipmentSnapshot.size}개)`, 'success');
+                
+                // 완료
+                statusDiv.className = 'status success';
+                statusDiv.innerHTML = `
+                    🎉 <strong>업데이트 완료!</strong><br><br>
+                    - Buildings: ${buildingUpdateCount}개 업데이트<br>
+                    - Equipment: ${equipmentUpdateCount}개 업데이트<br><br>
+                    <a href="index.html" style="color: #667eea; font-weight: bold;">🏠 메인 페이지로 이동</a>
+                `;
+                
+                addLog('🎉 모든 데이터 업데이트 완료!', 'success');
+                
+            } catch (error) {
+                console.error('Update Error:', error);
+                statusDiv.className = 'status error';
+                statusDiv.innerHTML = `❌ <strong>오류 발생:</strong><br>${error.message}`;
+                addLog(`오류: ${error.message}`, 'error');
+            } finally {
+                updateBtn.disabled = false;
+                updateBtn.innerHTML = '<i class="fas fa-redo"></i> 다시 실행하기';
+            }
+        }
+    </script>
+</body>
+</html>
