@@ -273,14 +273,15 @@
             if (direction === 'sheets-to-firebase') {
                 warningList.innerHTML = `
                     <li>이 작업은 <strong>Google Sheets 데이터</strong>를 Firebase로 복사합니다</li>
-                    <li>Firebase에 <strong>이미 있는 데이터는 덮어쓰기</strong> 됩니다</li>
+                    <li><strong>✅ 중복 방지:</strong> ID가 있는 데이터는 기존 항목을 덮어쓰고, ID가 없으면 새로 추가합니다</li>
+                    <li><strong>동일 ID</strong>가 있는 경우 최신 데이터로 업데이트됩니다</li>
                     <li>마이그레이션 중에는 페이지를 <strong>새로고침하지 마세요</strong></li>
                     <li>완료까지 <strong>1-5분</strong> 정도 소요될 수 있습니다</li>
                 `;
             } else {
                 warningList.innerHTML = `
                     <li>이 작업은 <strong>Firebase 데이터</strong>를 Google Sheets로 내보냅니다</li>
-                    <li>Google Sheets에 <strong>이미 있는 데이터는 덮어쓰기</strong> 됩니다</li>
+                    <li>Google Sheets에 <strong>이미 있는 데이터는 전부 삭제</strong>되고 새로 추가됩니다</li>
                     <li>내보내기 중에는 페이지를 <strong>새로고침하지 마세요</strong></li>
                     <li>완료까지 <strong>1-5분</strong> 정도 소요될 수 있습니다</li>
                 `;
@@ -454,22 +455,46 @@
                     statusDiv.innerHTML += `<br>📥 ${tableName} 데이터 추가 중... (${data.length}개)`;
                     
                     let successCount = 0;
+                    let skippedCount = 0;
                     for (const item of data) {
                         try {
-                            if (item.id && (tableName !== 'inspections')) {
-                                const result = await window.FirestoreHelper.setDocument(tableName, item.id, item);
-                                if (result.success) successCount++;
+                            if (item.id) {
+                                // ID가 있는 경우: 기존 문서 확인 후 업데이트 (중복 방지)
+                                const existing = await window.FirestoreHelper.getDocument(tableName, item.id);
+                                
+                                if (existing.success && existing.data) {
+                                    // 이미 존재하는 경우 덮어쓰기
+                                    const result = await window.FirestoreHelper.setDocument(tableName, item.id, item);
+                                    if (result.success) {
+                                        successCount++;
+                                        console.log(`✏️ ${tableName}/${item.id} 업데이트됨`);
+                                    }
+                                } else {
+                                    // 존재하지 않는 경우 새로 추가
+                                    const result = await window.FirestoreHelper.setDocument(tableName, item.id, item);
+                                    if (result.success) {
+                                        successCount++;
+                                        console.log(`➕ ${tableName}/${item.id} 추가됨`);
+                                    }
+                                }
                             } else {
+                                // ID가 없는 경우: 자동 ID 생성하여 추가
                                 const itemData = { ...item };
                                 const result = await window.FirestoreHelper.addDocument(tableName, itemData);
-                                if (result.success) successCount++;
+                                if (result.success) {
+                                    successCount++;
+                                    console.log(`➕ ${tableName} 문서 추가됨 (자동 ID)`);
+                                }
                             }
                         } catch (itemError) {
-                            console.error(`Error adding item to ${tableName}:`, itemError);
+                            console.error(`Error processing item in ${tableName}:`, itemError);
                         }
                     }
 
-                    statusDiv.innerHTML += `<br>✅ ${tableName} 완료! (${successCount}/${data.length}개)`;
+                    statusDiv.innerHTML += `<br>✅ ${tableName} 완료! (${successCount}/${data.length}개 처리됨)`;
+                    if (skippedCount > 0) {
+                        statusDiv.innerHTML += ` - ${skippedCount}개 중복 건너뜀`;
+                    }
                 }
 
                 progressFill.style.width = '100%';
