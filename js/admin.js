@@ -997,22 +997,32 @@ async function enrichInspectorNames(inspections) {
         
         inspections.forEach(inspection => {
             const email = inspection.inspector_email;
+            const originalName = inspection.inspector_name;
+
             if (email && usersMap[email]) {
-                // 사용자 정보가 있으면 이름 업데이트
-                inspection.inspector_name = usersMap[email].name || inspection.inspector_name;
+                // email로 users 컬렉션 매칭 성공 → 최신 이름으로 업데이트
+                inspection.inspector_name = usersMap[email].name || originalName;
                 updatedCount++;
             } else if (email) {
                 // 이메일은 있지만 users 컬렉션에 없는 경우 (삭제된 사용자)
-                inspection.inspector_name = `${email} (삭제된 사용자)`;
-                inspection._missing_user = true;
-                missingCount++;
+                // 기존 이름이 있으면 유지, 없을 때만 email 표시
+                if (!originalName || originalName.trim() === '') {
+                    inspection.inspector_name = `${email} (삭제된 사용자)`;
+                    inspection._missing_user = true;
+                    missingCount++;
+                }
                 console.warn(`⚠️ users 컬렉션에서 ${email}을(를) 찾을 수 없음 (점검 ID: ${inspection.id})`);
             } else {
-                // 이메일도 없는 경우
-                inspection.inspector_name = '알 수 없음';
-                inspection._missing_user = true;
-                missingCount++;
-                console.warn(`⚠️ inspector_email이 없음 (점검 ID: ${inspection.id})`);
+                // 이메일도 없는 경우 (구버전 마이그레이션 데이터)
+                // 기존 inspector_name이 있으면 반드시 유지
+                if (!originalName || originalName.trim() === '') {
+                    inspection.inspector_name = '알 수 없음';
+                    inspection._missing_user = true;
+                    missingCount++;
+                    console.warn(`⚠️ inspector_email, inspector_name 모두 없음 (점검 ID: ${inspection.id})`);
+                } else {
+                    console.log(`ℹ️ email 없으나 기존 이름 유지: ${originalName} (점검 ID: ${inspection.id})`);
+                }
             }
         });
         
