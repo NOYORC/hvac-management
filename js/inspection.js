@@ -568,7 +568,14 @@ async function submitInspection(e) {
     };
     
     try {
-        const result = await window.FirestoreHelper.addDocument('inspections', inspectionData);
+        // 문서 ID 생성: YYYYMMDD_HHmmss_장비ID 형식
+        const now = new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        const dateStr = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}`;
+        const timeStr = `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+        const docId = `${dateStr}_${timeStr}_${selectedEquipment.id}`;
+
+        const result = await window.FirestoreHelper.setDocument('inspections', docId, inspectionData);
         
         if (result.success) {
             alert('✅ 점검이 성공적으로 완료되었습니다!');

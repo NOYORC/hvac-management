@@ -46,15 +46,17 @@ async function enrichInspectorNames(inspections) {
                 updatedCount++;
             } else {
                 if (!email) {
-                    console.warn(`  ⚠️ inspector_email이 없음`);
+                    console.warn(`  ⚠️ inspector_email이 없음 → 기존 inspector_name 유지`);
                 } else if (!usersMap[email]) {
-                    console.warn(`  ⚠️ users 컬렉션에서 ${email}을 찾을 수 없음`);
+                    console.warn(`  ⚠️ users 컬렉션에서 ${email}을 찾을 수 없음 → 기존 inspector_name 유지`);
                 }
                 
-                // 기존 이름이 없으면 email 또는 기본값 사용
-                if (!inspection.inspector_name) {
+                // 기존 이름이 있으면 그대로 유지, 완전히 없을 때만 기본값
+                if (!inspection.inspector_name || inspection.inspector_name.trim() === '') {
                     inspection.inspector_name = email || '알 수 없음';
-                    console.log(`  → 기본값 설정: ${inspection.inspector_name}`);
+                    console.log(`  → 이름 없음, 기본값 설정: ${inspection.inspector_name}`);
+                } else {
+                    console.log(`  → 기존 이름 유지: ${inspection.inspector_name}`);
                 }
             }
         });
