@@ -836,7 +836,108 @@ async function importDataBatch(type, data) {
     return { successCount, errorCount, errors };
 }
 
-// 통합 템플릿 다운로드
+// 현재 Firebase 데이터를 통합 템플릿 서식으로 내보내기
+async function exportCurrentData() {
+    await waitForFirebase();
+
+    showStatus('info', '⏳ Firebase에서 데이터를 불러오는 중...');
+
+    try {
+        // 3개 컬렉션 병렬 조회
+        const [sitesResult, buildingsResult, equipmentResult] = await Promise.all([
+            window.FirestoreHelper.getAllDocuments('sites'),
+            window.FirestoreHelper.getAllDocuments('buildings'),
+            window.FirestoreHelper.getAllDocuments('equipment')
+        ]);
+
+        if (!sitesResult.success || !buildingsResult.success || !equipmentResult.success) {
+            showStatus('error', '❌ 데이터를 불러오는 중 오류가 발생했습니다.');
+            return;
+        }
+
+        const sitesData    = sitesResult.data    || [];
+        const buildingsData = buildingsResult.data || [];
+        const equipmentData = equipmentResult.data || [];
+
+        // ── Sites 시트 ──────────────────────────────────────
+        const sitesRows = sitesData.map(s => ({
+            id:            s.id            || '',
+            site_name:     s.site_name     || '',
+            site_group:    s.site_group    || '',
+            address:       s.address       || '',
+            contact_name:  s.contact_name  || '',
+            contact_phone: s.contact_phone || ''
+        }));
+
+        // ── Buildings 시트 ───────────────────────────────────
+        const buildingsRows = buildingsData.map(b => ({
+            id:            b.id            || '',
+            site_id:       b.site_id       || '',
+            building_name: b.building_name || '',
+            floors:        b.floors        || ''
+        }));
+
+        // ── Equipment 시트 ───────────────────────────────────
+        const equipmentRows = equipmentData.map(e => {
+            // installation_date: Firestore Timestamp → 문자열 변환
+            let installDate = '';
+            if (e.installation_date) {
+                try {
+                    const d = typeof e.installation_date.toDate === 'function'
+                        ? e.installation_date.toDate()
+                        : new Date(e.installation_date);
+                    if (!isNaN(d.getTime())) {
+                        installDate = d.toISOString().split('T')[0]; // YYYY-MM-DD
+                    }
+                } catch (_) {}
+            }
+
+            return {
+                id:                e.id                || '',
+                site_id:           e.site_id           || '',
+                building_id:       e.building_id       || '',
+                equipment_type:    e.equipment_type    || '',
+                model:             e.model             || '',
+                location:          e.location          || '',
+                floor:             e.floor             || '',
+                capacity:          e.capacity          || '',
+                installation_date: installDate
+            };
+        });
+
+        // ── 워크북 생성 ──────────────────────────────────────
+        const wb = XLSX.utils.book_new();
+
+        const sitesSheet     = XLSX.utils.json_to_sheet(sitesRows.length     ? sitesRows     : [{ id:'', site_name:'', site_group:'', address:'', contact_name:'', contact_phone:'' }]);
+        const buildingsSheet = XLSX.utils.json_to_sheet(buildingsRows.length ? buildingsRows : [{ id:'', site_id:'', building_name:'', floors:'' }]);
+        const equipmentSheet = XLSX.utils.json_to_sheet(equipmentRows.length ? equipmentRows : [{ id:'', site_id:'', building_id:'', equipment_type:'', model:'', location:'', floor:'', capacity:'', installation_date:'' }]);
+
+        // 컬럼 너비 설정
+        sitesSheet['!cols']     = [{ wch:12 },{ wch:30 },{ wch:20 },{ wch:40 },{ wch:15 },{ wch:18 }];
+        buildingsSheet['!cols'] = [{ wch:12 },{ wch:12 },{ wch:25 },{ wch:8 }];
+        equipmentSheet['!cols'] = [{ wch:12 },{ wch:12 },{ wch:12 },{ wch:35 },{ wch:20 },{ wch:15 },{ wch:8 },{ wch:10 },{ wch:14 }];
+
+        XLSX.utils.book_append_sheet(wb, sitesSheet,     'Sites');
+        XLSX.utils.book_append_sheet(wb, buildingsSheet, 'Buildings');
+        XLSX.utils.book_append_sheet(wb, equipmentSheet, 'Equipment');
+
+        // 파일명 (날짜 포함)
+        const today = new Date();
+        const dateStr = `${today.getFullYear()}${String(today.getMonth()+1).padStart(2,'0')}${String(today.getDate()).padStart(2,'0')}`;
+        XLSX.writeFile(wb, `HVAC_통합데이터_${dateStr}.xlsx`);
+
+        showStatus('success',
+            `✅ 내보내기 완료!<br>현장 ${sitesData.length}개 / 건물 ${buildingsData.length}개 / 장비 ${equipmentData.length}개`
+        );
+
+    } catch (error) {
+        console.error('❌ 데이터 내보내기 오류:', error);
+        showStatus('error', `❌ 내보내기 오류: ${error.message}`);
+    }
+}
+
+
+// 통합 템플릿 다운로드 (빈 샘플)
 function downloadAllTemplate() {
     const workbook = XLSX.utils.book_new();
     
