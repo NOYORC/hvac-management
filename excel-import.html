@@ -721,6 +721,188 @@
                 window.location.href = 'login.html';
             }
         }
+        
+        /**
+         * Firebase 데이터를 엑셀로 다운로드
+         */
+        async function downloadAllTemplate() {
+            try {
+                console.log('📥 Firebase 데이터 다운로드 시작...');
+                
+                // 로딩 표시
+                const downloadBtn = event.target.closest('a');
+                const originalHTML = downloadBtn.innerHTML;
+                downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 데이터 로딩 중...';
+                downloadBtn.style.pointerEvents = 'none';
+                
+                // Firebase에서 데이터 가져오기
+                const sitesResult = await window.FirestoreHelper.getAllDocuments('sites');
+                const buildingsResult = await window.FirestoreHelper.getAllDocuments('buildings');
+                const equipmentResult = await window.FirestoreHelper.getAllDocuments('equipment');
+                
+                console.log('✅ Sites:', sitesResult.data.length, '개');
+                console.log('✅ Buildings:', buildingsResult.data.length, '개');
+                console.log('✅ Equipment:', equipmentResult.data.length, '개');
+                
+                // 데이터 변환
+                const sitesData = sitesResult.data.map(site => ({
+                    id: site.id || '',
+                    site_name: site.site_name || '',
+                    address: site.address || '',
+                    contact_name: site.contact_name || '',
+                    contact_phone: site.contact_phone || ''
+                }));
+                
+                const buildingsData = buildingsResult.data.map(building => ({
+                    id: building.id || '',
+                    site_id: building.site_id || '',
+                    site_name: building.site_name || '',
+                    building_name: building.building_name || '',
+                    floors: building.floors || ''
+                }));
+                
+                const equipmentData = equipmentResult.data.map(eq => {
+                    // 설치일자 포맷팅
+                    let installDate = '';
+                    if (eq.installation_date) {
+                        if (eq.installation_date.toDate) {
+                            installDate = eq.installation_date.toDate().toISOString().split('T')[0];
+                        } else if (eq.installation_date instanceof Date) {
+                            installDate = eq.installation_date.toISOString().split('T')[0];
+                        } else if (typeof eq.installation_date === 'string') {
+                            installDate = eq.installation_date;
+                        }
+                    }
+                    
+                    return {
+                        id: eq.id || '',
+                        site_id: eq.site_id || '',
+                        site_name: eq.site_name || '',
+                        building_id: eq.building_id || '',
+                        building_name: eq.building_name || '',
+                        equipment_type: eq.equipment_type || '',
+                        model: eq.model || '',
+                        location: eq.location || '',
+                        floor: eq.floor || '',
+                        capacity: eq.capacity || '',
+                        installation_date: installDate
+                    };
+                });
+                
+                // 데이터가 없으면 샘플 데이터 제공
+                if (sitesData.length === 0) {
+                    sitesData.push({
+                        id: 'SITE001',
+                        site_name: '예시 발전소',
+                        address: '서울시 강남구',
+                        contact_name: '홍길동',
+                        contact_phone: '010-1234-5678'
+                    });
+                }
+                
+                if (buildingsData.length === 0) {
+                    buildingsData.push({
+                        id: 'BLD001',
+                        site_id: 'SITE001',
+                        site_name: '예시 발전소',
+                        building_name: 'A동',
+                        floors: 10
+                    });
+                }
+                
+                if (equipmentData.length === 0) {
+                    equipmentData.push({
+                        id: 'EQ001',
+                        site_id: 'SITE001',
+                        site_name: '예시 발전소',
+                        building_id: 'BLD001',
+                        building_name: 'A동',
+                        equipment_type: 'COOLING TOWER',
+                        model: 'H-CT-00801',
+                        location: '옥상',
+                        floor: '옥상',
+                        capacity: '',
+                        installation_date: '2024-01-01'
+                    });
+                }
+                
+                // 워크북 생성
+                const wb = XLSX.utils.book_new();
+                
+                // Sites 시트
+                const wsSites = XLSX.utils.json_to_sheet(sitesData);
+                wsSites['!cols'] = [
+                    { wch: 12 },  // id
+                    { wch: 20 },  // site_name
+                    { wch: 30 },  // address
+                    { wch: 15 },  // contact_name
+                    { wch: 15 }   // contact_phone
+                ];
+                XLSX.utils.book_append_sheet(wb, wsSites, 'Sites');
+                
+                // Buildings 시트
+                const wsBuildings = XLSX.utils.json_to_sheet(buildingsData);
+                wsBuildings['!cols'] = [
+                    { wch: 12 },  // id
+                    { wch: 12 },  // site_id
+                    { wch: 20 },  // site_name
+                    { wch: 20 },  // building_name
+                    { wch: 10 }   // floors
+                ];
+                XLSX.utils.book_append_sheet(wb, wsBuildings, 'Buildings');
+                
+                // Equipment 시트
+                const wsEquipment = XLSX.utils.json_to_sheet(equipmentData);
+                wsEquipment['!cols'] = [
+                    { wch: 12 },  // id
+                    { wch: 12 },  // site_id
+                    { wch: 20 },  // site_name
+                    { wch: 12 },  // building_id
+                    { wch: 20 },  // building_name
+                    { wch: 20 },  // equipment_type
+                    { wch: 20 },  // model
+                    { wch: 15 },  // location
+                    { wch: 10 },  // floor
+                    { wch: 15 },  // capacity
+                    { wch: 15 }   // installation_date
+                ];
+                XLSX.utils.book_append_sheet(wb, wsEquipment, 'Equipment');
+                
+                // 파일명 생성
+                const today = new Date();
+                const dateStr = today.getFullYear() + 
+                               String(today.getMonth() + 1).padStart(2, '0') + 
+                               String(today.getDate()).padStart(2, '0');
+                const filename = `HVAC_데이터_${dateStr}.xlsx`;
+                
+                // 다운로드
+                XLSX.writeFile(wb, filename);
+                
+                console.log(`✅ 다운로드 완료: ${filename}`);
+                console.log(`   - Sites: ${sitesData.length}개`);
+                console.log(`   - Buildings: ${buildingsData.length}개`);
+                console.log(`   - Equipment: ${equipmentData.length}개`);
+                
+                // 버튼 복원
+                downloadBtn.innerHTML = originalHTML;
+                downloadBtn.style.pointerEvents = 'auto';
+                
+                alert(`✅ 다운로드 완료!\n\n` +
+                      `- Sites: ${sitesData.length}개\n` +
+                      `- Buildings: ${buildingsData.length}개\n` +
+                      `- Equipment: ${equipmentData.length}개`);
+                
+            } catch (error) {
+                console.error('❌ 다운로드 오류:', error);
+                alert('다운로드 중 오류가 발생했습니다:\n' + error.message);
+                
+                // 버튼 복원
+                if (downloadBtn) {
+                    downloadBtn.innerHTML = originalHTML;
+                    downloadBtn.style.pointerEvents = 'auto';
+                }
+            }
+        }
     </script>
 </body>
 </html>
