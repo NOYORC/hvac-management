@@ -368,11 +368,11 @@
                 <h3 class="section-title">📦 통합 데이터 업로드</h3>
                 
                 <div class="download-template" style="display: flex; gap: 12px; flex-wrap: wrap;">
-                    <a href="#" class="template-link" onclick="downloadAllTemplate(); return false;">
+                    <a href="#" class="template-link" onclick="downloadEmptyTemplate(); return false;">
                         <i class="fas fa-download"></i>
                         빈 템플릿 다운로드
                     </a>
-                    <a href="#" class="template-link" onclick="exportCurrentData(); return false;"
+                    <a href="#" class="template-link" onclick="downloadAllTemplate(); return false;"
                        style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
                         <i class="fas fa-file-export"></i>
                         현재 데이터 내보내기
@@ -723,7 +723,99 @@
         }
         
         /**
-         * Firebase 데이터를 엑셀로 다운로드
+         * 빈 템플릿 다운로드 (샘플 데이터만 포함)
+         */
+        async function downloadEmptyTemplate() {
+            try {
+                console.log('📥 빈 템플릿 다운로드 시작...');
+                
+                // 샘플 데이터
+                const sitesData = [{
+                    id: 'SITE001',
+                    site_name: '예시 발전소',
+                    address: '서울시 강남구',
+                    contact_name: '홍길동',
+                    contact_phone: '010-1234-5678'
+                }];
+                
+                const buildingsData = [{
+                    id: 'BLD001',
+                    site_id: 'SITE001',
+                    site_name: '예시 발전소',
+                    building_name: 'A동',
+                    floors: 10
+                }];
+                
+                const equipmentData = [{
+                    id: 'EQ001',
+                    site_id: 'SITE001',
+                    site_name: '예시 발전소',
+                    building_id: 'BLD001',
+                    building_name: 'A동',
+                    equipment_type: 'COOLING TOWER',
+                    model: 'H-CT-00801',
+                    location: '옥상',
+                    floor: '옥상',
+                    capacity: '',
+                    installation_date: '2024-01-01'
+                }];
+                
+                // 워크북 생성
+                const wb = XLSX.utils.book_new();
+                
+                // Sites 시트
+                const wsSites = XLSX.utils.json_to_sheet(sitesData);
+                wsSites['!cols'] = [
+                    { wch: 12 },  // id
+                    { wch: 20 },  // site_name
+                    { wch: 30 },  // address
+                    { wch: 15 },  // contact_name
+                    { wch: 15 }   // contact_phone
+                ];
+                XLSX.utils.book_append_sheet(wb, wsSites, 'Sites');
+                
+                // Buildings 시트
+                const wsBuildings = XLSX.utils.json_to_sheet(buildingsData);
+                wsBuildings['!cols'] = [
+                    { wch: 12 },  // id
+                    { wch: 12 },  // site_id
+                    { wch: 20 },  // site_name
+                    { wch: 20 },  // building_name
+                    { wch: 10 }   // floors
+                ];
+                XLSX.utils.book_append_sheet(wb, wsBuildings, 'Buildings');
+                
+                // Equipment 시트
+                const wsEquipment = XLSX.utils.json_to_sheet(equipmentData);
+                wsEquipment['!cols'] = [
+                    { wch: 12 },  // id
+                    { wch: 12 },  // site_id
+                    { wch: 20 },  // site_name
+                    { wch: 12 },  // building_id
+                    { wch: 20 },  // building_name
+                    { wch: 20 },  // equipment_type
+                    { wch: 20 },  // model
+                    { wch: 15 },  // location
+                    { wch: 10 },  // floor
+                    { wch: 15 },  // capacity
+                    { wch: 15 }   // installation_date
+                ];
+                XLSX.utils.book_append_sheet(wb, wsEquipment, 'Equipment');
+                
+                // 다운로드
+                XLSX.writeFile(wb, 'HVAC_템플릿_빈양식.xlsx');
+                
+                console.log('✅ 빈 템플릿 다운로드 완료');
+                alert('✅ 빈 템플릿 다운로드 완료!');
+                
+            } catch (error) {
+                console.error('❌ 다운로드 오류:', error);
+                alert('다운로드 중 오류가 발생했습니다:\n' + error.message);
+            }
+        }
+        
+        /**
+         * 현재 Firebase 데이터를 엑셀로 다운로드
          */
         async function downloadAllTemplate() {
             try {
