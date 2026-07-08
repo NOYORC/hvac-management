@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>캐시 버스터 테스트</title>
+</head>
+<body>
+    <h1>🔍 엑셀 다운로드 함수 확인</h1>
+    <div id="result"></div>
+    
+    <script>
+        const result = document.getElementById('result');
+        
+        // 페이지 로드 시간 표시
+        const now = new Date();
+        result.innerHTML += `<p><strong>현재 시간:</strong> ${now.toLocaleString('ko-KR')}</p>`;
+        
+        // excel-import.html을 fetch해서 함수 확인
+        fetch('excel-import.html?' + Date.now())
+            .then(response => response.text())
+            .then(html => {
+                // downloadEmptyTemplate 함수 존재 확인
+                const hasEmptyTemplate = html.includes('function downloadEmptyTemplate()');
+                const hasAllTemplate = html.includes('현재 Firebase 데이터를 엑셀로 다운로드');
+                
+                // 버튼 onclick 확인
+                const hasEmptyButton = html.includes('onclick="downloadEmptyTemplate()');
+                const hasExportButton = html.includes('onclick="downloadAllTemplate()') && html.includes('현재 데이터 내보내기');
+                
+                result.innerHTML += `
+                    <h2>✅ 함수 존재 여부:</h2>
+                    <ul>
+                        <li style="color: ${hasEmptyTemplate ? 'green' : 'red'};">
+                            downloadEmptyTemplate() 함수: ${hasEmptyTemplate ? '✅ 존재' : '❌ 없음'}
+                        </li>
+                        <li style="color: ${hasAllTemplate ? 'green' : 'red'};">
+                            downloadAllTemplate() 함수: ${hasAllTemplate ? '✅ 존재' : '❌ 없음'}
+                        </li>
+                    </ul>
+                    
+                    <h2>✅ 버튼 연결 상태:</h2>
+                    <ul>
+                        <li style="color: ${hasEmptyButton ? 'green' : 'red'};">
+                            "빈 템플릿 다운로드" 버튼: ${hasEmptyButton ? '✅ downloadEmptyTemplate()' : '❌ 연결 안됨'}
+                        </li>
+                        <li style="color: ${hasExportButton ? 'green' : 'red'};">
+                            "현재 데이터 내보내기" 버튼: ${hasExportButton ? '✅ downloadAllTemplate()' : '❌ 연결 안됨'}
+                        </li>
+                    </ul>
+                    
+                    <h2>📝 결론:</h2>
+                    <p style="font-size: 18px; font-weight: bold; color: ${hasEmptyTemplate && hasAllTemplate && hasEmptyButton && hasExportButton ? 'green' : 'red'};">
+                        ${hasEmptyTemplate && hasAllTemplate && hasEmptyButton && hasExportButton 
+                            ? '✅ 모든 함수가 정상적으로 배포되었습니다!' 
+                            : '❌ 일부 함수가 누락되었습니다. 캐시를 완전히 지우고 다시 시도하세요.'}
+                    </p>
+                    
+                    <h3>🔧 권장 조치:</h3>
+                    <ol>
+                        <li><strong>Chrome/Edge:</strong> Ctrl+Shift+Delete → "캐시된 이미지 및 파일" 체크 → "데이터 삭제"</li>
+                        <li><strong>Firefox:</strong> Ctrl+Shift+Delete → "캐시" 체크 → "지금 지우기"</li>
+                        <li><strong>Safari:</strong> Cmd+Option+E (캐시 비우기)</li>
+                        <li>브라우저를 완전히 닫았다가 다시 열기</li>
+                        <li>시크릿/incognito 모드에서 테스트</li>
+                    </ol>
+                    
+                    <hr>
+                    <h3>🧪 직접 테스트:</h3>
+                    <a href="excel-import.html?nocache=${Date.now()}" target="_blank" 
+                       style="display: inline-block; padding: 15px 30px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); 
+                              color: white; text-decoration: none; border-radius: 10px; font-weight: bold; margin-top: 10px;">
+                        🚀 엑셀 가져오기 페이지 열기 (캐시 무시)
+                    </a>
+                `;
+            })
+            .catch(error => {
+                result.innerHTML += `<p style="color: red;">❌ 오류: ${error.message}</p>`;
+            });
+    </script>
+</body>
+</html>
