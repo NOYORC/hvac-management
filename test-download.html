@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>다운로드 테스트</title>
+</head>
+<body>
+    <h1>다운로드 함수 테스트</h1>
+    <button onclick="testDownload()">Firebase 데이터 확인</button>
+    <div id="output"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyCpTEePTOkEfSLRzyszq0dCCJmQEWJsBic",
+            authDomain: "hvac-management-477fb.firebaseapp.com",
+            projectId: "hvac-management-477fb",
+            storageBucket: "hvac-management-477fb.firebasestorage.app",
+            messagingSenderId: "312239966797",
+            appId: "1:312239966797:web:b454d99fde9823207dea04",
+            measurementId: "G-FT4YE5FDP1"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        window.testDownload = async function() {
+            const output = document.getElementById('output');
+            output.innerHTML = '<h2>데이터 확인 중...</h2>';
+            
+            try {
+                // Equipment 데이터 확인
+                const equipmentSnap = await getDocs(collection(db, 'equipment'));
+                const equipmentList = [];
+                
+                equipmentSnap.forEach(doc => {
+                    const data = doc.data();
+                    equipmentList.push({
+                        id: doc.id,
+                        site_id: data.site_id,
+                        site_name: data.site_name || '❌없음',
+                        building_id: data.building_id,
+                        building_name: data.building_name || '❌없음',
+                        equipment_type: data.equipment_type
+                    });
+                });
+                
+                // Buildings 데이터 확인
+                const buildingsSnap = await getDocs(collection(db, 'buildings'));
+                const buildingsList = [];
+                
+                buildingsSnap.forEach(doc => {
+                    const data = doc.data();
+                    buildingsList.push({
+                        id: doc.id,
+                        site_id: data.site_id,
+                        site_name: data.site_name || '❌없음',
+                        building_name: data.building_name
+                    });
+                });
+                
+                // 결과 표시
+                let html = '<h2>✅ Equipment 데이터 (처음 5개):</h2>';
+                html += '<table border="1" style="border-collapse: collapse; width: 100%;">';
+                html += '<tr><th>ID</th><th>site_id</th><th>site_name</th><th>building_id</th><th>building_name</th><th>type</th></tr>';
+                
+                equipmentList.slice(0, 5).forEach(eq => {
+                    html += `<tr>
+                        <td>${eq.id}</td>
+                        <td>${eq.site_id}</td>
+                        <td style="color: ${eq.site_name === '❌없음' ? 'red' : 'green'};">${eq.site_name}</td>
+                        <td>${eq.building_id}</td>
+                        <td style="color: ${eq.building_name === '❌없음' ? 'red' : 'green'};">${eq.building_name}</td>
+                        <td>${eq.equipment_type}</td>
+                    </tr>`;
+                });
+                html += '</table>';
+                
+                html += `<h3>총 Equipment: ${equipmentList.length}개</h3>`;
+                html += `<h3>site_name 없는 항목: ${equipmentList.filter(e => e.site_name === '❌없음').length}개</h3>`;
+                html += `<h3>building_name 없는 항목: ${equipmentList.filter(e => e.building_name === '❌없음').length}개</h3>`;
+                
+                html += '<h2>✅ Buildings 데이터 (처음 5개):</h2>';
+                html += '<table border="1" style="border-collapse: collapse; width: 100%;">';
+                html += '<tr><th>ID</th><th>site_id</th><th>site_name</th><th>building_name</th></tr>';
+                
+                buildingsList.slice(0, 5).forEach(bld => {
+                    html += `<tr>
+                        <td>${bld.id}</td>
+                        <td>${bld.site_id}</td>
+                        <td style="color: ${bld.site_name === '❌없음' ? 'red' : 'green'};">${bld.site_name}</td>
+                        <td>${bld.building_name}</td>
+                    </tr>`;
+                });
+                html += '</table>';
+                
+                html += `<h3>총 Buildings: ${buildingsList.length}개</h3>`;
+                html += `<h3>site_name 없는 항목: ${buildingsList.filter(b => b.site_name === '❌없음').length}개</h3>`;
+                
+                output.innerHTML = html;
+                
+            } catch (error) {
+                output.innerHTML = `<h2 style="color: red;">❌ 오류: ${error.message}</h2>`;
+                console.error(error);
+            }
+        };
+    </script>
+</body>
+</html>
