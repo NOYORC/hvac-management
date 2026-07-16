@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>장비 데이터 테스트</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+        .equipment-card {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .equipment-card h3 {
+            margin: 0 0 15px 0;
+            color: #333;
+        }
+        .field {
+            margin: 8px 0;
+            padding: 8px;
+            background: white;
+            border-radius: 4px;
+        }
+        .field strong {
+            color: #667eea;
+            margin-right: 10px;
+        }
+        .parts-box {
+            background: #e3f2fd;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 6px;
+        }
+        .part-item {
+            background: white;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 4px;
+            border-left: 3px solid #2196F3;
+        }
+        .no-parts {
+            color: #999;
+            font-style: italic;
+        }
+        pre {
+            background: #263238;
+            color: #aed581;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        .status {
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-weight: 600;
+        }
+        .success { background: #e8f5e9; color: #2e7d32; }
+        .error { background: #ffebee; color: #c62828; }
+        .warning { background: #fff3e0; color: #ef6c00; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 장비 데이터 상세 테스트</h1>
+        <p>Firebase에서 장비 데이터를 직접 가져와서 부속품 정보를 확인합니다.</p>
+        
+        <div>
+            <label for="equipmentId" style="display: block; margin-bottom: 5px; font-weight: 600;">장비 ID 입력:</label>
+            <input type="text" id="equipmentId" placeholder="예: EQ0001" style="padding: 10px; width: 300px; border: 1px solid #ddd; border-radius: 6px; margin-right: 10px;">
+            <button onclick="loadEquipmentData()">장비 데이터 조회</button>
+        </div>
+        
+        <button onclick="loadAllEquipment()">전체 장비 조회 (부속품 있는 것만)</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyCpTEePTOkEfSLRzyszq0dCCJmQEWJsBic",
+            authDomain: "hvac-management-477fb.firebaseapp.com",
+            projectId: "hvac-management-477fb",
+            storageBucket: "hvac-management-477fb.firebasestorage.app",
+            messagingSenderId: "312239966797",
+            appId: "1:312239966797:web:b454d99fde9823207dea04"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        window.loadEquipmentData = async function() {
+            const equipmentId = document.getElementById('equipmentId').value.trim();
+            const results = document.getElementById('results');
+            
+            if (!equipmentId) {
+                results.innerHTML = '<div class="status error">⚠️ 장비 ID를 입력하세요</div>';
+                return;
+            }
+            
+            results.innerHTML = '<div class="status">🔍 데이터 조회 중...</div>';
+            
+            try {
+                const docRef = doc(db, 'equipment', equipmentId);
+                const docSnap = await getDoc(docRef);
+                
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    displayEquipment(equipmentId, data);
+                } else {
+                    results.innerHTML = `<div class="status error">❌ 장비 ID "${equipmentId}"를 찾을 수 없습니다</div>`;
+                }
+            } catch (error) {
+                results.innerHTML = `<div class="status error">❌ 오류: ${error.message}</div>`;
+                console.error(error);
+            }
+        };
+        
+        window.loadAllEquipment = async function() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<div class="status">🔍 전체 장비 데이터 조회 중...</div>';
+            
+            try {
+                const querySnapshot = await getDocs(collection(db, 'equipment'));
+                
+                let html = '';
+                let total = 0;
+                let withParts = 0;
+                
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    total++;
+                    
+                    if (data.parts && Array.isArray(data.parts) && data.parts.length > 0) {
+                        withParts++;
+                        html += renderEquipmentCard(doc.id, data);
+                    }
+                });
+                
+                if (withParts === 0) {
+                    results.innerHTML = `
+                        <div class="status warning">
+                            ⚠️ 전체 장비 ${total}개 중 부속품이 등록된 장비가 없습니다.<br>
+                            시스템 관리 페이지에서 장비를 수정하여 부속품을 추가하세요.
+                        </div>
+                    `;
+                } else {
+                    results.innerHTML = `
+                        <div class="status success">
+                            ✅ 전체 장비: ${total}개 | 부속품 등록: ${withParts}개
+                        </div>
+                        ${html}
+                    `;
+                }
+            } catch (error) {
+                results.innerHTML = `<div class="status error">❌ 오류: ${error.message}</div>`;
+                console.error(error);
+            }
+        };
+        
+        function renderEquipmentCard(id, data) {
+            const hasParts = data.parts && Array.isArray(data.parts) && data.parts.length > 0;
+            
+            let partsHtml = '<div class="no-parts">부속품 없음</div>';
+            if (hasParts) {
+                partsHtml = data.parts.map(part => `
+                    <div class="part-item">
+                        <strong>🔧 ${part.name}</strong>
+                        <span style="color: #666; margin-left: 10px;">${part.spec || '-'}</span>
+                    </div>
+                `).join('');
+            }
+            
+            return `
+                <div class="equipment-card">
+                    <h3>${data.equipment_type || '알 수 없음'} (${id})</h3>
+                    <div class="field"><strong>모델:</strong> ${data.model || '-'}</div>
+                    <div class="field"><strong>현장:</strong> ${data.site_name || data.site_id || '-'}</div>
+                    <div class="field"><strong>건물:</strong> ${data.building_name || data.building_id || '-'}</div>
+                    <div class="field"><strong>위치:</strong> ${data.location || '-'}</div>
+                    <div class="field"><strong>용량:</strong> ${data.capacity || '-'}</div>
+                    
+                    <div class="parts-box">
+                        <strong style="display: block; margin-bottom: 10px;">📦 부속품 정보 (${data.parts?.length || 0}개)</strong>
+                        ${partsHtml}
+                    </div>
+                    
+                    <details style="margin-top: 15px;">
+                        <summary style="cursor: pointer; color: #667eea; font-weight: 600;">전체 JSON 데이터 보기</summary>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    </details>
+                </div>
+            `;
+        }
+        
+        function displayEquipment(id, data) {
+            const results = document.getElementById('results');
+            results.innerHTML = `
+                <div class="status success">✅ 장비 데이터 조회 성공</div>
+                ${renderEquipmentCard(id, data)}
+            `;
+        }
+    </script>
+</body>
+</html>
