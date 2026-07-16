@@ -45,7 +45,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, getDocs, query, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         
         const firebaseConfig = {
@@ -71,7 +71,8 @@
             results.innerHTML = '<div class="status info"><i class="fas fa-spinner fa-spin"></i> Firebase에서 장비 데이터 확인 중...</div>';
             
             try {
-                const equipmentQuery = query(collection(db, 'equipment'), limit(10));
+                // 전체 장비 조회 (limit 제거)
+                const equipmentQuery = collection(db, 'equipment');
                 const snapshot = await getDocs(equipmentQuery);
                 
                 let html = '';

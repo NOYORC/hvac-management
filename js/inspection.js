@@ -894,6 +894,13 @@ function renderEquipmentDetail(equipment) {
     
     // 부속품 정보 HTML 생성
     let partsHtml = '';
+    console.log('🔍 부속품 데이터 확인:', {
+        hasParts: !!equipment.parts,
+        isArray: Array.isArray(equipment.parts),
+        length: equipment.parts?.length || 0,
+        partsData: equipment.parts
+    });
+    
     if (equipment.parts && Array.isArray(equipment.parts) && equipment.parts.length > 0) {
         const partsItems = equipment.parts.map(part => `
             <div class="part-item">
@@ -916,6 +923,9 @@ function renderEquipmentDetail(equipment) {
                 </div>
             </div>
         `;
+        console.log('✅ 부속품 HTML 생성됨:', partsHtml.length, '바이트');
+    } else {
+        console.log('⚠️ 부속품 데이터 없음 - HTML 생성 건너뜀');
     }
     
     detailDiv.innerHTML = `
