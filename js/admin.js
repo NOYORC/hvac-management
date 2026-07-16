@@ -94,6 +94,7 @@ function switchTab(tabName) {
     } else if (tabName === 'equipment') {
         renderEquipmentTable();
         updateEquipmentSiteFilter();
+        updateEquipmentBuildingFilter();
     }
 }
 
@@ -294,7 +295,7 @@ function renderEquipmentTable() {
     
     // 필터 적용
     const siteFilter = document.getElementById('equipmentSiteFilter')?.value || 'all';
-    const typeFilter = document.getElementById('equipmentTypeFilter')?.value || 'all';
+    const buildingFilter = document.getElementById('equipmentBuildingFilter')?.value || 'all';
     const idSearch = document.getElementById('equipmentIdFilter')?.value.toLowerCase() || '';
     
     let filtered = [...equipment];
@@ -304,9 +305,9 @@ function renderEquipmentTable() {
         filtered = filtered.filter(eq => eq.site_id === siteFilter);
     }
     
-    // 장비 종류 필터
-    if (typeFilter !== 'all') {
-        filtered = filtered.filter(eq => (eq.equipment_type || eq.type) === typeFilter);
+    // 건물 필터
+    if (buildingFilter !== 'all') {
+        filtered = filtered.filter(eq => eq.building_id === buildingFilter);
     }
     
     // ID 검색
@@ -533,11 +534,32 @@ function updateEquipmentSiteFilter() {
     }
 }
 
+function updateEquipmentBuildingFilter() {
+    const buildingFilter = document.getElementById('equipmentBuildingFilter');
+    if (!buildingFilter) return;
+    
+    const currentValue = buildingFilter.value;
+    buildingFilter.innerHTML = '<option value="all">전체</option>';
+    
+    buildings.forEach(building => {
+        const option = document.createElement('option');
+        option.value = building.id;
+        option.textContent = building.building_name || building.id;
+        buildingFilter.appendChild(option);
+    });
+    
+    // 이전 선택 값 복원
+    if (currentValue && buildingFilter.querySelector(`option[value="${currentValue}"]`)) {
+        buildingFilter.value = currentValue;
+    }
+}
+
 // 기존 renderEquipment 함수 (하위 호환성 유지)
 function renderEquipment() {
     // 새 테이블 형식으로 렌더링
     renderEquipmentTable();
     updateEquipmentSiteFilter();
+    updateEquipmentBuildingFilter();
 }
 
 async function showAddEquipmentModal() {

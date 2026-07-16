@@ -592,16 +592,11 @@
                     </div>
                     <div>
                         <label style="display: block; margin-bottom: 5px; font-weight: 600; font-size: 13px; color: #666;">
-                            <i class="fas fa-cube"></i> 장비 종류
+                            <i class="fas fa-city"></i> 건물
                         </label>
-                        <select id="equipmentTypeFilter" onchange="renderEquipmentTable()" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 5px;">
+                        <select id="equipmentBuildingFilter" onchange="renderEquipmentTable()" style="width: 100%; padding: 8px; border: 1px solid #e0e0e0; border-radius: 5px;">
                             <option value="all">전체</option>
-                            <option value="히트펌프">히트펌프</option>
-                            <option value="FCU">FCU</option>
-                            <option value="AHU">AHU</option>
-                            <option value="냉온수기">냉온수기</option>
-                            <option value="보일러">보일러</option>
-                            <option value="기타">기타</option>
+                            <!-- 건물 목록은 JavaScript에서 동적으로 로드됩니다 -->
                         </select>
                     </div>
                     <div>
