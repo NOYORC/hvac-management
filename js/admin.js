@@ -1391,6 +1391,13 @@ let partsCount = 0;
 
 function addPartInput() {
     const container = document.getElementById('partsContainer');
+    
+    // no-parts 메시지가 있으면 제거
+    const noParts = container.querySelector('.no-parts');
+    if (noParts) {
+        noParts.remove();
+    }
+    
     const partId = 'part_' + (++partsCount);
     
     const partItem = document.createElement('div');
@@ -1421,6 +1428,17 @@ function removePartInput(partId) {
         setTimeout(() => {
             partItem.remove();
             console.log('🗑️ 부속품 입력 필드 제거:', partId);
+            
+            // 모든 부속품이 제거되었으면 no-parts 메시지 표시
+            const container = document.getElementById('partsContainer');
+            const remaining = container.querySelectorAll('.part-input-group');
+            if (remaining.length === 0) {
+                container.innerHTML = `
+                    <div class="no-parts">
+                        <i class="fas fa-info-circle"></i> 등록된 부속품이 없습니다. "부속품 추가" 버튼을 클릭하세요.
+                    </div>
+                `;
+            }
         }, 300);
     }
 }

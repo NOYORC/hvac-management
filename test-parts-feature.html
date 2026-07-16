@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>부속품 기능 테스트</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 30px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .test-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .status {
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        .status.success {
+            background: #e8f5e9;
+            color: #388E3C;
+        }
+        .status.error {
+            background: #ffebee;
+            color: #C62828;
+        }
+        .status.info {
+            background: #e3f2fd;
+            color: #1976D2;
+        }
+        
+        /* 부속품 스타일 복사 */
+        .parts-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid #e3e8ef;
+            margin-bottom: 20px;
+        }
+        .parts-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .btn-add-part {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.3s ease;
+        }
+        .btn-add-part:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+        .part-input-group {
+            display: grid;
+            grid-template-columns: 1fr 2fr auto;
+            gap: 10px;
+            margin-bottom: 12px;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e3e8ef;
+        }
+        .part-input-group input {
+            padding: 10px 12px;
+            border: 1px solid #e3e8ef;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .btn-remove-part {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 10px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .no-parts {
+            text-align: center;
+            padding: 20px;
+            color: #999;
+            font-size: 14px;
+            background: white;
+            border-radius: 8px;
+            border: 1px dashed #e3e8ef;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-section">
+        <div class="test-title">🔍 부속품 기능 테스트</div>
+        
+        <div id="testResults"></div>
+        
+        <button onclick="runTests()" style="padding: 12px 24px; background: #667eea; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-bottom: 20px;">
+            <i class="fas fa-play"></i> 테스트 실행
+        </button>
+        
+        <div class="parts-section">
+            <div class="parts-header">
+                <label style="font-weight: 600; color: #333; margin: 0;">
+                    <i class="fas fa-cogs" style="color: #3b82f6;"></i> 부속품 정보 (실제 UI)
+                </label>
+                <button type="button" class="btn-add-part" onclick="testAddPart()">
+                    <i class="fas fa-plus"></i> 부속품 추가
+                </button>
+            </div>
+            <div id="testPartsContainer">
+                <div class="no-parts">
+                    <i class="fas fa-info-circle"></i> 등록된 부속품이 없습니다. "부속품 추가" 버튼을 클릭하세요.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let testPartsCount = 0;
+        
+        function runTests() {
+            const results = document.getElementById('testResults');
+            results.innerHTML = '<div class="status info"><i class="fas fa-spinner fa-spin"></i> 테스트 실행 중...</div>';
+            
+            setTimeout(() => {
+                let html = '';
+                
+                // 1. HTML 요소 존재 확인
+                const container = document.getElementById('testPartsContainer');
+                if (container) {
+                    html += '<div class="status success"><i class="fas fa-check"></i> ✅ partsContainer 요소 존재</div>';
+                } else {
+                    html += '<div class="status error"><i class="fas fa-times"></i> ❌ partsContainer 요소 없음</div>';
+                }
+                
+                // 2. 함수 정의 확인
+                if (typeof testAddPart === 'function') {
+                    html += '<div class="status success"><i class="fas fa-check"></i> ✅ addPartInput 함수 정의됨</div>';
+                } else {
+                    html += '<div class="status error"><i class="fas fa-times"></i> ❌ addPartInput 함수 미정의</div>';
+                }
+                
+                // 3. CSS 스타일 확인
+                const btn = document.querySelector('.btn-add-part');
+                if (btn) {
+                    const styles = window.getComputedStyle(btn);
+                    const bgColor = styles.backgroundColor;
+                    html += `<div class="status success"><i class="fas fa-check"></i> ✅ CSS 스타일 적용됨 (배경색: ${bgColor})</div>`;
+                } else {
+                    html += '<div class="status error"><i class="fas fa-times"></i> ❌ CSS 스타일 미적용</div>';
+                }
+                
+                // 4. admin.js 로드 확인
+                html += '<div class="status info"><i class="fas fa-info-circle"></i> 실제 admin.html에서는 admin.js가 로드되어야 함</div>';
+                
+                results.innerHTML = html;
+            }, 500);
+        }
+        
+        function testAddPart() {
+            const container = document.getElementById('testPartsContainer');
+            
+            // no-parts 메시지 제거
+            const noParts = container.querySelector('.no-parts');
+            if (noParts) {
+                noParts.remove();
+            }
+            
+            const partId = 'test_part_' + (++testPartsCount);
+            
+            const partItem = document.createElement('div');
+            partItem.className = 'part-input-group';
+            partItem.id = partId;
+            partItem.innerHTML = `
+                <input type="text" placeholder="부속품명 (예: 마그네트)" class="part-name">
+                <input type="text" placeholder="규격/모델 (예: MC-32, MC-9B)" class="part-spec">
+                <button type="button" class="btn-remove-part" onclick="testRemovePart('${partId}')">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            container.appendChild(partItem);
+            
+            setTimeout(() => {
+                partItem.querySelector('.part-name').focus();
+            }, 100);
+            
+            console.log('✅ 테스트: 부속품 입력 필드 추가됨', partId);
+        }
+        
+        function testRemovePart(partId) {
+            const partItem = document.getElementById(partId);
+            if (partItem) {
+                partItem.remove();
+                console.log('🗑️ 테스트: 부속품 입력 필드 제거됨', partId);
+                
+                // 모든 필드가 제거되면 no-parts 메시지 표시
+                const container = document.getElementById('testPartsContainer');
+                const remaining = container.querySelectorAll('.part-input-group');
+                if (remaining.length === 0) {
+                    container.innerHTML = `
+                        <div class="no-parts">
+                            <i class="fas fa-info-circle"></i> 등록된 부속품이 없습니다. "부속품 추가" 버튼을 클릭하세요.
+                        </div>
+                    `;
+                }
+            }
+        }
+        
+        // 페이지 로드 시 자동 테스트
+        window.addEventListener('load', () => {
+            setTimeout(runTests, 500);
+        });
+    </script>
+</body>
+</html>
