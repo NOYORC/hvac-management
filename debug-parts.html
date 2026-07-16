@@ -46,6 +46,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, getDocs, query, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
         
         const firebaseConfig = {
             apiKey: "AIzaSyCpTEePTOkEfSLRzyszq0dCCJmQEWJsBic",
@@ -58,6 +59,12 @@
         
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
+        
+        // 페이지 로드 시 익명 로그인
+        signInAnonymously(auth).catch(error => {
+            console.error("익명 로그인 실패:", error);
+        });
         
         window.checkData = async function() {
             const results = document.getElementById('results');

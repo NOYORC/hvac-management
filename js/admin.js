@@ -570,6 +570,11 @@ async function showAddEquipmentModal() {
     // 현장 목록 로드
     await loadSitesForEquipment();
     
+    // 건물 선택 필드 초기화 (현장 선택 전까지 비활성화)
+    const buildingSelect = document.getElementById('equipmentBuilding');
+    buildingSelect.innerHTML = '<option value="">⚠️ 현장을 먼저 선택해 주세요</option>';
+    buildingSelect.disabled = true;
+    
     // 커스텀 필드 초기화
     document.getElementById('customFieldsContainer').innerHTML = '';
     customFieldsCount = 0;
@@ -647,11 +652,24 @@ async function loadSitesForEquipment() {
 
 async function loadBuildingsForEquipment(siteId) {
     const select = document.getElementById('equipmentBuilding');
+    
+    if (!siteId) {
+        select.innerHTML = '<option value="">⚠️ 현장을 먼저 선택해 주세요</option>';
+        select.disabled = true;
+        return;
+    }
+    
+    select.disabled = false;
     select.innerHTML = '<option value="">건물을 선택하세요</option>';
     
-    if (!siteId) return;
-    
     const siteBuildings = buildings.filter(b => b.site_id === siteId);
+    
+    if (siteBuildings.length === 0) {
+        select.innerHTML = '<option value="">⚠️ 이 현장에는 건물이 없습니다</option>';
+        select.disabled = true;
+        return;
+    }
+    
     siteBuildings.forEach(building => {
         select.innerHTML += `<option value="${building.id}">${building.building_name}</option>`;
     });
