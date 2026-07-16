@@ -848,10 +848,11 @@ function renderEquipmentDetail(equipment) {
     
     // equipment 객체에서 기본 필드가 아닌 필드들을 커스텀 필드로 추가
     const reservedKeys = ['id', 'equipment_type', 'model', 'capacity', 'floor', 'location', 
-                         'installation_date', 'site_id', 'building_id', 'created_at', 'updated_at'];
+                         'installation_date', 'site_id', 'building_id', 'site_name', 'building_name',
+                         'created_at', 'updated_at', 'parts'];
     
     Object.keys(equipment).forEach(key => {
-        if (!reservedKeys.includes(key) && equipment[key] && key !== 'custom_fields') {
+        if (!reservedKeys.includes(key) && equipment[key] && key !== 'custom_fields' && key !== 'parts') {
             allFields.push({
                 key: key,
                 label: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
