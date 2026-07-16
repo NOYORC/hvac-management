@@ -552,6 +552,15 @@ async function showAddEquipmentModal() {
     document.getElementById('customFieldsContainer').innerHTML = '';
     customFieldsCount = 0;
     
+    // 부속품 초기화
+    const partsContainer = document.getElementById('partsContainer');
+    partsContainer.innerHTML = `
+        <div class="no-parts">
+            <i class="fas fa-info-circle"></i> 등록된 부속품이 없습니다. "부속품 추가" 버튼을 클릭하세요.
+        </div>
+    `;
+    partsCount = 0;
+    
     document.getElementById('equipmentModal').classList.add('active');
     currentEditId = null;
 }
@@ -592,6 +601,9 @@ async function editEquipment(equipmentId) {
     
     // 커스텀 필드 로드
     loadCustomFields(eq);
+    
+    // 부속품 로드
+    loadParts(eq);
     
     document.getElementById('equipmentModal').classList.add('active');
     currentEditId = equipmentId;
@@ -659,6 +671,12 @@ async function handleEquipmentSubmit(e) {
     const customFields = getCustomFieldsData();
     if (customFields) {
         equipmentData.custom_fields = customFields;
+    }
+    
+    // 부속품 정보 추가
+    const parts = getPartsData();
+    if (parts) {
+        equipmentData.parts = parts;
     }
     
     console.log('💾 장비 저장 데이터:', equipmentData);
@@ -1344,6 +1362,94 @@ function getCustomFieldsData() {
     
     console.log('📦 커스텀 필드 데이터:', customFields);
     return Object.keys(customFields).length > 0 ? customFields : null;
+}
+
+// ===== 부속품 관리 함수 =====
+let partsCount = 0;
+
+function addPartInput() {
+    const container = document.getElementById('partsContainer');
+    const partId = 'part_' + (++partsCount);
+    
+    const partItem = document.createElement('div');
+    partItem.className = 'part-input-group';
+    partItem.id = partId;
+    partItem.innerHTML = `
+        <input type="text" placeholder="부속품명 (예: 마그네트)" class="part-name">
+        <input type="text" placeholder="규격/모델 (예: MC-32, MC-9B)" class="part-spec">
+        <button type="button" class="btn-remove-part" onclick="removePartInput('${partId}')">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+    
+    container.appendChild(partItem);
+    
+    // 첫 번째 input에 포커스
+    setTimeout(() => {
+        partItem.querySelector('.part-name').focus();
+    }, 100);
+    
+    console.log('✅ 부속품 입력 필드 추가:', partId);
+}
+
+function removePartInput(partId) {
+    const partItem = document.getElementById(partId);
+    if (partItem) {
+        partItem.style.animation = 'fadeOut 0.3s ease';
+        setTimeout(() => {
+            partItem.remove();
+            console.log('🗑️ 부속품 입력 필드 제거:', partId);
+        }, 300);
+    }
+}
+
+function loadParts(equipment) {
+    const container = document.getElementById('partsContainer');
+    container.innerHTML = '';
+    partsCount = 0;
+    
+    if (equipment.parts && Array.isArray(equipment.parts) && equipment.parts.length > 0) {
+        equipment.parts.forEach(part => {
+            const partId = 'part_' + (++partsCount);
+            const partItem = document.createElement('div');
+            partItem.className = 'part-input-group';
+            partItem.id = partId;
+            partItem.innerHTML = `
+                <input type="text" value="${part.name || ''}" placeholder="부속품명" class="part-name">
+                <input type="text" value="${part.spec || ''}" placeholder="규격/모델" class="part-spec">
+                <button type="button" class="btn-remove-part" onclick="removePartInput('${partId}')">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            container.appendChild(partItem);
+        });
+        console.log(`🔧 ${equipment.parts.length}개 부속품 로드됨`);
+    } else {
+        // 부속품이 없으면 안내 메시지 표시
+        container.innerHTML = `
+            <div class="no-parts">
+                <i class="fas fa-info-circle"></i> 등록된 부속품이 없습니다. "부속품 추가" 버튼을 클릭하세요.
+            </div>
+        `;
+    }
+}
+
+function getPartsData() {
+    const container = document.getElementById('partsContainer');
+    const partItems = container.querySelectorAll('.part-input-group');
+    const parts = [];
+    
+    partItems.forEach(item => {
+        const name = item.querySelector('.part-name')?.value.trim();
+        const spec = item.querySelector('.part-spec')?.value.trim();
+        
+        if (name && spec) {
+            parts.push({ name, spec });
+        }
+    });
+    
+    console.log('🔧 부속품 데이터:', parts);
+    return parts.length > 0 ? parts : null;
 }
 
 // fadeOut 애니메이션 추가

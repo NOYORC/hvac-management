@@ -892,12 +892,42 @@ function renderEquipmentDetail(equipment) {
         `;
     }).join('');
     
-    detailDiv.innerHTML = `<div class="detail-grid">${detailItems}</div>`;
+    // 부속품 정보 HTML 생성
+    let partsHtml = '';
+    if (equipment.parts && Array.isArray(equipment.parts) && equipment.parts.length > 0) {
+        const partsItems = equipment.parts.map(part => `
+            <div class="part-item">
+                <i class="fas fa-cog"></i>
+                <div>
+                    <span class="part-name">${part.name}</span>
+                    <span class="part-spec">${part.spec}</span>
+                </div>
+            </div>
+        `).join('');
+        
+        partsHtml = `
+            <div class="parts-section">
+                <div class="parts-header">
+                    <i class="fas fa-cogs"></i>
+                    <span>부속품 정보</span>
+                </div>
+                <div class="parts-list">
+                    ${partsItems}
+                </div>
+            </div>
+        `;
+    }
+    
+    detailDiv.innerHTML = `
+        <div class="detail-grid">${detailItems}</div>
+        ${partsHtml}
+    `;
     
     console.log('📋 장비 상세 정보 렌더링 완료:', {
         총필드수: allFields.length,
         기본필드: defaultFields.length,
-        커스텀필드: allFields.length - defaultFields.length
+        커스텀필드: allFields.length - defaultFields.length,
+        부속품수: equipment.parts?.length || 0
     });
 }
 
