@@ -381,8 +381,8 @@
             color: #999;
         }
 
-        /* 부속품 정보 스타일 */
-        .parts-section {
+        /* 추가 정보 통합 스타일 */
+        .additional-info-section {
             background: #f8f9fa;
             padding: 20px;
             border-radius: 12px;
@@ -390,14 +390,14 @@
             margin-bottom: 20px;
         }
 
-        .parts-header {
+        .additional-info-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
         }
 
-        .btn-add-part {
+        .btn-add-info {
             background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
             color: white;
             border: none;
@@ -412,12 +412,12 @@
             transition: all 0.3s ease;
         }
 
-        .btn-add-part:hover {
+        .btn-add-info:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
         }
 
-        .part-input-group {
+        .info-input-group {
             display: grid;
             grid-template-columns: 1fr 2fr auto;
             gap: 10px;
@@ -427,14 +427,26 @@
             border-radius: 8px;
             border: 1px solid #e3e8ef;
             transition: all 0.2s ease;
+            animation: slideIn 0.3s ease;
         }
 
-        .part-input-group:hover {
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .info-input-group:hover {
             border-color: #3b82f6;
             box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
         }
 
-        .part-input-group input {
+        .info-input-group input {
             padding: 10px 12px;
             border: 1px solid #e3e8ef;
             border-radius: 6px;
@@ -442,17 +454,17 @@
             transition: all 0.2s ease;
         }
 
-        .part-input-group input:focus {
+        .info-input-group input:focus {
             outline: none;
             border-color: #3b82f6;
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
 
-        .part-input-group input::placeholder {
+        .info-input-group input::placeholder {
             color: #aaa;
         }
 
-        .btn-remove-part {
+        .btn-remove-info {
             background: #ef4444;
             color: white;
             border: none;
@@ -465,12 +477,12 @@
             justify-content: center;
         }
 
-        .btn-remove-part:hover {
+        .btn-remove-info:hover {
             background: #dc2626;
             transform: scale(1.05);
         }
 
-        .no-parts {
+        .no-additional-info {
             text-align: center;
             padding: 20px;
             color: #999;
@@ -478,6 +490,13 @@
             background: white;
             border-radius: 8px;
             border: 1px dashed #e3e8ef;
+        }
+
+        .no-additional-info i {
+            font-size: 24px;
+            margin-bottom: 10px;
+            display: block;
+            opacity: 0.5;
         }
     </style>
 </head>
@@ -1080,39 +1099,21 @@
                     <input type="date" id="equipmentInstallDate" name="installation_date">
                 </div>
 
-                <!-- 부속품 정보 섹션 -->
-                <div class="parts-section">
-                    <div class="parts-header">
+                <!-- 추가 정보 섹션 (통합) -->
+                <div class="additional-info-section">
+                    <div class="additional-info-header">
                         <label style="font-weight: 600; color: #333; margin: 0;">
-                            <i class="fas fa-cogs" style="color: #3b82f6;"></i> 부속품 정보
+                            <i class="fas fa-plus-circle" style="color: #3b82f6;"></i> 추가 정보
                         </label>
-                        <button type="button" class="btn-add-part" onclick="addPartInput()">
-                            <i class="fas fa-plus"></i> 부속품 추가
+                        <button type="button" class="btn-add-info" onclick="addAdditionalInfo()">
+                            <i class="fas fa-plus"></i> 정보 추가
                         </button>
                     </div>
-                    <div id="partsContainer">
+                    <div id="additionalInfoContainer">
                         <!-- 동적으로 생성 -->
                     </div>
                     <small style="color: #999; font-size: 11px; display: block; margin-top: 8px;">
-                        💡 장비에 포함된 부속품 정보 (예: 마그네트, V-벨트, 컨덴서, 팬모터 등)
-                    </small>
-                </div>
-
-                <!-- 커스텀 필드 섹션 -->
-                <div class="custom-fields-section">
-                    <div class="custom-fields-header">
-                        <label style="font-weight: 600; color: #333; margin: 0;">
-                            <i class="fas fa-star" style="color: #ffa726;"></i> 커스텀 필드
-                        </label>
-                        <button type="button" class="btn-add-custom-field" onclick="addCustomFieldInput()">
-                            <i class="fas fa-plus"></i> 필드 추가
-                        </button>
-                    </div>
-                    <div id="customFieldsContainer">
-                        <!-- 동적으로 생성 -->
-                    </div>
-                    <small style="color: #999; font-size: 11px; display: block; margin-top: 8px;">
-                        💡 추가한 커스텀 필드는 점검 페이지에 자동으로 표시됩니다
+                        💡 부속품, 사양, 기타 장비 관련 정보를 추가하세요 (예: MC-32 마그네트, B94 V-벨트, 제조사 등)
                     </small>
                 </div>
 

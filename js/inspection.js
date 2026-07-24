@@ -843,95 +843,70 @@ function renderEquipmentDetail(equipment) {
         }
     ];
     
-    // 기본 필드와 커스텀 필드 합치기
-    const allFields = [...defaultFields];
-    
-    // equipment 객체에서 기본 필드가 아닌 필드들을 커스텀 필드로 추가
-    const reservedKeys = ['id', 'equipment_type', 'model', 'capacity', 'floor', 'location', 
-                         'installation_date', 'site_id', 'building_id', 'site_name', 'building_name',
-                         'created_at', 'updated_at', 'parts'];
-    
-    Object.keys(equipment).forEach(key => {
-        if (!reservedKeys.includes(key) && equipment[key] && key !== 'custom_fields' && key !== 'parts') {
-            allFields.push({
-                key: key,
-                label: key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-                icon: 'fas fa-info-circle',
-                isCustom: true
-            });
-        }
-    });
-    
-    // custom_fields가 있다면 추가
-    if (equipment.custom_fields && typeof equipment.custom_fields === 'object') {
-        Object.entries(equipment.custom_fields).forEach(([key, value]) => {
-            allFields.push({
-                key: key,
-                label: key,
-                icon: 'fas fa-star',
-                value: value,
-                isCustom: true
-            });
-        });
-    }
-    
     // HTML 생성
     const detailItems = allFields.map(field => {
         const value = field.value !== undefined ? field.value : 
                      (field.formatter ? field.formatter(equipment[field.key]) : equipment[field.key] || '-');
         
-        const customBadge = field.isCustom ? '<span class="custom-field-badge">커스텀</span>' : '';
-        
         return `
-            <div class="detail-item ${field.isCustom ? 'custom-field' : ''}">
+            <div class="detail-item">
                 <i class="${field.icon}"></i>
                 <div>
-                    <div class="detail-label">${field.label} ${customBadge}</div>
+                    <div class="detail-label">${field.label}</div>
                     <div class="detail-value">${value}</div>
                 </div>
             </div>
         `;
     }).join('');
     
-    // 부속품 정보 HTML 생성
-    let partsHtml = '';
-    console.log('🔍 부속품 데이터 확인:', {
-        hasParts: !!equipment.parts,
-        isArray: Array.isArray(equipment.parts),
-        length: equipment.parts?.length || 0,
-        partsData: equipment.parts
+    // equipment 객체에서 기본 필드가 아닌 필드들은 제외 (추가 정보는 별도 섹션에서 표시)
+    const reservedKeys = ['id', 'equipment_type', 'model', 'capacity', 'floor', 'location', 
+                         'installation_date', 'site_id', 'building_id', 'site_name', 'building_name',
+                         'created_at', 'updated_at', 'additional_info', 'parts', 'custom_fields'];
+    
+    // additional_info HTML 생성
+    let additionalInfoHtml = '';
+    console.log('🔍 추가 정보 확인:', {
+        hasInfo: !!equipment.additional_info,
+        isObject: typeof equipment.additional_info === 'object',
+        count: equipment.additional_info ? Object.keys(equipment.additional_info).length : 0,
+        data: equipment.additional_info
     });
     
-    if (equipment.parts && Array.isArray(equipment.parts) && equipment.parts.length > 0) {
-        const partsItems = equipment.parts.map(part => `
-            <div class="part-item">
-                <i class="fas fa-cog"></i>
-                <div>
-                    <span class="part-name">${part.name}</span>
-                    <span class="part-spec">${part.spec}</span>
-                </div>
-            </div>
-        `).join('');
+    if (equipment.additional_info && typeof equipment.additional_info === 'object') {
+        const entries = Object.entries(equipment.additional_info);
         
-        partsHtml = `
-            <div class="parts-section">
-                <div class="parts-header">
-                    <i class="fas fa-cogs"></i>
-                    <span>부속품 정보</span>
+        if (entries.length > 0) {
+            const infoItems = entries.map(([key, value]) => `
+                <div class="info-item">
+                    <i class="fas fa-tag"></i>
+                    <div>
+                        <span class="info-key">${key}</span>
+                        <span class="info-value">${value}</span>
+                    </div>
                 </div>
-                <div class="parts-list">
-                    ${partsItems}
+            `).join('');
+            
+            additionalInfoHtml = `
+                <div class="additional-info-section">
+                    <div class="additional-info-header">
+                        <i class="fas fa-plus-circle"></i>
+                        <span>추가 정보</span>
+                    </div>
+                    <div class="additional-info-list">
+                        ${infoItems}
+                    </div>
                 </div>
-            </div>
-        `;
-        console.log('✅ 부속품 HTML 생성됨:', partsHtml.length, '바이트');
+            `;
+            console.log('✅ 추가 정보 HTML 생성됨:', additionalInfoHtml.length, '바이트');
+        }
     } else {
-        console.log('⚠️ 부속품 데이터 없음 - HTML 생성 건너뜀');
+        console.log('⚠️ 추가 정보 없음 - HTML 생성 건너뜀');
     }
     
     detailDiv.innerHTML = `
         <div class="detail-grid">${detailItems}</div>
-        ${partsHtml}
+        ${additionalInfoHtml}
     `;
     
     console.log('📋 장비 상세 정보 렌더링 완료:', {

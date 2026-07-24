@@ -901,8 +901,8 @@
     font-size: 14px;
 }
 
-/* ===== 부속품 정보 스타일 ===== */
-.parts-section {
+/* ===== 추가 정보 통합 스타일 ===== */
+.additional-info-section {
     margin-top: 25px;
     padding: 20px;
     background: linear-gradient(135deg, #f6f8fb 0%, #f1f4f9 100%);
@@ -910,7 +910,7 @@
     border: 2px solid #e3e8ef;
 }
 
-.parts-header {
+.additional-info-header {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -920,19 +920,19 @@
     color: #3b82f6;
 }
 
-.parts-header i {
+.additional-info-header i {
     font-size: 18px;
 }
 
-.parts-list {
+.additional-info-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 12px;
 }
 
-.part-item {
+.info-item {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 12px;
     padding: 12px 15px;
     background: white;
@@ -941,33 +941,35 @@
     transition: all 0.2s ease;
 }
 
-.part-item:hover {
+.info-item:hover {
     border-color: #3b82f6;
     box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
     transform: translateY(-1px);
 }
 
-.part-item i {
+.info-item i {
     color: #3b82f6;
     font-size: 16px;
+    margin-top: 2px;
 }
 
-.part-item > div {
+.info-item > div {
     display: flex;
     flex-direction: column;
     gap: 4px;
+    flex: 1;
 }
 
-.part-name {
+.info-key {
     font-weight: 600;
     font-size: 14px;
     color: #333;
 }
 
-.part-spec {
+.info-value {
     font-size: 13px;
     color: #666;
-    font-family: 'Courier New', monospace;
+    word-break: break-word;
 }
 
 /* 반응형 */
@@ -986,7 +988,7 @@
         justify-content: center;
     }
     
-    .parts-list {
+    .additional-info-list {
         grid-template-columns: 1fr;
     }
 }

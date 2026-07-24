@@ -575,18 +575,15 @@ async function showAddEquipmentModal() {
     buildingSelect.innerHTML = '<option value="">⚠️ 현장을 먼저 선택해 주세요</option>';
     buildingSelect.disabled = true;
     
-    // 커스텀 필드 초기화
-    document.getElementById('customFieldsContainer').innerHTML = '';
-    customFieldsCount = 0;
-    
-    // 부속품 초기화
-    const partsContainer = document.getElementById('partsContainer');
-    partsContainer.innerHTML = `
-        <div class="no-parts">
-            <i class="fas fa-info-circle"></i> 등록된 부속품이 없습니다. "부속품 추가" 버튼을 클릭하세요.
+    // 추가 정보 초기화 (통합)
+    const infoContainer = document.getElementById('additionalInfoContainer');
+    infoContainer.innerHTML = `
+        <div class="no-additional-info">
+            <i class="fas fa-info-circle"></i>
+            등록된 추가 정보가 없습니다. "정보 추가" 버튼을 클릭하세요.
         </div>
     `;
-    partsCount = 0;
+    additionalInfoCount = 0;
     
     document.getElementById('equipmentModal').classList.add('active');
     currentEditId = null;
@@ -626,11 +623,8 @@ async function editEquipment(equipmentId) {
     await loadBuildingsForEquipment(eq.site_id);
     document.getElementById('equipmentBuilding').value = eq.building_id;
     
-    // 커스텀 필드 로드
-    loadCustomFields(eq);
-    
-    // 부속품 로드
-    loadParts(eq);
+    // 추가 정보 로드 (통합)
+    loadAdditionalInfo(eq);
     
     document.getElementById('equipmentModal').classList.add('active');
     currentEditId = equipmentId;
@@ -707,16 +701,10 @@ async function handleEquipmentSubmit(e) {
         equipmentData.installation_date = window.FirestoreTimestamp.now();
     }
     
-    // 커스텀 필드 추가
-    const customFields = getCustomFieldsData();
-    if (customFields) {
-        equipmentData.custom_fields = customFields;
-    }
-    
-    // 부속품 정보 추가
-    const parts = getPartsData();
-    if (parts) {
-        equipmentData.parts = parts;
+    // 추가 정보 (통합)
+    const additionalInfo = getAdditionalInfoData();
+    if (additionalInfo) {
+        equipmentData.additional_info = additionalInfo;
     }
     
     console.log('💾 장비 저장 데이터:', equipmentData);
@@ -1404,56 +1392,57 @@ function getCustomFieldsData() {
     return Object.keys(customFields).length > 0 ? customFields : null;
 }
 
-// ===== 부속품 관리 함수 =====
-let partsCount = 0;
+// ===== 추가 정보 관리 함수 (통합) =====
+let additionalInfoCount = 0;
 
-function addPartInput() {
-    const container = document.getElementById('partsContainer');
+function addAdditionalInfo() {
+    const container = document.getElementById('additionalInfoContainer');
     
-    // no-parts 메시지가 있으면 제거
-    const noParts = container.querySelector('.no-parts');
-    if (noParts) {
-        noParts.remove();
+    // no-additional-info 메시지가 있으면 제거
+    const noInfo = container.querySelector('.no-additional-info');
+    if (noInfo) {
+        noInfo.remove();
     }
     
-    const partId = 'part_' + (++partsCount);
+    const infoId = 'info_' + (++additionalInfoCount);
     
-    const partItem = document.createElement('div');
-    partItem.className = 'part-input-group';
-    partItem.id = partId;
-    partItem.innerHTML = `
-        <input type="text" placeholder="부속품명 (예: 마그네트)" class="part-name">
-        <input type="text" placeholder="규격/모델 (예: MC-32, MC-9B)" class="part-spec">
-        <button type="button" class="btn-remove-part" onclick="removePartInput('${partId}')">
+    const infoItem = document.createElement('div');
+    infoItem.className = 'info-input-group';
+    infoItem.id = infoId;
+    infoItem.innerHTML = `
+        <input type="text" placeholder="항목명 (예: MC-32, 제조사)" class="info-key">
+        <input type="text" placeholder="내용 (예: 마그네트 스위치, LG전자)" class="info-value">
+        <button type="button" class="btn-remove-info" onclick="removeAdditionalInfo('${infoId}')">
             <i class="fas fa-times"></i>
         </button>
     `;
     
-    container.appendChild(partItem);
+    container.appendChild(infoItem);
     
     // 첫 번째 input에 포커스
     setTimeout(() => {
-        partItem.querySelector('.part-name').focus();
+        infoItem.querySelector('.info-key').focus();
     }, 100);
     
-    console.log('✅ 부속품 입력 필드 추가:', partId);
+    console.log('✅ 추가 정보 입력 필드 추가:', infoId);
 }
 
-function removePartInput(partId) {
-    const partItem = document.getElementById(partId);
-    if (partItem) {
-        partItem.style.animation = 'fadeOut 0.3s ease';
+function removeAdditionalInfo(infoId) {
+    const infoItem = document.getElementById(infoId);
+    if (infoItem) {
+        infoItem.style.animation = 'fadeOut 0.3s ease';
         setTimeout(() => {
-            partItem.remove();
-            console.log('🗑️ 부속품 입력 필드 제거:', partId);
+            infoItem.remove();
+            console.log('🗑️ 추가 정보 입력 필드 제거:', infoId);
             
-            // 모든 부속품이 제거되었으면 no-parts 메시지 표시
-            const container = document.getElementById('partsContainer');
-            const remaining = container.querySelectorAll('.part-input-group');
+            // 모든 정보가 제거되었으면 안내 메시지 표시
+            const container = document.getElementById('additionalInfoContainer');
+            const remaining = container.querySelectorAll('.info-input-group');
             if (remaining.length === 0) {
                 container.innerHTML = `
-                    <div class="no-parts">
-                        <i class="fas fa-info-circle"></i> 등록된 부속품이 없습니다. "부속품 추가" 버튼을 클릭하세요.
+                    <div class="no-additional-info">
+                        <i class="fas fa-info-circle"></i>
+                        등록된 추가 정보가 없습니다. "정보 추가" 버튼을 클릭하세요.
                     </div>
                 `;
             }
@@ -1461,53 +1450,63 @@ function removePartInput(partId) {
     }
 }
 
-function loadParts(equipment) {
-    const container = document.getElementById('partsContainer');
+function loadAdditionalInfo(equipment) {
+    const container = document.getElementById('additionalInfoContainer');
     container.innerHTML = '';
-    partsCount = 0;
+    additionalInfoCount = 0;
     
-    if (equipment.parts && Array.isArray(equipment.parts) && equipment.parts.length > 0) {
-        equipment.parts.forEach(part => {
-            const partId = 'part_' + (++partsCount);
-            const partItem = document.createElement('div');
-            partItem.className = 'part-input-group';
-            partItem.id = partId;
-            partItem.innerHTML = `
-                <input type="text" value="${part.name || ''}" placeholder="부속품명" class="part-name">
-                <input type="text" value="${part.spec || ''}" placeholder="규격/모델" class="part-spec">
-                <button type="button" class="btn-remove-part" onclick="removePartInput('${partId}')">
-                    <i class="fas fa-times"></i>
-                </button>
-            `;
-            container.appendChild(partItem);
-        });
-        console.log(`🔧 ${equipment.parts.length}개 부속품 로드됨`);
-    } else {
-        // 부속품이 없으면 안내 메시지 표시
-        container.innerHTML = `
-            <div class="no-parts">
-                <i class="fas fa-info-circle"></i> 등록된 부속품이 없습니다. "부속품 추가" 버튼을 클릭하세요.
-            </div>
-        `;
+    // additional_info 객체에서 로드
+    if (equipment.additional_info && typeof equipment.additional_info === 'object') {
+        const entries = Object.entries(equipment.additional_info);
+        if (entries.length > 0) {
+            entries.forEach(([key, value]) => {
+                const infoId = 'info_' + (++additionalInfoCount);
+                const infoItem = document.createElement('div');
+                infoItem.className = 'info-input-group';
+                infoItem.id = infoId;
+                infoItem.innerHTML = `
+                    <input type="text" value="${key}" placeholder="항목명" class="info-key">
+                    <input type="text" value="${value}" placeholder="내용" class="info-value">
+                    <button type="button" class="btn-remove-info" onclick="removeAdditionalInfo('${infoId}')">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                container.appendChild(infoItem);
+            });
+            console.log(`📦 ${entries.length}개 추가 정보 로드됨`);
+            return;
+        }
     }
+    
+    // 정보가 없으면 안내 메시지 표시
+    container.innerHTML = `
+        <div class="no-additional-info">
+            <i class="fas fa-info-circle"></i>
+            등록된 추가 정보가 없습니다. "정보 추가" 버튼을 클릭하세요.
+        </div>
+    `;
 }
 
-function getPartsData() {
-    const container = document.getElementById('partsContainer');
-    const partItems = container.querySelectorAll('.part-input-group');
-    const parts = [];
+function getAdditionalInfoData() {
+    const container = document.getElementById('additionalInfoContainer');
+    const infoItems = container.querySelectorAll('.info-input-group');
+    const additionalInfo = {};
     
-    partItems.forEach(item => {
-        const name = item.querySelector('.part-name')?.value.trim();
-        const spec = item.querySelector('.part-spec')?.value.trim();
+    infoItems.forEach(item => {
+        const key = item.querySelector('.info-key')?.value.trim();
+        const value = item.querySelector('.info-value')?.value.trim();
         
-        if (name && spec) {
-            parts.push({ name, spec });
+        if (key && value) {
+            additionalInfo[key] = value;
         }
     });
     
-    console.log('🔧 부속품 데이터:', parts);
-    return parts.length > 0 ? parts : null;
+    console.log('📦 추가 정보 데이터:', additionalInfo);
+    return Object.keys(additionalInfo).length > 0 ? additionalInfo : null;
+}
+            </div>
+        `;
+    }
 }
 
 // fadeOut 애니메이션 추가
